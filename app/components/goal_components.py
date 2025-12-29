@@ -149,7 +149,7 @@ def add_edit_goal_modal() -> rx.Component:
                             ),
                             name="category",
                             default_value=GoalsState.form_category,
-                            class_name="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all font-medium bg-white",
+                            class_name="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all font-medium bg-white appearance-none",
                         ),
                         class_name="mb-5",
                     ),

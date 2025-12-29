@@ -196,7 +196,7 @@ def profile_page() -> rx.Component:
                                                 ),
                                                 name="risk_tolerance",
                                                 default_value=ProfileState.risk_tolerance,
-                                                class_name="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none bg-white",
+                                                class_name="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none bg-white appearance-none",
                                             ),
                                         ),
                                         rx.el.div(
@@ -219,7 +219,7 @@ def profile_page() -> rx.Component:
                                                 ),
                                                 name="investment_goal",
                                                 default_value=ProfileState.investment_goal,
-                                                class_name="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none bg-white",
+                                                class_name="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none bg-white appearance-none",
                                             ),
                                         ),
                                         class_name="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8",

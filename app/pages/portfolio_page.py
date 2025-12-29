@@ -29,7 +29,7 @@ def portfolio_header() -> rx.Component:
                     lambda p, i: rx.el.option(p["name"], value=i),
                 ),
                 on_change=lambda e: PortfolioState.set_portfolio_index(e),
-                class_name="bg-white border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block px-4 py-2",
+                class_name="bg-white border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block px-4 py-2 appearance-none",
             ),
             rx.el.button(
                 rx.icon("plus", size=16, class_name="mr-2"),
