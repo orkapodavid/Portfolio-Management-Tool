@@ -1,23 +1,22 @@
-# PnL View Module Enhancement Plan
+# Positions Module Implementation Plan
 
-## Phase 1: PnL View Data Structure & State Management ✅
-- [x] Add PnL-specific data structures (PnLChange, PnLSummary, PnLCurrency TypedDicts)
-- [x] Include missing columns from gap analysis: PnL Chg 2D, PnL Chg% 2D
-- [x] Resolve truncated field: POS C → POS CCY PnL (full name)
-- [x] Add mock data for all three PnL tabs with realistic financial values
-- [x] Add sparkline data for PnL YTD and Daily Change metrics
+## Phase 1: Position Data Models and State ✅
+- [x] Define TypedDict structures for position data (StockPosition, WarrantPosition, BondPosition, TradeSummary)
+- [x] Add position-specific state variables to PortfolioDashboardState
+- [x] Create mock data generators for each position type
+- [x] Add position filtering and pagination logic
 
-## Phase 2: PnL View UI Components ✅
-- [x] Create PnL Change tab with all columns including 2D change metrics
-- [x] Create PnL Summary tab with DTL column (from 5% DTL)
-- [x] Create PnL Currency tab with full POS CCY PnL column
-- [x] Implement red/green color-coding for all PnL change values
-- [x] Add sparkline mini-trend components for PnL YTD and Daily Change
-- [x] Replace text status indicators with checkmark/alert icons for REC column
+## Phase 2: Position Table Components
+- [ ] Create positions_views.py with all 5 position tables
+- [ ] Implement Positions (main overview) table
+- [ ] Implement Stock Position table with detailed columns
+- [ ] Implement Warrant Position table
+- [ ] Implement Bond Position table  
+- [ ] Implement Trade Summary table
+- [ ] Add sparklines, color-coding, and REC status icons consistent with PnL views
 
-## Phase 3: Functional Improvements & Action Bar ✅
-- [x] Move "Generate" button from bottom to top-left action area
-- [x] Add PnL Full tab integration (keep separate but accessible)
-- [x] Add export and refresh actions in top action bar
-- [x] Implement consistent $(X,XXX.XX) negative formatting across all PnL values
-- [x] Add right-alignment for all currency/numeric columns
+## Phase 3: Integration and Testing
+- [ ] Wire up position tables to contextual_workspace.py
+- [ ] Ensure sub-tab navigation works for all 5 position views
+- [ ] Add Generate Position button functionality
+- [ ] Test search/filter functionality across position views

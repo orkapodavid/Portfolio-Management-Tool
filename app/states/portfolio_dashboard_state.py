@@ -4,6 +4,72 @@ from typing import TypedDict
 import reflex as rx
 
 
+class PositionItem(TypedDict):
+    id: int
+    ticker: str
+    qty: str
+    mkt_value: str
+    cost_basis: str
+    unrealized_pnl: str
+    realized_pnl: str
+    weight_pct: str
+    is_positive: bool
+
+
+class StockPositionItem(TypedDict):
+    id: int
+    ticker: str
+    shares: str
+    avg_cost: str
+    current_price: str
+    mkt_value: str
+    daily_pnl: str
+    sector: str
+    beta: str
+    is_positive: bool
+
+
+class WarrantPositionItem(TypedDict):
+    id: int
+    underlying: str
+    ticker: str
+    strike: str
+    expiry: str
+    qty: str
+    premium: str
+    delta: str
+    gamma: str
+    theta: str
+    intrinsic_value: str
+    is_positive: bool
+
+
+class BondPositionItem(TypedDict):
+    id: int
+    issuer: str
+    coupon: str
+    maturity: str
+    face_value: str
+    mkt_value: str
+    yield_to_maturity: str
+    duration: str
+    rating: str
+    is_positive: bool
+
+
+class TradeSummaryItem(TypedDict):
+    id: int
+    trade_date: str
+    security_type: str
+    ticker: str
+    side: str
+    qty: str
+    price: str
+    notional: str
+    status: str
+    settlement_date: str
+
+
 class NotificationItem(TypedDict):
     id: int
     header: str
@@ -241,6 +307,117 @@ def _generate_pnl_currency_data() -> list[PnLCurrencyItem]:
                 "ccy_hedged_pnl": _fmt_usd(random.uniform(-10000, 10000)),
                 "pos_ccy_pnl": _fmt_usd(random.uniform(-20000, 20000)),
                 "net_ccy": _fmt_usd(random.uniform(-5000, 5000)),
+            }
+        )
+    return data
+
+
+def _generate_positions_data() -> list[PositionItem]:
+    tickers = ["AAPL", "MSFT", "GOOGL", "TSLA", "NVDA", "BTC-USD", "EURUSD", "US10Y"]
+    data = []
+    for i, t in enumerate(tickers):
+        pnl = random.uniform(-10000, 50000)
+        data.append(
+            {
+                "id": i,
+                "ticker": t,
+                "qty": f"{random.randint(100, 10000):,}",
+                "mkt_value": _fmt_usd(random.uniform(50000, 500000)),
+                "cost_basis": _fmt_usd(random.uniform(40000, 450000)),
+                "unrealized_pnl": _fmt_usd(pnl),
+                "realized_pnl": _fmt_usd(random.uniform(0, 5000)),
+                "weight_pct": f"{random.uniform(1, 15):.2f}%",
+                "is_positive": pnl >= 0,
+            }
+        )
+    return data
+
+
+def _generate_stock_positions() -> list[StockPositionItem]:
+    tickers = ["AAPL", "MSFT", "AMZN", "GOOGL", "META", "NVDA", "NFLX"]
+    sectors = ["Tech", "Tech", "Consumer", "Tech", "Tech", "Semis", "Media"]
+    data = []
+    for i, t in enumerate(tickers):
+        pnl = random.uniform(-5000, 25000)
+        data.append(
+            {
+                "id": i,
+                "ticker": t,
+                "shares": f"{random.randint(50, 5000):,}",
+                "avg_cost": f"{random.uniform(100, 500):.2f}",
+                "current_price": f"{random.uniform(110, 550):.2f}",
+                "mkt_value": _fmt_usd(random.uniform(10000, 1000000)),
+                "daily_pnl": _fmt_usd(pnl),
+                "sector": sectors[i],
+                "beta": f"{random.uniform(0.8, 1.8):.2f}",
+                "is_positive": pnl >= 0,
+            }
+        )
+    return data
+
+
+def _generate_warrant_positions() -> list[WarrantPositionItem]:
+    underlyings = ["AAPL", "TSLA", "NVDA", "AMZN"]
+    data = []
+    for i in range(10):
+        und = random.choice(underlyings)
+        data.append(
+            {
+                "id": i,
+                "underlying": und,
+                "ticker": f"{und}-W",
+                "strike": f"{random.uniform(100, 500):.2f}",
+                "expiry": "2025-12-31",
+                "qty": f"{random.randint(1000, 50000):,}",
+                "premium": f"{random.uniform(5, 50):.2f}",
+                "delta": f"{random.uniform(0, 1):.4f}",
+                "gamma": f"{random.uniform(0, 0.05):.4f}",
+                "theta": f"{random.uniform(-0.1, 0):.4f}",
+                "intrinsic_value": _fmt_usd(random.uniform(0, 10000)),
+                "is_positive": True,
+            }
+        )
+    return data
+
+
+def _generate_bond_positions() -> list[BondPositionItem]:
+    issuers = ["US GOVT", "APPLE INC", "MICROSOFT", "GOLDMAN SACHS", "JPM"]
+    data = []
+    for i, issuer in enumerate(issuers):
+        data.append(
+            {
+                "id": i,
+                "issuer": issuer,
+                "coupon": f"{random.uniform(2, 6):.2f}%",
+                "maturity": "2034-01-01",
+                "face_value": f"{random.randint(100000, 1000000):,}",
+                "mkt_value": _fmt_usd(random.uniform(90000, 950000)),
+                "yield_to_maturity": f"{random.uniform(3, 7):.2f}%",
+                "duration": f"{random.uniform(2, 10):.2f}",
+                "rating": random.choice(["AAA", "AA+", "AA", "A+"]),
+                "is_positive": True,
+            }
+        )
+    return data
+
+
+def _generate_trade_summaries() -> list[TradeSummaryItem]:
+    tickers = ["AAPL", "MSFT", "TSLA", "EURUSD", "US10Y"]
+    data = []
+    for i in range(15):
+        side = random.choice(["Buy", "Sell"])
+        data.append(
+            {
+                "id": i,
+                "trade_date": datetime.now().strftime("%Y-%m-%d"),
+                "security_type": random.choice(["Equity", "FX", "Bond", "Warrant"]),
+                "ticker": random.choice(tickers),
+                "side": side,
+                "qty": f"{random.randint(100, 5000):,}",
+                "price": f"{random.uniform(10, 500):.2f}",
+                "notional": _fmt_usd(random.uniform(10000, 500000)),
+                "status": "Settled" if random.random() > 0.2 else "Pending",
+                "settlement_date": "2024-05-24",
             }
         )
     return data
@@ -800,6 +977,54 @@ class PortfolioDashboardState(rx.State):
     pnl_change_data: list[PnLChangeItem] = _generate_pnl_change_data()
     pnl_summary_data: list[PnLSummaryItem] = _generate_pnl_summary_data()
     pnl_currency_data: list[PnLCurrencyItem] = _generate_pnl_currency_data()
+    positions_data: list[PositionItem] = _generate_positions_data()
+    stock_positions: list[StockPositionItem] = _generate_stock_positions()
+    warrant_positions: list[WarrantPositionItem] = _generate_warrant_positions()
+    bond_positions: list[BondPositionItem] = _generate_bond_positions()
+    trade_summaries: list[TradeSummaryItem] = _generate_trade_summaries()
+
+    @rx.var(cache=True)
+    def filtered_positions(self) -> list[PositionItem]:
+        query = self.current_search_query.lower()
+        if not query:
+            return self.positions_data
+        return [p for p in self.positions_data if query in p["ticker"].lower()]
+
+    @rx.var(cache=True)
+    def filtered_stock_positions(self) -> list[StockPositionItem]:
+        query = self.current_search_query.lower()
+        if not query:
+            return self.stock_positions
+        return [
+            p
+            for p in self.stock_positions
+            if query in p["ticker"].lower() or query in p["sector"].lower()
+        ]
+
+    @rx.var(cache=True)
+    def filtered_warrant_positions(self) -> list[WarrantPositionItem]:
+        query = self.current_search_query.lower()
+        if not query:
+            return self.warrant_positions
+        return [
+            p
+            for p in self.warrant_positions
+            if query in p["ticker"].lower() or query in p["underlying"].lower()
+        ]
+
+    @rx.var(cache=True)
+    def filtered_bond_positions(self) -> list[BondPositionItem]:
+        query = self.current_search_query.lower()
+        if not query:
+            return self.bond_positions
+        return [p for p in self.bond_positions if query in p["issuer"].lower()]
+
+    @rx.var(cache=True)
+    def filtered_trade_summaries(self) -> list[TradeSummaryItem]:
+        query = self.current_search_query.lower()
+        if not query:
+            return self.trade_summaries
+        return [p for p in self.trade_summaries if query in p["ticker"].lower()]
 
     @rx.var(cache=True)
     def filtered_pnl_change(self) -> list[PnLChangeItem]:

@@ -6,6 +6,13 @@ from app.components.pnl_views import (
     pnl_summary_table,
     pnl_currency_table,
 )
+from app.components.positions_views import (
+    positions_table,
+    stock_position_table,
+    warrant_position_table,
+    bond_position_table,
+    trade_summary_table,
+)
 
 
 def table_header_cell(text: str, align: str = "left") -> rx.Component:
@@ -327,6 +334,18 @@ def contextual_workspace() -> rx.Component:
                 ("PnL Full", pnl_full_table()),
                 ("PnL Summary", pnl_summary_table()),
                 ("PnL Currency", pnl_currency_table()),
+                mock_data_table(),
+            ),
+        ),
+        (
+            "Positions",
+            rx.match(
+                PortfolioDashboardState.active_subtab,
+                ("Positions", positions_table()),
+                ("Stock Position", stock_position_table()),
+                ("Warrant Position", warrant_position_table()),
+                ("Bond Position", bond_position_table()),
+                ("Trade Summary (War/Bond)", trade_summary_table()),
                 mock_data_table(),
             ),
         ),
