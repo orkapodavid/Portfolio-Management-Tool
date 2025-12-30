@@ -150,15 +150,26 @@ def pagination_controls() -> rx.Component:
     """Pagination controls for the data table."""
     return rx.el.div(
         rx.el.div(
-            rx.el.span("Rows:", class_name="text-xs font-semibold text-gray-500 mr-2"),
-            rx.el.select(
-                rx.foreach(
-                    PortfolioDashboardState.page_size_options,
-                    lambda x: rx.el.option(x, value=x),
+            rx.el.span(
+                "Rows:",
+                class_name="text-[10px] font-bold text-gray-500 uppercase tracking-tight mr-2",
+            ),
+            rx.el.div(
+                rx.el.select(
+                    rx.foreach(
+                        PortfolioDashboardState.page_size_options,
+                        lambda x: rx.el.option(x.to_string(), value=x.to_string()),
+                    ),
+                    value=PortfolioDashboardState.page_size.to_string(),
+                    on_change=PortfolioDashboardState.set_page_size,
+                    class_name="text-[10px] font-bold border-gray-300 rounded px-1.5 py-0 h-6 bg-white appearance-none pr-6 outline-none focus:border-blue-500 shadow-sm transition-all",
                 ),
-                value=PortfolioDashboardState.page_size.to_string(),
-                on_change=PortfolioDashboardState.set_page_size,
-                class_name="text-[10px] border-gray-300 rounded p-0.5 h-6 bg-white appearance-none",
+                rx.icon(
+                    "chevron-down",
+                    size=10,
+                    class_name="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none",
+                ),
+                class_name="relative",
             ),
             class_name="flex items-center",
         ),

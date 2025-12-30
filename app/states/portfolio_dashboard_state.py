@@ -554,7 +554,7 @@ class PortfolioDashboardState(rx.State):
         self.selected_row_id = row_id
 
     current_page: int = 1
-    page_size: int = 25
+    page_size: int = 50
     page_size_options: list[int] = [25, 50, 100]
     _all_table_data: list[dict] = _generate_mock_data()
 
