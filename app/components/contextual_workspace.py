@@ -22,6 +22,13 @@ def table_row(item: dict) -> rx.Component:
     pnl_color = rx.cond(
         item["is_positive"], f"text-[{POSITIVE_GREEN}]", f"text-[{NEGATIVE_RED}]"
     )
+    price_fmt = rx.cond(item["is_positive"], f"${item['price']}", f"$({item['price']})")
+    mkt_val_fmt = rx.cond(
+        item["is_positive"], f"${item['mkt_value']}", f"$({item['mkt_value']})"
+    )
+    pnl_fmt = rx.cond(
+        item["is_positive"], f"${item['daily_pnl']}", f"$({item['daily_pnl']})"
+    )
     return rx.el.tr(
         rx.el.td(
             item["ticker"],
@@ -40,22 +47,46 @@ def table_row(item: dict) -> rx.Component:
             class_name="px-3 py-2 text-[10px] font-mono font-bold text-gray-700 text-right border-b border-gray-200 align-middle",
         ),
         rx.el.td(
-            f"${item['price']}",
+            price_fmt,
             class_name="px-3 py-2 text-[10px] font-mono font-bold text-gray-700 text-right border-b border-gray-200 align-middle",
         ),
         rx.el.td(
-            f"${item['mkt_value']}",
+            mkt_val_fmt,
             class_name="px-3 py-2 text-[10px] font-black font-mono text-gray-900 text-right border-b border-gray-200 align-middle",
         ),
         rx.el.td(
-            f"${item['daily_pnl']}",
+            pnl_fmt,
             class_name=f"px-3 py-2 text-[10px] font-black font-mono {pnl_color} text-right border-b border-gray-200 align-middle",
         ),
         rx.el.td(
             rx.el.div(
-                rx.el.span(
+                rx.match(
                     item["status"],
-                    class_name="px-1.5 py-0.5 rounded-[2px] text-[8px] font-black uppercase tracking-tighter bg-gray-100 text-gray-600",
+                    (
+                        "Active",
+                        rx.el.span(
+                            "Active",
+                            class_name="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-emerald-100 text-[#059669] border border-emerald-200 shadow-sm",
+                        ),
+                    ),
+                    (
+                        "Hedged",
+                        rx.el.span(
+                            "Hedged",
+                            class_name="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-blue-100 text-[#2563EB] border border-blue-200 shadow-sm",
+                        ),
+                    ),
+                    (
+                        "Review",
+                        rx.el.span(
+                            "Review",
+                            class_name="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-orange-100 text-[#C2410C] border border-orange-200 shadow-sm",
+                        ),
+                    ),
+                    rx.el.span(
+                        item["status"],
+                        class_name="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-gray-100 text-gray-600 border border-gray-200",
+                    ),
                 ),
                 class_name="flex items-center justify-center",
             ),

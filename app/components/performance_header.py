@@ -25,6 +25,11 @@ def kpi_card(metric: KPIMetric) -> rx.Component:
     text_color = rx.cond(
         metric["is_positive"], f"text-[{POSITIVE_GREEN}]", f"text-[{NEGATIVE_RED}]"
     )
+    value_display = rx.cond(
+        metric["is_positive"],
+        metric["value"],
+        f"$({metric['value'].split('$').join('')})",
+    )
     return rx.el.div(
         rx.el.div(
             rx.el.span(
@@ -32,7 +37,7 @@ def kpi_card(metric: KPIMetric) -> rx.Component:
                 class_name="text-[7px] font-black text-gray-400 uppercase tracking-[0.15em] truncate mr-2",
             ),
             rx.el.span(
-                metric["value"],
+                value_display,
                 class_name=f"text-[10px] font-black {text_color} tracking-tighter",
             ),
             class_name="flex items-center justify-between w-full",
