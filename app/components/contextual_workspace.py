@@ -18,7 +18,12 @@ def sub_tab(name: str) -> rx.Component:
 
 
 def workspace_controls() -> rx.Component:
-    """Merged controls row with summary cards."""
+    """Merged controls row with summary cards and the relocated Generate button."""
+    active_page_name = rx.cond(
+        PortfolioDashboardState.active_subtab != "",
+        PortfolioDashboardState.active_subtab,
+        PortfolioDashboardState.active_module,
+    )
     return rx.el.div(
         rx.el.div(
             rx.el.div(
@@ -61,10 +66,15 @@ def workspace_controls() -> rx.Component:
                 ),
                 class_name="flex items-center bg-white px-2 py-0 rounded border border-gray-200 shadow-sm h-6",
             ),
+            rx.el.button(
+                f"GENERATE {active_page_name}",
+                on_click=PortfolioDashboardState.handle_generate(active_page_name),
+                class_name="bg-[#2563EB] text-white px-3 h-6 rounded shadow-sm hover:bg-blue-700 transition-all duration-200 text-[9px] font-black uppercase tracking-wider flex items-center justify-center",
+            ),
             class_name="flex items-center gap-2",
         ),
         portfolio_summary(),
-        class_name="flex items-center justify-between px-2 py-0.5 bg-gray-50 border-b border-gray-200 shrink-0 h-[36px]",
+        class_name="flex items-center justify-between px-2 py-0.5 bg-gray-50 border-b border-gray-200 shrink-0 h-[36px] sticky top-0 z-30",
     )
 
 
@@ -73,7 +83,7 @@ def table_header_cell(text: str, align: str = "left") -> rx.Component:
     align_class = f"text-{align}"
     return rx.el.th(
         text,
-        class_name=f"px-2 py-0.5 {align_class} text-[9px] font-bold text-gray-500 uppercase tracking-wider sticky top-0 bg-gray-50 border-b border-gray-200 z-10",
+        class_name=f"px-2 py-0.5 {align_class} text-[9px] font-bold text-gray-500 uppercase tracking-wider sticky top-[36px] bg-gray-50 border-b border-gray-200 z-10 shadow-sm",
     )
 
 
@@ -129,10 +139,29 @@ def table_row(item: dict) -> rx.Component:
         rx.el.td(
             rx.cond(
                 item["is_reconciled"],
-                rx.icon(
-                    "check", size=12, class_name=f"text-[{POSITIVE_GREEN}] mx-auto"
+                rx.tooltip(
+                    rx.el.div(
+                        rx.icon(
+                            "check", size=12, class_name=f"text-[{POSITIVE_GREEN}]"
+                        ),
+                        rx.el.span(
+                            "REC",
+                            class_name="text-[8px] font-bold text-emerald-600 ml-1",
+                        ),
+                        class_name="flex items-center justify-center cursor-help",
+                    ),
+                    content="Reconciled: Data matches internal records.",
                 ),
-                rx.icon("x", size=12, class_name=f"text-[{NEGATIVE_RED}] mx-auto"),
+                rx.tooltip(
+                    rx.el.div(
+                        rx.icon("x", size=12, class_name=f"text-[{NEGATIVE_RED}]"),
+                        rx.el.span(
+                            "VAR", class_name="text-[8px] font-bold text-red-600 ml-1"
+                        ),
+                        class_name="flex items-center justify-center cursor-help",
+                    ),
+                    content="Variance: Discrepancy detected in data.",
+                ),
             ),
             class_name="px-3 text-center border-b border-gray-100",
         ),
@@ -256,14 +285,6 @@ def contextual_workspace() -> rx.Component:
             rx.el.div(
                 mock_data_table(),
                 class_name="flex-1 flex flex-col min-h-0 overflow-hidden bg-white",
-            ),
-            rx.el.div(
-                rx.el.button(
-                    f"Generate {active_page_name}",
-                    on_click=PortfolioDashboardState.handle_generate(active_page_name),
-                    class_name="bg-[#2563EB] text-white px-6 h-[32px] rounded shadow-sm hover:bg-blue-700 hover:shadow-md transition-all duration-200 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center",
-                ),
-                class_name="flex justify-center shrink-0 bg-white border-t border-gray-200 h-[40px] items-center py-1 mt-auto",
             ),
             class_name="flex flex-col flex-1 min-h-0 h-full",
         ),

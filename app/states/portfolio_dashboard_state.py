@@ -157,7 +157,7 @@ class PortfolioDashboardState(rx.State):
     active_module: str = "Market Data"
     _active_subtabs: dict[str, str] = {}
     _filters: dict[str, dict] = {}
-    is_sidebar_open: bool = False
+    is_sidebar_open: bool = True
     is_mobile_menu_open: bool = False
     show_top_movers: bool = False
     selected_row_id: int = -1
