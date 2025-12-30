@@ -28,6 +28,224 @@ class TopMover(TypedDict):
     is_positive: bool
 
 
+class PnLChangeItem(TypedDict):
+    id: int
+    trade_date: str
+    underlying: str
+    ticker: str
+    pnl_ytd: str
+    pnl_chg_1d: str
+    pnl_chg_2d: str
+    pnl_chg_1w: str
+    pnl_chg_1m: str
+    pnl_chg_pct_1d: str
+    pnl_chg_pct_2d: str
+    pnl_chg_pct_1w: str
+    pnl_chg_pct_1m: str
+    sparkline_data: list[float]
+    sparkline_svg: str
+    sparkline_color: str
+    is_reconciled: bool
+
+
+class PnLSummaryItem(TypedDict):
+    id: int
+    trade_date: str
+    underlying: str
+    currency: str
+    price: str
+    price_t_1: str
+    price_change: str
+    fx_rate: str
+    fx_rate_t_1: str
+    fx_rate_change: str
+    dtl: str
+    last_volume: str
+    adv_3m: str
+
+
+class PnLCurrencyItem(TypedDict):
+    id: int
+    trade_date: str
+    currency: str
+    fx_rate: str
+    fx_rate_t_1: str
+    fx_rate_change: str
+    ccy_exposure: str
+    usd_exposure: str
+    pos_ccy_expo: str
+    ccy_hedged_pnl: str
+    pos_ccy_pnl: str
+    net_ccy: str
+
+
+def _fmt_usd(val: float) -> str:
+    return f"${val:,.2f}" if val >= 0 else f"$({abs(val):,.2f})"
+
+
+def _fmt_num(val: float) -> str:
+    return f"{val:,.2f}" if val >= 0 else f"({abs(val):,.2f})"
+
+
+def _fmt_pct(val: float) -> str:
+    return f"{val:,.2f}%"
+
+
+def _generate_pnl_change_data() -> list[PnLChangeItem]:
+    tickers = [
+        "AAPL",
+        "MSFT",
+        "GOOGL",
+        "AMZN",
+        "TSLA",
+        "NVDA",
+        "META",
+        "NFLX",
+        "AMD",
+        "INTC",
+        "JPM",
+        "BAC",
+        "WFC",
+        "C",
+        "GS",
+        "MS",
+        "BLK",
+        "SPY",
+        "QQQ",
+        "IWM",
+    ]
+    data = []
+    for i, ticker in enumerate(tickers):
+        base_pnl = random.uniform(-50000, 150000)
+        chg_1d = random.uniform(-5000, 5000)
+        sparkline = [random.uniform(100, 150) for _ in range(10)]
+        min_val = min(sparkline)
+        max_val = max(sparkline)
+        range_val = max_val - min_val if max_val > min_val else 1
+        points = []
+        width = 80
+        height = 24
+        step = width / (len(sparkline) - 1)
+        for idx, val in enumerate(sparkline):
+            x = idx * step
+            normalized = (val - min_val) / range_val
+            y = height - 4 - normalized * (height - 4) + 2
+            points.append(f"{x:.1f},{y:.1f}")
+        sparkline_svg = " ".join(points)
+        sparkline_color = "#059669" if sparkline[-1] >= sparkline[0] else "#DC2626"
+        is_reconciled = random.choice([True, True, True, False])
+        data.append(
+            {
+                "id": i,
+                "trade_date": datetime.now().strftime("%Y-%m-%d"),
+                "underlying": f"{ticker} US Equity",
+                "ticker": ticker,
+                "pnl_ytd": _fmt_usd(base_pnl),
+                "pnl_chg_1d": _fmt_usd(chg_1d),
+                "pnl_chg_2d": _fmt_usd(chg_1d * 1.2),
+                "pnl_chg_1w": _fmt_usd(chg_1d * 3.5),
+                "pnl_chg_1m": _fmt_usd(chg_1d * 12.0),
+                "pnl_chg_pct_1d": _fmt_pct(random.uniform(-3, 3)),
+                "pnl_chg_pct_2d": _fmt_pct(random.uniform(-4, 4)),
+                "pnl_chg_pct_1w": _fmt_pct(random.uniform(-8, 8)),
+                "pnl_chg_pct_1m": _fmt_pct(random.uniform(-15, 15)),
+                "sparkline_data": sparkline,
+                "sparkline_svg": sparkline_svg,
+                "sparkline_color": sparkline_color,
+                "is_reconciled": is_reconciled,
+            }
+        )
+    return data
+
+
+def _generate_pnl_summary_data() -> list[PnLSummaryItem]:
+    tickers = [
+        "AAPL",
+        "MSFT",
+        "GOOGL",
+        "AMZN",
+        "TSLA",
+        "NVDA",
+        "META",
+        "NFLX",
+        "AMD",
+        "INTC",
+    ]
+    currencies = ["USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY", "HKD", "SGD"]
+    data = []
+    for i in range(20):
+        ticker = tickers[i % len(tickers)]
+        ccy = currencies[i % len(currencies)]
+        price = random.uniform(100, 1000)
+        price_t1 = price * random.uniform(0.95, 1.05)
+        fx = random.uniform(0.8, 1.5)
+        fx_t1 = fx * random.uniform(0.99, 1.01)
+        data.append(
+            {
+                "id": i,
+                "trade_date": datetime.now().strftime("%Y-%m-%d"),
+                "underlying": f"{ticker} US Equity",
+                "currency": ccy,
+                "price": _fmt_num(price),
+                "price_t_1": _fmt_num(price_t1),
+                "price_change": _fmt_num(price - price_t1),
+                "fx_rate": f"{fx:,.4f}",
+                "fx_rate_t_1": f"{fx_t1:,.4f}",
+                "fx_rate_change": _fmt_num(fx - fx_t1),
+                "dtl": f"{random.uniform(0, 1000):,.0f}",
+                "last_volume": f"{random.randint(100000, 5000000):,.0f}",
+                "adv_3m": f"{random.randint(100000, 5000000):,.0f}",
+            }
+        )
+    return data
+
+
+def _generate_pnl_currency_data() -> list[PnLCurrencyItem]:
+    currencies = [
+        "USD",
+        "EUR",
+        "GBP",
+        "JPY",
+        "CAD",
+        "AUD",
+        "CHF",
+        "CNY",
+        "HKD",
+        "SGD",
+        "SEK",
+        "NOK",
+        "DKK",
+        "NZD",
+        "MXN",
+        "BRL",
+        "INR",
+        "KRW",
+        "ZAR",
+        "TRY",
+    ]
+    data = []
+    for i, ccy in enumerate(currencies):
+        fx = random.uniform(0.5, 1.5)
+        fx_t1 = fx * random.uniform(0.98, 1.02)
+        data.append(
+            {
+                "id": i,
+                "trade_date": datetime.now().strftime("%Y-%m-%d"),
+                "currency": ccy,
+                "fx_rate": f"{fx:,.4f}",
+                "fx_rate_t_1": f"{fx_t1:,.4f}",
+                "fx_rate_change": _fmt_num(fx - fx_t1),
+                "ccy_exposure": _fmt_usd(random.uniform(-1000000, 1000000)),
+                "usd_exposure": _fmt_usd(random.uniform(-1000000, 1000000)),
+                "pos_ccy_expo": _fmt_usd(random.uniform(-500000, 500000)),
+                "ccy_hedged_pnl": _fmt_usd(random.uniform(-10000, 10000)),
+                "pos_ccy_pnl": _fmt_usd(random.uniform(-20000, 20000)),
+                "net_ccy": _fmt_usd(random.uniform(-5000, 5000)),
+            }
+        )
+    return data
+
+
 def _generate_mock_data() -> list[dict]:
     """Generates mock data once at module load time."""
     base_data = [
@@ -159,6 +377,7 @@ class PortfolioDashboardState(rx.State):
     _filters: dict[str, dict] = {}
     is_sidebar_open: bool = True
     is_mobile_menu_open: bool = False
+    is_generate_menu_open: bool = False
     show_top_movers: bool = False
     selected_row_id: int = -1
     is_loading: bool = False
@@ -465,6 +684,10 @@ class PortfolioDashboardState(rx.State):
         self.is_mobile_menu_open = not self.is_mobile_menu_open
 
     @rx.event
+    def toggle_generate_menu(self):
+        self.is_generate_menu_open = not self.is_generate_menu_open
+
+    @rx.event
     def set_subtab(self, subtab_name: str):
         """Sets the active subtab for the CURRENT module."""
         self._active_subtabs[self.active_module] = subtab_name
@@ -550,6 +773,23 @@ class PortfolioDashboardState(rx.State):
         yield rx.toast(f"Generating report for {page_name}...", duration=2000)
 
     @rx.event
+    async def refresh_prices(self):
+        """Simulates refreshing market data for all PnL views."""
+        self.is_loading = True
+        yield
+        try:
+            self.pnl_change_data = _generate_pnl_change_data()
+            self.pnl_summary_data = _generate_pnl_summary_data()
+            self.pnl_currency_data = _generate_pnl_currency_data()
+            yield rx.toast("Market data refreshed", position="bottom-right")
+        except Exception as e:
+            import logging
+
+            logging.exception(f"Error refreshing portfolio dashboard prices: {e}")
+        finally:
+            self.is_loading = False
+
+    @rx.event
     def set_selected_row(self, row_id: int):
         self.selected_row_id = row_id
 
@@ -557,6 +797,40 @@ class PortfolioDashboardState(rx.State):
     page_size: int = 50
     page_size_options: list[int] = [25, 50, 100]
     _all_table_data: list[dict] = _generate_mock_data()
+    pnl_change_data: list[PnLChangeItem] = _generate_pnl_change_data()
+    pnl_summary_data: list[PnLSummaryItem] = _generate_pnl_summary_data()
+    pnl_currency_data: list[PnLCurrencyItem] = _generate_pnl_currency_data()
+
+    @rx.var(cache=True)
+    def filtered_pnl_change(self) -> list[PnLChangeItem]:
+        query = self.current_search_query.lower()
+        if not query:
+            return self.pnl_change_data
+        return [
+            item
+            for item in self.pnl_change_data
+            if query in item["ticker"].lower() or query in item["underlying"].lower()
+        ]
+
+    @rx.var(cache=True)
+    def filtered_pnl_summary(self) -> list[PnLSummaryItem]:
+        query = self.current_search_query.lower()
+        if not query:
+            return self.pnl_summary_data
+        return [
+            item
+            for item in self.pnl_summary_data
+            if query in item["underlying"].lower() or query in item["currency"].lower()
+        ]
+
+    @rx.var(cache=True)
+    def filtered_pnl_currency(self) -> list[PnLCurrencyItem]:
+        query = self.current_search_query.lower()
+        if not query:
+            return self.pnl_currency_data
+        return [
+            item for item in self.pnl_currency_data if query in item["currency"].lower()
+        ]
 
     @rx.var
     def total_items(self) -> int:

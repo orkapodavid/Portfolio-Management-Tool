@@ -1,5 +1,11 @@
 import reflex as rx
 from app.states.portfolio_dashboard_state import PortfolioDashboardState
+from app.components.pnl_views import (
+    pnl_change_table,
+    pnl_full_table,
+    pnl_summary_table,
+    pnl_currency_table,
+)
 
 
 def table_header_cell(text: str, align: str = "left") -> rx.Component:
@@ -228,48 +234,104 @@ def sub_tab(name: str) -> rx.Component:
     )
 
 
+def generate_menu_item(label: str) -> rx.Component:
+    return rx.el.button(
+        label,
+        on_click=lambda: PortfolioDashboardState.handle_generate(label),
+        class_name="block w-full text-left px-4 py-2 text-[10px] font-bold text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors",
+    )
+
+
 def workspace_controls() -> rx.Component:
     return rx.el.div(
         rx.el.div(
             rx.el.div(
+                rx.el.button(
+                    rx.el.div(
+                        rx.icon("zap", size=12),
+                        rx.el.span("Generate", class_name="ml-1.5"),
+                        rx.icon("chevron-down", size=10, class_name="ml-1 opacity-70"),
+                        class_name="flex items-center",
+                    ),
+                    on_click=PortfolioDashboardState.toggle_generate_menu,
+                    class_name="px-3 h-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded hover:shadow-md transition-all flex items-center shadow-sm",
+                ),
+                rx.cond(
+                    PortfolioDashboardState.is_generate_menu_open,
+                    rx.el.div(
+                        rx.el.div(
+                            class_name="fixed inset-0 z-40",
+                            on_click=PortfolioDashboardState.toggle_generate_menu,
+                        ),
+                        rx.el.div(
+                            generate_menu_item("Generate PnL Change"),
+                            generate_menu_item("Generate PnL Summary"),
+                            generate_menu_item("Generate PnL Currency"),
+                            class_name="absolute top-full left-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-100 py-1 z-50 animate-in fade-in slide-in-from-top-1 duration-100",
+                        ),
+                    ),
+                ),
+                class_name="relative",
+            ),
+            rx.el.button(
+                rx.el.div(
+                    rx.icon("download", size=12),
+                    rx.el.span("Export", class_name="ml-1.5"),
+                    class_name="flex items-center",
+                ),
+                class_name="px-3 h-6 bg-white border border-gray-200 text-gray-600 text-[10px] font-bold uppercase tracking-widest rounded hover:bg-gray-50 hover:text-blue-600 transition-colors shadow-sm flex items-center",
+            ),
+            rx.el.button(
+                rx.icon(
+                    "refresh-cw",
+                    size=12,
+                    class_name=rx.cond(
+                        PortfolioDashboardState.is_loading, "animate-spin", ""
+                    ),
+                ),
+                on_click=PortfolioDashboardState.refresh_prices,
+                class_name="h-6 w-6 flex items-center justify-center bg-white border border-gray-200 text-gray-600 rounded hover:bg-gray-50 hover:text-blue-600 transition-colors shadow-sm",
+            ),
+            rx.el.div(
                 rx.icon("search", size=12, class_name="text-gray-400 mr-1.5"),
                 rx.el.input(
-                    placeholder="Search tickers...",
+                    placeholder="Search data...",
                     on_change=PortfolioDashboardState.set_current_search,
                     class_name="bg-transparent text-[10px] font-bold outline-none w-full text-gray-700",
                 ),
-                class_name="flex items-center bg-gray-100 border border-gray-200 rounded px-2 h-6 flex-1 max-w-[200px]",
+                class_name="flex items-center bg-white border border-gray-200 rounded px-2 h-6 flex-1 max-w-[200px] shadow-sm ml-2",
             ),
             rx.el.div(
                 rx.el.input(
                     type="date",
                     on_change=PortfolioDashboardState.set_current_date,
-                    class_name="bg-gray-100 border border-gray-200 rounded px-2 h-6 text-[10px] font-bold text-gray-600 outline-none",
+                    class_name="bg-white border border-gray-200 rounded px-2 h-6 text-[10px] font-bold text-gray-600 outline-none shadow-sm",
                 ),
                 class_name="flex items-center",
             ),
-            class_name="flex items-center gap-3 flex-1",
+            class_name="flex items-center gap-2 flex-1",
         ),
-        rx.el.div(
-            rx.el.button(
-                rx.el.div(
-                    rx.icon("zap", size=10),
-                    rx.el.span("Generate", class_name="ml-1"),
-                    class_name="flex items-center",
-                ),
-                on_click=lambda: PortfolioDashboardState.handle_generate(
-                    PortfolioDashboardState.active_subtab
-                ),
-                class_name="px-3 h-6 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded hover:bg-blue-700 transition-colors",
-            ),
-            class_name="flex items-center gap-2",
-        ),
-        class_name="flex items-center justify-between px-3 py-1 bg-[#F9F9F9] border-b border-gray-200 shrink-0 h-[36px]",
+        class_name="flex items-center justify-between px-3 py-1.5 bg-[#F9F9F9] border-b border-gray-200 shrink-0 h-[40px]",
     )
 
 
 def contextual_workspace() -> rx.Component:
     """The main workspace area (Region 3) with maximized table height."""
+    content = rx.match(
+        PortfolioDashboardState.active_module,
+        (
+            "PnL",
+            rx.match(
+                PortfolioDashboardState.active_subtab,
+                ("PnL Change", pnl_change_table()),
+                ("PnL Full", pnl_full_table()),
+                ("PnL Summary", pnl_summary_table()),
+                ("PnL Currency", pnl_currency_table()),
+                mock_data_table(),
+            ),
+        ),
+        mock_data_table(),
+    )
     return rx.el.div(
         rx.el.div(
             rx.foreach(PortfolioDashboardState.current_subtabs, sub_tab),
@@ -278,7 +340,7 @@ def contextual_workspace() -> rx.Component:
         rx.el.div(
             workspace_controls(),
             rx.el.div(
-                mock_data_table(),
+                content,
                 class_name="flex-1 flex flex-col min-h-0 overflow-hidden bg-white",
             ),
             class_name="flex flex-col flex-1 min-h-0 h-full",
