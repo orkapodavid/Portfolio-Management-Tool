@@ -18,16 +18,12 @@ def pnl_full_table() -> rx.Component:
                     header_cell("Underlying", align="left"),
                     header_cell("Ticker", align="left"),
                     header_cell("PnL YTD"),
-                    header_cell("Trend", align="center", width="90px"),
-                    header_cell("1D Chg"),
-                    header_cell("1D %"),
-                    header_cell("2D Chg"),
-                    header_cell("2D %"),
-                    header_cell("1W Chg"),
-                    header_cell("1W %"),
-                    header_cell("1M Chg"),
-                    header_cell("1M %"),
-                    header_cell("REC", align="center"),
+                    header_cell("PnL Chg 1D"),
+                    header_cell("PnL Chg 1W"),
+                    header_cell("PnL Chg 1M"),
+                    header_cell("PnL Chg% 1D"),
+                    header_cell("PnL Chg% 1W"),
+                    header_cell("PnL Chg% 1M"),
                 )
             ),
             rx.el.tbody(
@@ -81,55 +77,18 @@ def text_cell(value: str, align: str = "left", bold: bool = False) -> rx.Compone
     )
 
 
-def sparkline_cell(svg_points: str, color: str) -> rx.Component:
-    """Renders a mini sparkline chart."""
-    return rx.el.td(
-        rx.el.svg(
-            rx.el.svg.polyline(
-                points=svg_points,
-                fill="none",
-                stroke=color,
-                stroke_width="1.5",
-                stroke_linecap="round",
-                stroke_linejoin="round",
-            ),
-            view_box="0 0 80 24",
-            class_name="w-[80px] h-[24px]",
-        ),
-        class_name="px-2 py-2 border-b border-gray-200 align-middle",
-    )
-
-
-def status_icon_cell(is_reconciled: bool) -> rx.Component:
-    """Renders a status icon (REC column)."""
-    return rx.el.td(
-        rx.cond(
-            is_reconciled,
-            rx.icon("check", size=14, class_name=f"text-[{POSITIVE_GREEN}] mx-auto"),
-            rx.icon(
-                "triangle-alert", size=14, class_name=f"text-[{NEGATIVE_RED}] mx-auto"
-            ),
-        ),
-        class_name="px-3 py-2 text-center border-b border-gray-200 align-middle",
-    )
-
-
 def pnl_change_row(item: PnLChangeItem) -> rx.Component:
     return rx.el.tr(
         text_cell(item["trade_date"], align="left"),
         text_cell(item["underlying"], align="left", bold=True),
         text_cell(item["ticker"], align="left"),
         value_cell(item["pnl_ytd"]),
-        sparkline_cell(item["sparkline_svg"], item["sparkline_color"]),
         value_cell(item["pnl_chg_1d"]),
-        value_cell(item["pnl_chg_pct_1d"]),
-        value_cell(item["pnl_chg_2d"]),
-        value_cell(item["pnl_chg_pct_2d"]),
         value_cell(item["pnl_chg_1w"]),
-        value_cell(item["pnl_chg_pct_1w"]),
         value_cell(item["pnl_chg_1m"]),
+        value_cell(item["pnl_chg_pct_1d"]),
+        value_cell(item["pnl_chg_pct_1w"]),
         value_cell(item["pnl_chg_pct_1m"]),
-        status_icon_cell(item["is_reconciled"]),
         class_name="odd:bg-white even:bg-gray-50 hover:bg-gray-100 h-[40px] transition-colors",
     )
 
@@ -143,16 +102,12 @@ def pnl_change_table() -> rx.Component:
                     header_cell("Underlying", align="left"),
                     header_cell("Ticker", align="left"),
                     header_cell("PnL YTD"),
-                    header_cell("Trend", align="center", width="90px"),
-                    header_cell("1D Chg"),
-                    header_cell("1D %"),
-                    header_cell("2D Chg"),
-                    header_cell("2D %"),
-                    header_cell("1W Chg"),
-                    header_cell("1W %"),
-                    header_cell("1M Chg"),
-                    header_cell("1M %"),
-                    header_cell("REC", align="center"),
+                    header_cell("PnL Chg 1D"),
+                    header_cell("PnL Chg 1W"),
+                    header_cell("PnL Chg 1M"),
+                    header_cell("PnL Chg% 1D"),
+                    header_cell("PnL Chg% 1W"),
+                    header_cell("PnL Chg% 1M"),
                 )
             ),
             rx.el.tbody(
@@ -194,12 +149,12 @@ def pnl_summary_table() -> rx.Component:
                     header_cell("Currency", align="center"),
                     header_cell("Price"),
                     header_cell("Price (T-1)"),
-                    header_cell("Price Chg"),
+                    header_cell("Price Change"),
                     header_cell("FX Rate"),
-                    header_cell("FX (T-1)"),
-                    header_cell("FX Chg"),
+                    header_cell("FX Rate (T-1)"),
+                    header_cell("FX Rate Change"),
                     header_cell("DTL"),
-                    header_cell("Volume"),
+                    header_cell("Last Volume"),
                     header_cell("ADV 3M"),
                 )
             ),
@@ -229,6 +184,7 @@ def pnl_currency_row(item: PnLCurrencyItem) -> rx.Component:
         value_cell(item["ccy_hedged_pnl"]),
         value_cell(item["pos_ccy_pnl"]),
         value_cell(item["net_ccy"]),
+        value_cell(item["pos_c_truncated"]),
         class_name="odd:bg-white even:bg-gray-50 hover:bg-gray-100 h-[40px] transition-colors",
     )
 
@@ -241,14 +197,15 @@ def pnl_currency_table() -> rx.Component:
                     header_cell("Trade Date", align="left"),
                     header_cell("Currency", align="center"),
                     header_cell("FX Rate"),
-                    header_cell("FX (T-1)"),
-                    header_cell("FX Chg"),
+                    header_cell("FX Rate (T-1)"),
+                    header_cell("FX Rate Change"),
                     header_cell("CCY Exposure"),
                     header_cell("USD Exposure"),
                     header_cell("POS CCY Expo"),
                     header_cell("CCY Hedged PnL"),
                     header_cell("POS CCY PnL"),
-                    header_cell("Net CCY"),
+                    header_cell("Net CC"),
+                    header_cell("POS C (truncated)"),
                 )
             ),
             rx.el.tbody(

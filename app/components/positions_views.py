@@ -40,50 +40,68 @@ def text_cell(val: str, align: str = "left", bold: bool = False) -> rx.Component
 
 def positions_row(p: PositionItem) -> rx.Component:
     return rx.el.tr(
+        text_cell(p["trade_date"]),
+        text_cell(p["deal_num"]),
+        text_cell(p["detail_id"]),
+        text_cell(p["underlying"]),
         text_cell(p["ticker"], bold=True),
-        text_cell(p["qty"], align="right"),
-        text_cell(p["mkt_value"], align="right"),
-        text_cell(p["cost_basis"], align="right"),
-        value_cell(p["unrealized_pnl"], is_positive=p["is_positive"]),
-        value_cell(p["realized_pnl"], is_positive=True),
-        text_cell(p["weight_pct"], align="right"),
+        text_cell(p["company_name"]),
+        text_cell(p["account_id"]),
+        text_cell(p["pos_loc"]),
         class_name="odd:bg-white even:bg-gray-50 hover:bg-gray-100 transition-colors h-[40px]",
     )
 
 
 def positions_table() -> rx.Component:
-    return rx.scroll_area(
-        rx.el.table(
-            rx.el.thead(
-                rx.el.tr(
-                    header_cell("Ticker", "left"),
-                    header_cell("Qty"),
-                    header_cell("Mkt Value"),
-                    header_cell("Cost Basis"),
-                    header_cell("Unrealized PnL"),
-                    header_cell("Realized PnL"),
-                    header_cell("Weight %"),
-                )
+    return rx.el.div(
+        rx.scroll_area(
+            rx.el.table(
+                rx.el.thead(
+                    rx.el.tr(
+                        header_cell("Trade Date", "left"),
+                        header_cell("Deal Num", "left"),
+                        header_cell("Detail ID", "left"),
+                        header_cell("Underlying", "left"),
+                        header_cell("Ticker", "left"),
+                        header_cell("Company Name", "left"),
+                        header_cell("Account ID", "left"),
+                        header_cell("Pos Loc", "left"),
+                    )
+                ),
+                rx.el.tbody(
+                    rx.foreach(
+                        PortfolioDashboardState.filtered_positions, positions_row
+                    )
+                ),
+                class_name="w-full table-auto border-separate border-spacing-0",
             ),
-            rx.el.tbody(
-                rx.foreach(PortfolioDashboardState.filtered_positions, positions_row)
-            ),
-            class_name="w-full table-auto border-separate border-spacing-0",
+            class_name="flex-1 w-full bg-white",
         ),
-        class_name="flex-1 w-full bg-white",
+        rx.el.div(
+            rx.el.button(
+                "Generate Positions",
+                class_name="bg-blue-600 text-white text-xs font-bold py-2 px-4 rounded hover:bg-blue-700 transition-colors shadow-sm",
+                on_click=lambda: PortfolioDashboardState.handle_generate("Positions"),
+            ),
+            class_name="p-3 border-t border-gray-200 bg-gray-50 flex justify-center",
+        ),
+        class_name="flex flex-col h-full w-full bg-white",
     )
 
 
 def stock_position_row(p: StockPositionItem) -> rx.Component:
     return rx.el.tr(
+        text_cell(p["trade_date"]),
+        text_cell(p["deal_num"]),
+        text_cell(p["detail_id"]),
         text_cell(p["ticker"], bold=True),
-        text_cell(p["shares"], align="right"),
-        text_cell(p["avg_cost"], align="right"),
-        text_cell(p["current_price"], align="right"),
-        text_cell(p["mkt_value"], align="right"),
-        value_cell(p["daily_pnl"], is_positive=p["is_positive"]),
-        text_cell(p["sector"], align="left"),
-        text_cell(p["beta"], align="right"),
+        text_cell(p["company_name"]),
+        text_cell(p["sec_id"]),
+        text_cell(p["sec_type"]),
+        text_cell(p["currency"], align="center"),
+        text_cell(p["account_id"]),
+        text_cell(p["position_location"]),
+        text_cell(p["notional"], align="right"),
         class_name="odd:bg-white even:bg-gray-50 hover:bg-gray-100 transition-colors h-[40px]",
     )
 
@@ -93,14 +111,17 @@ def stock_position_table() -> rx.Component:
         rx.el.table(
             rx.el.thead(
                 rx.el.tr(
+                    header_cell("Trade Date", "left"),
+                    header_cell("Deal Num", "left"),
+                    header_cell("Detail ID", "left"),
                     header_cell("Ticker", "left"),
-                    header_cell("Shares"),
-                    header_cell("Avg Cost"),
-                    header_cell("Price"),
-                    header_cell("Mkt Value"),
-                    header_cell("Daily PnL"),
-                    header_cell("Sector", "left"),
-                    header_cell("Beta"),
+                    header_cell("Company Name", "left"),
+                    header_cell("SecID", "left"),
+                    header_cell("Sec Type", "left"),
+                    header_cell("Currency", "center"),
+                    header_cell("Account ID", "left"),
+                    header_cell("Position Location", "left"),
+                    header_cell("Notional", "right"),
                 )
             ),
             rx.el.tbody(
@@ -116,15 +137,17 @@ def stock_position_table() -> rx.Component:
 
 def warrant_position_row(p: WarrantPositionItem) -> rx.Component:
     return rx.el.tr(
+        text_cell(p["trade_date"]),
+        text_cell(p["deal_num"]),
+        text_cell(p["detail_id"]),
         text_cell(p["underlying"], bold=True),
         text_cell(p["ticker"]),
-        text_cell(p["strike"], align="right"),
-        text_cell(p["expiry"], align="center"),
-        text_cell(p["qty"], align="right"),
-        text_cell(p["delta"], align="right"),
-        text_cell(p["gamma"], align="right"),
-        text_cell(p["theta"], align="right"),
-        text_cell(p["intrinsic_value"], align="right"),
+        text_cell(p["company_name"]),
+        text_cell(p["sec_id"]),
+        text_cell(p["sec_type"]),
+        text_cell(p["subtype"]),
+        text_cell(p["currency"], align="center"),
+        text_cell(p["account_id"]),
         class_name="odd:bg-white even:bg-gray-50 hover:bg-gray-100 transition-colors h-[40px]",
     )
 
@@ -134,15 +157,17 @@ def warrant_position_table() -> rx.Component:
         rx.el.table(
             rx.el.thead(
                 rx.el.tr(
+                    header_cell("Trade Date", "left"),
+                    header_cell("Deal Num", "left"),
+                    header_cell("Detail ID", "left"),
                     header_cell("Underlying", "left"),
                     header_cell("Ticker", "left"),
-                    header_cell("Strike"),
-                    header_cell("Expiry", "center"),
-                    header_cell("Qty"),
-                    header_cell("Delta"),
-                    header_cell("Gamma"),
-                    header_cell("Theta"),
-                    header_cell("Intrinsic"),
+                    header_cell("Company Name", "left"),
+                    header_cell("SecID", "left"),
+                    header_cell("Sec Type", "left"),
+                    header_cell("Subtype", "left"),
+                    header_cell("Currency", "center"),
+                    header_cell("Account ID", "left"),
                 )
             ),
             rx.el.tbody(
@@ -159,14 +184,17 @@ def warrant_position_table() -> rx.Component:
 
 def bond_position_row(p: BondPositionItem) -> rx.Component:
     return rx.el.tr(
-        text_cell(p["issuer"], bold=True),
-        text_cell(p["coupon"], align="center"),
-        text_cell(p["maturity"], align="center"),
-        text_cell(p["face_value"], align="right"),
-        text_cell(p["mkt_value"], align="right"),
-        text_cell(p["yield_to_maturity"], align="right"),
-        text_cell(p["duration"], align="right"),
-        text_cell(p["rating"], align="center"),
+        text_cell(p["trade_date"]),
+        text_cell(p["deal_num"]),
+        text_cell(p["detail_id"]),
+        text_cell(p["underlying"], bold=True),
+        text_cell(p["ticker"]),
+        text_cell(p["company_name"]),
+        text_cell(p["sec_id"]),
+        text_cell(p["sec_type"]),
+        text_cell(p["subtype"]),
+        text_cell(p["currency"], align="center"),
+        text_cell(p["account_id"]),
         class_name="odd:bg-white even:bg-gray-50 hover:bg-gray-100 transition-colors h-[40px]",
     )
 
@@ -176,14 +204,17 @@ def bond_position_table() -> rx.Component:
         rx.el.table(
             rx.el.thead(
                 rx.el.tr(
-                    header_cell("Issuer", "left"),
-                    header_cell("Coupon", "center"),
-                    header_cell("Maturity", "center"),
-                    header_cell("Face Value"),
-                    header_cell("Mkt Value"),
-                    header_cell("YTM"),
-                    header_cell("Duration"),
-                    header_cell("Rating", "center"),
+                    header_cell("Trade Date", "left"),
+                    header_cell("Deal Num", "left"),
+                    header_cell("Detail ID", "left"),
+                    header_cell("Underlying", "left"),
+                    header_cell("Ticker", "left"),
+                    header_cell("Company Name", "left"),
+                    header_cell("SecID", "left"),
+                    header_cell("Sec Type", "left"),
+                    header_cell("Subtype", "left"),
+                    header_cell("Currency", "center"),
+                    header_cell("Account ID", "left"),
                 )
             ),
             rx.el.tbody(
@@ -198,27 +229,19 @@ def bond_position_table() -> rx.Component:
 
 
 def trade_summary_row(p: TradeSummaryItem) -> rx.Component:
-    status_bg = rx.match(
-        p["status"],
-        ("Settled", "bg-emerald-100 text-emerald-700"),
-        "bg-amber-100 text-amber-700",
-    )
     return rx.el.tr(
-        text_cell(p["trade_date"]),
-        text_cell(p["security_type"]),
+        text_cell(p["deal_num"]),
+        text_cell(p["detail_id"]),
         text_cell(p["ticker"], bold=True),
-        text_cell(p["side"], align="center"),
-        text_cell(p["qty"], align="right"),
-        text_cell(p["price"], align="right"),
-        text_cell(p["notional"], align="right"),
-        rx.el.td(
-            rx.el.span(
-                p["status"],
-                class_name=f"px-2 py-0.5 rounded-full text-[8px] font-black uppercase {status_bg} border border-black/5",
-            ),
-            class_name="px-3 py-2 text-center border-b border-gray-200 align-middle",
-        ),
-        text_cell(p["settlement_date"], align="center"),
+        text_cell(p["underlying"]),
+        text_cell(p["account_id"]),
+        text_cell(p["company_name"]),
+        text_cell(p["sec_id"]),
+        text_cell(p["sec_type"]),
+        text_cell(p["subtype"]),
+        text_cell(p["currency"], align="center"),
+        text_cell(p["closing_date"], align="center"),
+        text_cell(p["divisor"], align="right"),
         class_name="odd:bg-white even:bg-gray-50 hover:bg-gray-100 transition-colors h-[40px]",
     )
 
@@ -228,15 +251,18 @@ def trade_summary_table() -> rx.Component:
         rx.el.table(
             rx.el.thead(
                 rx.el.tr(
-                    header_cell("Trade Date", "left"),
-                    header_cell("Type", "left"),
+                    header_cell("Deal Num", "left"),
+                    header_cell("Detail ID", "left"),
                     header_cell("Ticker", "left"),
-                    header_cell("Side", "center"),
-                    header_cell("Qty"),
-                    header_cell("Price"),
-                    header_cell("Notional"),
-                    header_cell("Status", "center"),
-                    header_cell("Settle Date", "center"),
+                    header_cell("Underlying", "left"),
+                    header_cell("Account ID", "left"),
+                    header_cell("Company Name", "left"),
+                    header_cell("SecID", "left"),
+                    header_cell("Sec Type", "left"),
+                    header_cell("Subtype", "left"),
+                    header_cell("Currency", "center"),
+                    header_cell("Closing Date", "center"),
+                    header_cell("Divisor", "right"),
                 )
             ),
             rx.el.tbody(

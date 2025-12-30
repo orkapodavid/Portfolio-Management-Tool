@@ -13,6 +13,59 @@ from app.components.positions_views import (
     bond_position_table,
     trade_summary_table,
 )
+from app.components.compliance_views import (
+    restricted_list_table,
+    undertakings_table,
+    beneficial_ownership_table,
+    monthly_exercise_limit_table,
+)
+from app.components.portfolio_tools_views import (
+    pay_to_hold_table,
+    short_ecl_table,
+    stock_borrow_table,
+    po_settlement_table,
+    deal_indication_table,
+    reset_dates_table,
+    coming_resets_table,
+    cb_installments_table,
+    excess_amount_table,
+)
+from app.components.reconciliation_views import (
+    pps_recon_table,
+    settlement_recon_table,
+    failed_trades_table,
+    pnl_recon_table,
+    risk_input_recon_table,
+)
+from app.components.operations_views import (
+    daily_procedure_check_table,
+    operation_process_table,
+)
+from app.components.market_data_views import (
+    market_data_table,
+    fx_data_table,
+    historical_data_table,
+    trading_calendar_table,
+    market_hours_table,
+    event_calendar_table,
+    event_stream_view,
+    reverse_inquiry_table,
+)
+from app.components.instrument_views import (
+    ticker_data_table,
+    stock_screener_view,
+    special_term_table,
+    instrument_data_table,
+    instrument_term_table,
+)
+from app.components.risk_views import (
+    delta_change_table,
+    risk_measures_table,
+    risk_inputs_table,
+    pricer_warrant_view,
+    pricer_bond_view,
+)
+from app.components.emsa_views import emsa_order_table, emsa_route_table
 
 
 def table_header_cell(text: str, align: str = "left") -> rx.Component:
@@ -344,8 +397,111 @@ def contextual_workspace() -> rx.Component:
                 ("Positions", positions_table()),
                 ("Stock Position", stock_position_table()),
                 ("Warrant Position", warrant_position_table()),
-                ("Bond Position", bond_position_table()),
+                ("Bond Positions", bond_position_table()),
                 ("Trade Summary (War/Bond)", trade_summary_table()),
+                mock_data_table(),
+            ),
+        ),
+        (
+            "Compliance",
+            rx.match(
+                PortfolioDashboardState.active_subtab,
+                ("Restricted List", restricted_list_table()),
+                ("Undertakings", undertakings_table()),
+                ("Beneficial Ownership", beneficial_ownership_table()),
+                ("Monthly Exercise Limit", monthly_exercise_limit_table()),
+                mock_data_table(),
+            ),
+        ),
+        (
+            "Portfolio Tools",
+            rx.match(
+                PortfolioDashboardState.active_subtab,
+                ("Pay-To-Hold", pay_to_hold_table()),
+                ("Short ECL", short_ecl_table()),
+                ("Stock Borrow", stock_borrow_table()),
+                ("PO Settlement", po_settlement_table()),
+                ("Deal Indication", deal_indication_table()),
+                ("Reset Dates", reset_dates_table()),
+                ("Coming Resets", coming_resets_table()),
+                ("CB Installments", cb_installments_table()),
+                ("Excess Amount", excess_amount_table()),
+                mock_data_table(),
+            ),
+        ),
+        (
+            "Recon",
+            rx.match(
+                PortfolioDashboardState.active_subtab,
+                ("PPS Recon", pps_recon_table()),
+                ("Settlement Recon", settlement_recon_table()),
+                ("Failed Trades", failed_trades_table()),
+                ("PnL Recon", pnl_recon_table()),
+                ("Risk Input Recon", risk_input_recon_table()),
+                mock_data_table(),
+            ),
+        ),
+        (
+            "Operations",
+            rx.match(
+                PortfolioDashboardState.active_subtab,
+                ("Daily Procedure Check", daily_procedure_check_table()),
+                ("Operation Process", operation_process_table()),
+                mock_data_table(),
+            ),
+        ),
+        (
+            "Market Data",
+            rx.match(
+                PortfolioDashboardState.active_subtab,
+                ("Market Data", market_data_table()),
+                ("FX Data", fx_data_table()),
+                ("Historical Data", historical_data_table()),
+                ("Trading Calendar", trading_calendar_table()),
+                ("Market Hours", market_hours_table()),
+                mock_data_table(),
+            ),
+        ),
+        (
+            "Events",
+            rx.match(
+                PortfolioDashboardState.active_subtab,
+                ("Event Calendar", event_calendar_table()),
+                ("Event Stream", event_stream_view()),
+                ("Reverse Inquiry", reverse_inquiry_table()),
+                mock_data_table(),
+            ),
+        ),
+        (
+            "Instruments",
+            rx.match(
+                PortfolioDashboardState.active_subtab,
+                ("Ticker Data", ticker_data_table()),
+                ("Stock Screener", stock_screener_view()),
+                ("Special Term", special_term_table()),
+                ("Instrument Data", instrument_data_table()),
+                ("Instrument Term", instrument_term_table()),
+                mock_data_table(),
+            ),
+        ),
+        (
+            "Risk",
+            rx.match(
+                PortfolioDashboardState.active_subtab,
+                ("Delta Change", delta_change_table()),
+                ("Risk Measures", risk_measures_table()),
+                ("Risk Inputs", risk_inputs_table()),
+                ("Pricer Warrant", pricer_warrant_view()),
+                ("Pricer Bond", pricer_bond_view()),
+                mock_data_table(),
+            ),
+        ),
+        (
+            "Orders",
+            rx.match(
+                PortfolioDashboardState.active_subtab,
+                ("EMSX Order", emsa_order_table()),
+                ("EMSX Route", emsa_route_table()),
                 mock_data_table(),
             ),
         ),
