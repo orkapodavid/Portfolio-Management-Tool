@@ -33,6 +33,7 @@ class PortfolioDashboardState(rx.State):
     _active_subtabs: dict[str, str] = {}
     _filters: dict[str, dict] = {}
     is_sidebar_open: bool = False
+    is_mobile_menu_open: bool = False
     show_top_movers: bool = False
     kpi_metrics: list[KPIMetric] = [
         {"label": "Daily PnL", "value": "+$1.2M", "is_positive": True},
@@ -330,6 +331,11 @@ class PortfolioDashboardState(rx.State):
     def set_module(self, module_name: str):
         """Sets the active module."""
         self.active_module = module_name
+        self.is_mobile_menu_open = False
+
+    @rx.event
+    def toggle_mobile_menu(self):
+        self.is_mobile_menu_open = not self.is_mobile_menu_open
 
     @rx.event
     def set_subtab(self, subtab_name: str):

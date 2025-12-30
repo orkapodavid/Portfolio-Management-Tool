@@ -77,64 +77,80 @@ def table_header_cell(text: str, align: str = "left") -> rx.Component:
     )
 
 
-def table_row(item: dict) -> rx.Component:
-    """A data row for the placeholder table."""
+def table_row(item: dict, index: int) -> rx.Component:
+    """A data row for the placeholder table with alternating colors and standardized styling."""
+    from app.constants import (
+        POSITIVE_GREEN,
+        NEGATIVE_RED,
+        ROW_HIGHLIGHT,
+        TABLE_ROW_HEIGHT,
+    )
+
     status_color = rx.cond(
         item["status"] == "Active",
-        "bg-green-100 text-green-800",
+        f"bg-[{POSITIVE_GREEN}]/10 text-[{POSITIVE_GREEN}]",
         rx.cond(
             item["status"] == "Hedged",
             "bg-blue-100 text-blue-800",
             "bg-amber-100 text-amber-800",
         ),
     )
-    pnl_color = rx.cond(item["is_positive"], "text-green-600", "text-red-600")
-    reconciled_bg = rx.cond(item["is_reconciled"], "bg-green-500", "bg-red-500")
-    reconciled_text = rx.cond(item["is_reconciled"], "Yes", "No")
+    pnl_color = rx.cond(
+        item["is_positive"], f"text-[{POSITIVE_GREEN}]", f"text-[{NEGATIVE_RED}]"
+    )
+    reconciled_badge = rx.el.span(
+        rx.cond(item["is_reconciled"], "Yes", "No"),
+        class_name=rx.cond(
+            item["is_reconciled"],
+            f"px-1.5 py-0.5 rounded text-[8px] font-black text-white bg-[{POSITIVE_GREEN}]",
+            f"px-1.5 py-0.5 rounded text-[8px] font-black text-white bg-[{NEGATIVE_RED}]",
+        ),
+    )
     return rx.el.tr(
         rx.el.td(
             item["ticker"],
-            class_name="px-2 py-0 text-[9px] font-bold text-gray-900 border-b border-gray-100",
+            class_name="px-3 py-0 text-[10px] font-black text-gray-900 border-b border-gray-100",
         ),
         rx.el.td(
             item["description"],
-            class_name="px-2 py-0 text-[9px] font-medium text-gray-600 border-b border-gray-100 truncate max-w-[120px]",
+            class_name="px-3 py-0 text-[10px] font-bold text-gray-600 border-b border-gray-100 truncate max-w-[140px]",
         ),
         rx.el.td(
             item["asset_class"],
-            class_name="px-2 py-0 text-[9px] text-gray-500 border-b border-gray-100",
+            class_name="px-3 py-0 text-[10px] font-medium text-gray-500 border-b border-gray-100",
         ),
         rx.el.td(
             item["qty"],
-            class_name="px-2 py-0 text-[9px] font-mono text-gray-700 text-right border-b border-gray-100",
+            class_name="px-3 py-0 text-[10px] font-mono font-bold text-gray-700 text-right border-b border-gray-100",
         ),
         rx.el.td(
             item["price"],
-            class_name="px-2 py-0 text-[9px] font-mono text-gray-700 text-right border-b border-gray-100",
+            class_name="px-3 py-0 text-[10px] font-mono font-bold text-gray-700 text-right border-b border-gray-100",
         ),
         rx.el.td(
             item["mkt_value"],
-            class_name="px-2 py-0 text-[9px] font-bold font-mono text-gray-900 text-right border-b border-gray-100",
+            class_name="px-3 py-0 text-[10px] font-black font-mono text-gray-900 text-right border-b border-gray-100",
         ),
         rx.el.td(
             item["daily_pnl"],
-            class_name=f"px-2 py-0 text-[9px] font-bold font-mono {pnl_color} text-right border-b border-gray-100",
+            class_name=f"px-3 py-0 text-[10px] font-black font-mono {pnl_color} text-right border-b border-gray-100",
         ),
         rx.el.td(
             rx.el.span(
                 item["status"],
-                class_name=f"px-1 py-0 rounded text-[7px] font-bold {status_color}",
+                class_name=f"px-1.5 py-0.5 rounded text-[8px] font-black {status_color}",
             ),
-            class_name="px-2 py-0 text-center border-b border-gray-100",
+            class_name="px-3 py-0 text-center border-b border-gray-100",
         ),
         rx.el.td(
-            rx.el.span(
-                reconciled_text,
-                class_name=f"px-1 py-0 rounded text-[7px] font-bold text-white {reconciled_bg}",
-            ),
-            class_name="px-2 py-0 text-center border-b border-gray-100",
+            reconciled_badge,
+            class_name="px-3 py-0 text-center border-b border-gray-100",
         ),
-        class_name="group transition-colors duration-75 hover:bg-[#FFF2CC] cursor-default h-[20px]",
+        class_name=rx.cond(
+            index % 2 == 0,
+            f"bg-white group transition-colors hover:bg-[{ROW_HIGHLIGHT}] h-[{TABLE_ROW_HEIGHT}]",
+            f"bg-gray-50/30 group transition-colors hover:bg-[{ROW_HIGHLIGHT}] h-[{TABLE_ROW_HEIGHT}]",
+        ),
     )
 
 
@@ -153,13 +169,19 @@ def mock_data_table() -> rx.Component:
                     table_header_cell("PnL", "right"),
                     table_header_cell("Status", "center"),
                     table_header_cell("Rec", "center"),
+                    class_name="bg-[#333333]",
                 )
             ),
-            rx.el.tbody(rx.foreach(PortfolioDashboardState.mock_table_data, table_row)),
-            class_name="w-full table-auto border-collapse",
+            rx.el.tbody(
+                rx.foreach(
+                    PortfolioDashboardState.mock_table_data,
+                    lambda item, index: table_row(item, index),
+                )
+            ),
+            class_name="w-full min-w-[800px] table-auto border-collapse",
         ),
         type="always",
-        scrollbars="vertical",
+        scrollbars="both",
         class_name="flex-1 w-full h-full bg-white relative",
     )
 

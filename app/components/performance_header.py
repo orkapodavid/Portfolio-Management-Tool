@@ -36,7 +36,7 @@ def kpi_card(metric: KPIMetric) -> rx.Component:
             ),
             class_name="flex items-center justify-between w-full",
         ),
-        class_name=f"flex items-center bg-white px-2 h-[{KPI_HEIGHT}] rounded-none shadow-sm border-l-[3px] {accent_color} border-y border-r border-gray-200 min-w-[155px] flex-1 hover:bg-gray-50 transition-colors",
+        class_name=f"flex items-center bg-white px-2 h-[{KPI_HEIGHT}] rounded-none shadow-sm border-l-[3px] {accent_color} border-y border-r border-gray-200 min-w-[50%] md:min-w-[155px] flex-1 hover:bg-gray-50 transition-colors",
     )
 
 
@@ -84,7 +84,7 @@ def performance_header() -> rx.Component:
             rx.el.div(
                 rx.el.div(
                     rx.foreach(PortfolioDashboardState.kpi_metrics, kpi_card),
-                    class_name="flex flex-nowrap gap-0 overflow-x-auto no-scrollbar w-full",
+                    class_name="flex flex-wrap md:flex-nowrap gap-0 overflow-visible w-full",
                 ),
                 class_name="flex items-center gap-0 w-full px-0 py-0",
             ),
@@ -133,9 +133,9 @@ def performance_header() -> rx.Component:
                                 "Volume Leaders",
                                 PortfolioDashboardState.top_movers_volume,
                             ),
-                            class_name="flex flex-col gap-1 w-full p-1 bg-gray-100/30",
+                            class_name="flex flex-col md:flex-row gap-1 w-full p-1 bg-gray-100/30 overflow-x-auto",
                         ),
-                        class_name=f"block w-full bg-white border-b border-gray-300 animate-in fade-in slide-in-from-top-1 duration-300 ease-in-out shadow-inner overflow-hidden h-[{MOVERS_EXPANDED_HEIGHT}] overflow-y-auto",
+                        class_name=f"block w-full bg-white border-b border-gray-300 animate-in fade-in slide-in-from-top-1 duration-300 ease-in-out shadow-inner overflow-hidden h-auto md:h-[{MOVERS_EXPANDED_HEIGHT}] overflow-y-auto",
                     ),
                 ),
                 class_name="w-full",

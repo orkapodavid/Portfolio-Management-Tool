@@ -6,17 +6,19 @@ from app.states.portfolio_dashboard_state import (
 
 
 def alert_card(notification: NotificationItem) -> rx.Component:
-    """Renders a single notification card."""
+    """Renders a single notification card with standardized Amber styling."""
+    from app.constants import ALERT_AMBER
+
     bg_color = rx.match(
         notification["type"],
-        ("alert", "bg-[#FFC000]"),
+        ("alert", f"bg-[{ALERT_AMBER}]"),
         ("warning", "bg-amber-200"),
         ("info", "bg-blue-100"),
         "bg-gray-100",
     )
     border_color = rx.match(
         notification["type"],
-        ("alert", "border-yellow-700"),
+        ("alert", "border-black/20"),
         ("warning", "border-amber-500"),
         ("info", "border-blue-500"),
         "border-gray-400",
@@ -28,33 +30,33 @@ def alert_card(notification: NotificationItem) -> rx.Component:
         rx.el.div(
             rx.el.h4(
                 notification["header"],
-                class_name=f"text-sm font-bold {text_color} leading-tight",
+                class_name=f"text-[11px] font-black {text_color} leading-tight uppercase tracking-wider",
             ),
             rx.el.button(
-                rx.icon("x", size=14),
+                rx.icon("circle-x", size=14),
                 on_click=PortfolioDashboardState.dismiss_notification(
                     notification["id"]
                 ),
-                class_name="text-gray-600 hover:text-gray-900 bg-white/30 rounded-full p-0.5",
+                class_name="text-gray-900/60 hover:text-black transition-colors",
             ),
-            class_name="flex justify-between items-start mb-1.5",
+            class_name="flex justify-between items-start mb-2",
         ),
         rx.el.div(
             rx.el.span(
                 notification["ticker"],
-                class_name="text-xs font-bold text-gray-800 bg-white/50 px-1.5 py-0.5 rounded border border-black/5",
+                class_name="text-[10px] font-black text-gray-900 bg-white/40 px-1.5 py-0.5 rounded border border-black/10",
             ),
             rx.el.span(
                 notification["timestamp"],
-                class_name="text-[10px] font-medium text-gray-700/80",
+                class_name="text-[9px] font-bold text-gray-800/60",
             ),
-            class_name="flex justify-between items-center mb-1.5",
+            class_name="flex justify-between items-center mb-2",
         ),
         rx.el.p(
             notification["instruction"],
-            class_name=f"text-[10px] {text_color} leading-snug opacity-90",
+            class_name=f"text-[10px] font-bold {text_color} leading-snug",
         ),
-        class_name=f"{bg_color} p-2.5 rounded-lg border-l-4 {border_color} shadow-sm hover:shadow-md transition-all duration-200 animate-in slide-in-from-right fade-in",
+        class_name=f"{bg_color} p-3 rounded-md border-l-4 {border_color} shadow-sm hover:shadow-md transition-all duration-300 animate-in slide-in-from-right fade-in",
     )
 
 
@@ -94,9 +96,9 @@ def notification_sidebar() -> rx.Component:
             ),
             class_name=rx.cond(
                 PortfolioDashboardState.is_sidebar_open,
-                "w-[220px] opacity-100 border-l border-gray-200",
-                "w-0 opacity-0 border-l-0 pointer-events-none",
+                "fixed inset-y-0 right-0 w-80 max-w-full shadow-2xl md:shadow-none md:static md:w-[220px] opacity-100 border-l border-gray-200",
+                "w-0 opacity-0 border-l-0 pointer-events-none fixed inset-y-0 right-0 md:static",
             )
-            + " flex bg-[#F9F9F9] h-full shrink-0 flex-col relative z-40 overflow-hidden transition-all duration-300 ease-in-out",
+            + " flex bg-[#F9F9F9] h-full shrink-0 flex-col z-40 overflow-hidden transition-all duration-300 ease-in-out",
         )
     )
