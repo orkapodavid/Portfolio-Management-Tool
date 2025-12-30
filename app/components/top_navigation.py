@@ -68,7 +68,7 @@ def top_navigation() -> rx.Component:
                         "menu", size=18, class_name="text-gray-300 hover:text-white"
                     ),
                     on_click=PortfolioDashboardState.toggle_mobile_menu,
-                    class_name="md:hidden mr-3 p-1",
+                    class_name="md:hidden mr-3 p-1 shrink-0",
                 ),
                 rx.icon("activity", size=16, class_name="text-blue-400"),
                 rx.el.h1(

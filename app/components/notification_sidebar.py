@@ -84,7 +84,7 @@ def notification_sidebar() -> rx.Component:
                             rx.foreach(
                                 PortfolioDashboardState.notifications, alert_card
                             ),
-                            class_name="flex flex-col gap-2 p-2",
+                            class_name="flex flex-col gap-2 p-2 contain-content",
                         ),
                         type="hover",
                         scrollbars="vertical",

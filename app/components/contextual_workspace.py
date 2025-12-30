@@ -77,7 +77,7 @@ def table_header_cell(text: str, align: str = "left") -> rx.Component:
     )
 
 
-def table_row(item: dict, index: int) -> rx.Component:
+def table_row(item: dict) -> rx.Component:
     """An optimized, high-density data row with row selection and financial formatting."""
     from app.constants import (
         POSITIVE_GREEN,
@@ -136,21 +136,58 @@ def table_row(item: dict, index: int) -> rx.Component:
             ),
             class_name="px-3 text-center border-b border-gray-100",
         ),
-        on_click=lambda: PortfolioDashboardState.set_selected_row(item["id"]),
+        on_click=PortfolioDashboardState.set_selected_row(item["id"]),
         class_name=rx.cond(
             is_selected,
-            f"bg-[{ROW_HIGHLIGHT}] cursor-pointer h-[{TABLE_ROW_HEIGHT}] transition-colors duration-75",
-            rx.cond(
-                index % 2 == 0,
-                f"bg-white hover:bg-gray-100 cursor-pointer h-[{TABLE_ROW_HEIGHT}] transition-colors duration-75",
-                f"bg-gray-50 hover:bg-gray-100 cursor-pointer h-[{TABLE_ROW_HEIGHT}] transition-colors duration-75",
+            f"bg-[{ROW_HIGHLIGHT}]",
+            "odd:bg-gray-50 even:bg-white hover:bg-gray-100",
+        )
+        + f" cursor-pointer h-[{TABLE_ROW_HEIGHT}] transition-colors duration-75",
+    )
+
+
+def pagination_controls() -> rx.Component:
+    """Pagination controls for the data table."""
+    return rx.el.div(
+        rx.el.div(
+            rx.el.span("Rows:", class_name="text-xs font-semibold text-gray-500 mr-2"),
+            rx.el.select(
+                rx.foreach(
+                    PortfolioDashboardState.page_size_options,
+                    lambda x: rx.el.option(x, value=x),
+                ),
+                value=PortfolioDashboardState.page_size.to_string(),
+                on_change=PortfolioDashboardState.set_page_size,
+                class_name="text-[10px] border-gray-300 rounded p-0.5 h-6 bg-white appearance-none",
             ),
+            class_name="flex items-center",
         ),
+        rx.el.span(
+            f"Page {PortfolioDashboardState.current_page} of {PortfolioDashboardState.total_pages} ({PortfolioDashboardState.total_items} items)",
+            class_name="text-[10px] text-gray-500 font-medium",
+        ),
+        rx.el.div(
+            rx.el.button(
+                rx.icon("chevron-left", size=14),
+                on_click=PortfolioDashboardState.prev_page,
+                disabled=PortfolioDashboardState.current_page == 1,
+                class_name="p-1 rounded hover:bg-gray-200 disabled:opacity-30 disabled:hover:bg-transparent transition-colors",
+            ),
+            rx.el.button(
+                rx.icon("chevron-right", size=14),
+                on_click=PortfolioDashboardState.next_page,
+                disabled=PortfolioDashboardState.current_page
+                == PortfolioDashboardState.total_pages,
+                class_name="p-1 rounded hover:bg-gray-200 disabled:opacity-30 disabled:hover:bg-transparent transition-colors",
+            ),
+            class_name="flex gap-1",
+        ),
+        class_name="flex items-center justify-between px-3 py-1 border-t border-gray-200 bg-gray-50 shrink-0 h-[32px]",
     )
 
 
 def mock_data_table() -> rx.Component:
-    """An optimized data table with sticky headers and responsive scrolling."""
+    """An optimized data table with sticky headers, responsive scrolling and pagination."""
     return rx.el.div(
         rx.cond(
             PortfolioDashboardState.is_loading,
@@ -178,18 +215,16 @@ def mock_data_table() -> rx.Component:
                     )
                 ),
                 rx.el.tbody(
-                    rx.foreach(
-                        PortfolioDashboardState.filtered_table_data,
-                        lambda item, index: table_row(item, index),
-                    )
+                    rx.foreach(PortfolioDashboardState.paginated_table_data, table_row)
                 ),
                 class_name="w-full min-w-[800px] table-auto border-collapse",
             ),
             type="hover",
             scrollbars="both",
-            class_name="h-full w-full bg-white",
+            class_name="flex-1 w-full bg-white contain-strict",
         ),
-        class_name="flex-1 w-full h-full bg-white relative overflow-hidden",
+        pagination_controls(),
+        class_name="flex-1 w-full h-full bg-white relative overflow-hidden flex flex-col",
     )
 
 

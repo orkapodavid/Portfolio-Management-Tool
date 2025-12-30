@@ -28,6 +28,131 @@ class TopMover(TypedDict):
     is_positive: bool
 
 
+def _generate_mock_data() -> list[dict]:
+    """Generates mock data once at module load time."""
+    base_data = [
+        {
+            "id": 1,
+            "ticker": "AAPL",
+            "description": "Apple Inc.",
+            "asset_class": "Equity",
+            "qty": "15,400",
+            "price": "182.50",
+            "mkt_value": "2,810,500",
+            "daily_pnl": "+12,450",
+            "pnl_pct": "+0.45%",
+            "status": "Active",
+            "is_positive": True,
+            "is_reconciled": True,
+        },
+        {
+            "id": 2,
+            "ticker": "MSFT",
+            "description": "Microsoft Corp.",
+            "asset_class": "Equity",
+            "qty": "8,200",
+            "price": "405.12",
+            "mkt_value": "3,321,984",
+            "daily_pnl": "(1,230)",
+            "pnl_pct": "-0.03%",
+            "status": "Active",
+            "is_positive": False,
+            "is_reconciled": True,
+        },
+        {
+            "id": 3,
+            "ticker": "US10Y",
+            "description": "US Treasury 10Y",
+            "asset_class": "Bond",
+            "qty": "5,000,000",
+            "price": "98.25",
+            "mkt_value": "4,912,500",
+            "daily_pnl": "+5,600",
+            "pnl_pct": "+0.11%",
+            "status": "Hedged",
+            "is_positive": True,
+            "is_reconciled": True,
+        },
+        {
+            "id": 4,
+            "ticker": "EURUSD",
+            "description": "Euro / US Dollar",
+            "asset_class": "FX",
+            "qty": "2,500,000",
+            "price": "1.0850",
+            "mkt_value": "2,712,500",
+            "daily_pnl": "(4,500)",
+            "pnl_pct": "-0.16%",
+            "status": "Active",
+            "is_positive": False,
+            "is_reconciled": True,
+        },
+        {
+            "id": 5,
+            "ticker": "NVDA",
+            "description": "NVIDIA Corp",
+            "asset_class": "Equity",
+            "qty": "4,500",
+            "price": "785.30",
+            "mkt_value": "3,533,850",
+            "daily_pnl": "+45,200",
+            "pnl_pct": "+1.28%",
+            "status": "Active",
+            "is_positive": True,
+            "is_reconciled": False,
+        },
+        {
+            "id": 6,
+            "ticker": "GLD",
+            "description": "SPDR Gold Shares",
+            "asset_class": "Commodity",
+            "qty": "12,000",
+            "price": "195.40",
+            "mkt_value": "2,344,800",
+            "daily_pnl": "+8,900",
+            "pnl_pct": "+0.38%",
+            "status": "Hedged",
+            "is_positive": True,
+            "is_reconciled": True,
+        },
+        {
+            "id": 7,
+            "ticker": "TSLA",
+            "description": "Tesla Inc.",
+            "asset_class": "Equity",
+            "qty": "10,000",
+            "price": "175.20",
+            "mkt_value": "1,752,000",
+            "daily_pnl": "(15,400)",
+            "pnl_pct": "-0.88%",
+            "status": "Review",
+            "is_positive": False,
+            "is_reconciled": False,
+        },
+        {
+            "id": 8,
+            "ticker": "VIX",
+            "description": "Volatility Index",
+            "asset_class": "Index",
+            "qty": "5,000",
+            "price": "13.45",
+            "mkt_value": "67,250",
+            "daily_pnl": "(250)",
+            "pnl_pct": "-0.37%",
+            "status": "Hedged",
+            "is_positive": False,
+            "is_reconciled": True,
+        },
+    ]
+    expanded_data = []
+    for i in range(50):
+        for item in base_data:
+            new_item = item.copy()
+            new_item["id"] = len(expanded_data) + 1
+            expanded_data.append(new_item)
+    return expanded_data
+
+
 class PortfolioDashboardState(rx.State):
     active_module: str = "Market Data"
     _active_subtabs: dict[str, str] = {}
@@ -361,6 +486,7 @@ class PortfolioDashboardState(rx.State):
         if self.active_module not in self._filters:
             self._filters[self.active_module] = {}
         self._filters[self.active_module]["search"] = value
+        self.current_page = 1
 
     @rx.event
     def set_current_date(self, value: str):
@@ -410,6 +536,8 @@ class PortfolioDashboardState(rx.State):
             "read": False,
         }
         self.notifications.insert(0, new_note)
+        if len(self.notifications) > 20:
+            self.notifications = self.notifications[:20]
 
     @rx.event
     def dismiss_notification(self, id: int):
@@ -425,9 +553,24 @@ class PortfolioDashboardState(rx.State):
     def set_selected_row(self, row_id: int):
         self.selected_row_id = row_id
 
+    current_page: int = 1
+    page_size: int = 25
+    page_size_options: list[int] = [25, 50, 100]
+    _all_table_data: list[dict] = _generate_mock_data()
+
     @rx.var
+    def total_items(self) -> int:
+        return len(self.filtered_table_data)
+
+    @rx.var
+    def total_pages(self) -> int:
+        if self.total_items == 0:
+            return 1
+        return (self.total_items + self.page_size - 1) // self.page_size
+
+    @rx.var(cache=True)
     def filtered_table_data(self) -> list[dict]:
-        data = self.mock_table_data
+        data = self._all_table_data
         query = self.current_search_query.lower()
         if not query:
             return data
@@ -437,127 +580,23 @@ class PortfolioDashboardState(rx.State):
             if query in item["ticker"].lower() or query in item["description"].lower()
         ]
 
-    @rx.var
-    def mock_table_data(self) -> list[dict]:
-        """Returns mock data for the placeholder table with expanded rows."""
-        base_data = [
-            {
-                "id": 1,
-                "ticker": "AAPL",
-                "description": "Apple Inc.",
-                "asset_class": "Equity",
-                "qty": "15,400",
-                "price": "182.50",
-                "mkt_value": "2,810,500",
-                "daily_pnl": "+12,450",
-                "pnl_pct": "+0.45%",
-                "status": "Active",
-                "is_positive": True,
-                "is_reconciled": True,
-            },
-            {
-                "id": 2,
-                "ticker": "MSFT",
-                "description": "Microsoft Corp.",
-                "asset_class": "Equity",
-                "qty": "8,200",
-                "price": "405.12",
-                "mkt_value": "3,321,984",
-                "daily_pnl": "(1,230)",
-                "pnl_pct": "-0.03%",
-                "status": "Active",
-                "is_positive": False,
-                "is_reconciled": True,
-            },
-            {
-                "id": 3,
-                "ticker": "US10Y",
-                "description": "US Treasury 10Y",
-                "asset_class": "Bond",
-                "qty": "5,000,000",
-                "price": "98.25",
-                "mkt_value": "4,912,500",
-                "daily_pnl": "+5,600",
-                "pnl_pct": "+0.11%",
-                "status": "Hedged",
-                "is_positive": True,
-                "is_reconciled": True,
-            },
-            {
-                "id": 4,
-                "ticker": "EURUSD",
-                "description": "Euro / US Dollar",
-                "asset_class": "FX",
-                "qty": "2,500,000",
-                "price": "1.0850",
-                "mkt_value": "2,712,500",
-                "daily_pnl": "(4,500)",
-                "pnl_pct": "-0.16%",
-                "status": "Active",
-                "is_positive": False,
-                "is_reconciled": True,
-            },
-            {
-                "id": 5,
-                "ticker": "NVDA",
-                "description": "NVIDIA Corp",
-                "asset_class": "Equity",
-                "qty": "4,500",
-                "price": "785.30",
-                "mkt_value": "3,533,850",
-                "daily_pnl": "+45,200",
-                "pnl_pct": "+1.28%",
-                "status": "Active",
-                "is_positive": True,
-                "is_reconciled": False,
-            },
-            {
-                "id": 6,
-                "ticker": "GLD",
-                "description": "SPDR Gold Shares",
-                "asset_class": "Commodity",
-                "qty": "12,000",
-                "price": "195.40",
-                "mkt_value": "2,344,800",
-                "daily_pnl": "+8,900",
-                "pnl_pct": "+0.38%",
-                "status": "Hedged",
-                "is_positive": True,
-                "is_reconciled": True,
-            },
-            {
-                "id": 7,
-                "ticker": "TSLA",
-                "description": "Tesla Inc.",
-                "asset_class": "Equity",
-                "qty": "10,000",
-                "price": "175.20",
-                "mkt_value": "1,752,000",
-                "daily_pnl": "(15,400)",
-                "pnl_pct": "-0.88%",
-                "status": "Review",
-                "is_positive": False,
-                "is_reconciled": False,
-            },
-            {
-                "id": 8,
-                "ticker": "VIX",
-                "description": "Volatility Index",
-                "asset_class": "Index",
-                "qty": "5,000",
-                "price": "13.45",
-                "mkt_value": "67,250",
-                "daily_pnl": "(250)",
-                "pnl_pct": "-0.37%",
-                "status": "Hedged",
-                "is_positive": False,
-                "is_reconciled": True,
-            },
-        ]
-        expanded_data = []
-        for i in range(50):
-            for item in base_data:
-                new_item = item.copy()
-                new_item["id"] = len(expanded_data) + 1
-                expanded_data.append(new_item)
-        return expanded_data
+    @rx.var(cache=True)
+    def paginated_table_data(self) -> list[dict]:
+        start = (self.current_page - 1) * self.page_size
+        end = start + self.page_size
+        return self.filtered_table_data[start:end]
+
+    @rx.event
+    def next_page(self):
+        if self.current_page < self.total_pages:
+            self.current_page += 1
+
+    @rx.event
+    def prev_page(self):
+        if self.current_page > 1:
+            self.current_page -= 1
+
+    @rx.event
+    def set_page_size(self, size: str):
+        self.page_size = int(size)
+        self.current_page = 1
