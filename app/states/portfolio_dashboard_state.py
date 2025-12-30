@@ -35,6 +35,8 @@ class PortfolioDashboardState(rx.State):
     is_sidebar_open: bool = False
     is_mobile_menu_open: bool = False
     show_top_movers: bool = False
+    selected_row_id: int = -1
+    is_loading: bool = False
     kpi_metrics: list[KPIMetric] = [
         {"label": "Daily PnL", "value": "+$1.2M", "is_positive": True},
         {"label": "Daily Pos FX", "value": "($45K)", "is_positive": False},
@@ -418,6 +420,22 @@ class PortfolioDashboardState(rx.State):
     def handle_generate(self, page_name: str):
         """Handle the generate action."""
         yield rx.toast(f"Generating report for {page_name}...", duration=2000)
+
+    @rx.event
+    def set_selected_row(self, row_id: int):
+        self.selected_row_id = row_id
+
+    @rx.var
+    def filtered_table_data(self) -> list[dict]:
+        data = self.mock_table_data
+        query = self.current_search_query.lower()
+        if not query:
+            return data
+        return [
+            item
+            for item in data
+            if query in item["ticker"].lower() or query in item["description"].lower()
+        ]
 
     @rx.var
     def mock_table_data(self) -> list[dict]:

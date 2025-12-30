@@ -78,7 +78,7 @@ def table_header_cell(text: str, align: str = "left") -> rx.Component:
 
 
 def table_row(item: dict, index: int) -> rx.Component:
-    """A data row for the placeholder table with alternating colors and standardized styling."""
+    """An optimized, high-density data row with row selection and financial formatting."""
     from app.constants import (
         POSITIVE_GREEN,
         NEGATIVE_RED,
@@ -86,103 +86,110 @@ def table_row(item: dict, index: int) -> rx.Component:
         TABLE_ROW_HEIGHT,
     )
 
-    status_color = rx.cond(
-        item["status"] == "Active",
-        f"bg-[{POSITIVE_GREEN}]/10 text-[{POSITIVE_GREEN}]",
-        rx.cond(
-            item["status"] == "Hedged",
-            "bg-blue-100 text-blue-800",
-            "bg-amber-100 text-amber-800",
-        ),
-    )
+    is_selected = PortfolioDashboardState.selected_row_id == item["id"]
     pnl_color = rx.cond(
         item["is_positive"], f"text-[{POSITIVE_GREEN}]", f"text-[{NEGATIVE_RED}]"
-    )
-    reconciled_badge = rx.el.span(
-        rx.cond(item["is_reconciled"], "Yes", "No"),
-        class_name=rx.cond(
-            item["is_reconciled"],
-            f"px-1.5 py-0.5 rounded text-[8px] font-black text-white bg-[{POSITIVE_GREEN}]",
-            f"px-1.5 py-0.5 rounded text-[8px] font-black text-white bg-[{NEGATIVE_RED}]",
-        ),
     )
     return rx.el.tr(
         rx.el.td(
             item["ticker"],
-            class_name="px-3 py-0 text-[10px] font-black text-gray-900 border-b border-gray-100",
+            class_name="px-3 text-[10px] font-black text-gray-900 border-b border-gray-100 text-left",
         ),
         rx.el.td(
             item["description"],
-            class_name="px-3 py-0 text-[10px] font-bold text-gray-600 border-b border-gray-100 truncate max-w-[140px]",
+            class_name="px-3 text-[10px] font-bold text-gray-600 border-b border-gray-100 truncate max-w-[140px] text-left",
         ),
         rx.el.td(
             item["asset_class"],
-            class_name="px-3 py-0 text-[10px] font-medium text-gray-500 border-b border-gray-100",
+            class_name="px-3 text-[10px] font-medium text-gray-500 border-b border-gray-100 text-left",
         ),
         rx.el.td(
             item["qty"],
-            class_name="px-3 py-0 text-[10px] font-mono font-bold text-gray-700 text-right border-b border-gray-100",
+            class_name="px-3 text-[10px] font-mono font-bold text-gray-700 text-right border-b border-gray-100",
         ),
         rx.el.td(
-            item["price"],
-            class_name="px-3 py-0 text-[10px] font-mono font-bold text-gray-700 text-right border-b border-gray-100",
+            f"${item['price']}",
+            class_name="px-3 text-[10px] font-mono font-bold text-gray-700 text-right border-b border-gray-100",
         ),
         rx.el.td(
-            item["mkt_value"],
-            class_name="px-3 py-0 text-[10px] font-black font-mono text-gray-900 text-right border-b border-gray-100",
+            f"${item['mkt_value']}",
+            class_name="px-3 text-[10px] font-black font-mono text-gray-900 text-right border-b border-gray-100",
         ),
         rx.el.td(
-            item["daily_pnl"],
-            class_name=f"px-3 py-0 text-[10px] font-black font-mono {pnl_color} text-right border-b border-gray-100",
+            f"${item['daily_pnl']}",
+            class_name=f"px-3 text-[10px] font-black font-mono {pnl_color} text-right border-b border-gray-100",
         ),
         rx.el.td(
             rx.el.span(
                 item["status"],
-                class_name=f"px-1.5 py-0.5 rounded text-[8px] font-black {status_color}",
+                class_name="px-1.5 py-0.5 rounded-[2px] text-[8px] font-black uppercase tracking-tighter bg-gray-100 text-gray-600",
             ),
-            class_name="px-3 py-0 text-center border-b border-gray-100",
+            class_name="px-3 text-center border-b border-gray-100",
         ),
         rx.el.td(
-            reconciled_badge,
-            class_name="px-3 py-0 text-center border-b border-gray-100",
+            rx.cond(
+                item["is_reconciled"],
+                rx.icon(
+                    "check", size=12, class_name=f"text-[{POSITIVE_GREEN}] mx-auto"
+                ),
+                rx.icon("x", size=12, class_name=f"text-[{NEGATIVE_RED}] mx-auto"),
+            ),
+            class_name="px-3 text-center border-b border-gray-100",
         ),
+        on_click=lambda: PortfolioDashboardState.set_selected_row(item["id"]),
         class_name=rx.cond(
-            index % 2 == 0,
-            f"bg-white group transition-colors hover:bg-[{ROW_HIGHLIGHT}] h-[{TABLE_ROW_HEIGHT}]",
-            f"bg-gray-50/30 group transition-colors hover:bg-[{ROW_HIGHLIGHT}] h-[{TABLE_ROW_HEIGHT}]",
+            is_selected,
+            f"bg-[{ROW_HIGHLIGHT}] cursor-pointer h-[{TABLE_ROW_HEIGHT}] transition-colors duration-75",
+            rx.cond(
+                index % 2 == 0,
+                f"bg-white hover:bg-gray-100 cursor-pointer h-[{TABLE_ROW_HEIGHT}] transition-colors duration-75",
+                f"bg-gray-50 hover:bg-gray-100 cursor-pointer h-[{TABLE_ROW_HEIGHT}] transition-colors duration-75",
+            ),
         ),
     )
 
 
 def mock_data_table() -> rx.Component:
-    """A robust placeholder table component with compact rows and vertical scroll."""
-    return rx.scroll_area(
-        rx.el.table(
-            rx.el.thead(
-                rx.el.tr(
-                    table_header_cell("Ticker"),
-                    table_header_cell("Description"),
-                    table_header_cell("Class"),
-                    table_header_cell("Qty", "right"),
-                    table_header_cell("Price", "right"),
-                    table_header_cell("Mkt Val", "right"),
-                    table_header_cell("PnL", "right"),
-                    table_header_cell("Status", "center"),
-                    table_header_cell("Rec", "center"),
-                    class_name="bg-[#333333]",
-                )
+    """An optimized data table with sticky headers and responsive scrolling."""
+    return rx.el.div(
+        rx.cond(
+            PortfolioDashboardState.is_loading,
+            rx.el.div(
+                rx.el.div(
+                    class_name="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
+                ),
+                class_name="absolute inset-0 flex items-center justify-center bg-white/50 z-20",
             ),
-            rx.el.tbody(
-                rx.foreach(
-                    PortfolioDashboardState.mock_table_data,
-                    lambda item, index: table_row(item, index),
-                )
-            ),
-            class_name="w-full min-w-[800px] table-auto border-collapse",
         ),
-        type="always",
-        scrollbars="both",
-        class_name="flex-1 w-full h-full bg-white relative",
+        rx.scroll_area(
+            rx.el.table(
+                rx.el.thead(
+                    rx.el.tr(
+                        table_header_cell("Ticker"),
+                        table_header_cell("Description"),
+                        table_header_cell("Class"),
+                        table_header_cell("Qty", "right"),
+                        table_header_cell("Price", "right"),
+                        table_header_cell("Mkt Val", "right"),
+                        table_header_cell("PnL", "right"),
+                        table_header_cell("Status", "center"),
+                        table_header_cell("Rec", "center"),
+                        class_name="bg-gray-50 border-b border-gray-200 shadow-[0_1px_2px_rgba(0,0,0,0.05)]",
+                    )
+                ),
+                rx.el.tbody(
+                    rx.foreach(
+                        PortfolioDashboardState.filtered_table_data,
+                        lambda item, index: table_row(item, index),
+                    )
+                ),
+                class_name="w-full min-w-[800px] table-auto border-collapse",
+            ),
+            type="hover",
+            scrollbars="both",
+            class_name="h-full w-full bg-white",
+        ),
+        class_name="flex-1 w-full h-full bg-white relative overflow-hidden",
     )
 
 
