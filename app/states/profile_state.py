@@ -52,7 +52,7 @@ class ProfileState(rx.State):
     def toggle_editing(self):
         self.is_editing = not self.is_editing
         if not self.is_editing:
-            rx.toast("Profile updated successfully", position="bottom-right")
+            yield rx.toast("Profile updated successfully", position="bottom-right")
 
     @rx.event
     def save_profile(self, form_data: dict):
@@ -63,8 +63,8 @@ class ProfileState(rx.State):
         self.risk_tolerance = form_data.get("risk_tolerance", self.risk_tolerance)
         self.investment_goal = form_data.get("investment_goal", self.investment_goal)
         self.is_editing = False
-        rx.toast("Profile saved successfully", position="bottom-right")
+        yield rx.toast("Profile saved successfully", position="bottom-right")
 
     @rx.event
     def upload_avatar(self):
-        rx.toast("Avatar upload simulation started...", position="bottom-right")
+        yield rx.toast("Avatar upload simulation started...", position="bottom-right")

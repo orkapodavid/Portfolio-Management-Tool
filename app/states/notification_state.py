@@ -83,12 +83,12 @@ class NotificationState(rx.State):
             n["is_read"] = True
             new_notifications.append(n)
         self.notifications = new_notifications
-        rx.toast("All notifications marked as read", position="bottom-right")
+        yield rx.toast("All notifications marked as read", position="bottom-right")
 
     @rx.event
     def clear_all(self):
         self.notifications = []
-        rx.toast("All notifications cleared", position="bottom-right")
+        yield rx.toast("All notifications cleared", position="bottom-right")
 
     @rx.event
     def mark_read(self, notification_id: str):

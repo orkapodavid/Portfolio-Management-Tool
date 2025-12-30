@@ -219,7 +219,7 @@ class WatchlistState(rx.State):
     @rx.event
     def add_to_watchlist(self, stock: WatchedStock):
         if any((s["symbol"] == stock["symbol"] for s in self.watchlist)):
-            rx.toast(
+            yield rx.toast(
                 f"{stock['symbol']} is already in your watchlist",
                 position="bottom-right",
             )
@@ -227,7 +227,7 @@ class WatchlistState(rx.State):
         self.watchlist.append(stock)
         self.search_query = ""
         self.is_searching = False
-        rx.toast(f"Added {stock['symbol']} to watchlist", position="bottom-right")
+        yield rx.toast(f"Added {stock['symbol']} to watchlist", position="bottom-right")
 
     @rx.event
     async def refresh_watchlist(self):
@@ -235,7 +235,7 @@ class WatchlistState(rx.State):
 
         if not self.watchlist:
             return
-        rx.toast("Updating watchlist prices...", position="bottom-right")
+        yield rx.toast("Updating watchlist prices...", position="bottom-right")
         symbols = [s["symbol"] for s in self.watchlist]
         results = finance_service.fetch_multiple_stocks(symbols)
         new_watchlist = []
@@ -257,12 +257,14 @@ class WatchlistState(rx.State):
                 )
             new_watchlist.append(stock)
         self.watchlist = new_watchlist
-        rx.toast("Watchlist updated", position="bottom-right")
+        yield rx.toast("Watchlist updated", position="bottom-right")
 
     @rx.event
     def remove_from_watchlist(self, stock: WatchedStock):
         self.watchlist = [s for s in self.watchlist if s["symbol"] != stock["symbol"]]
-        rx.toast(f"Removed {stock['symbol']} from watchlist", position="bottom-right")
+        yield rx.toast(
+            f"Removed {stock['symbol']} from watchlist", position="bottom-right"
+        )
 
     @rx.event
     def open_alert_modal(self, symbol: str):
@@ -298,7 +300,7 @@ class WatchlistState(rx.State):
         }
         self.alerts.append(new_alert)
         self.is_alert_modal_open = False
-        rx.toast(
+        yield rx.toast(
             f"Alert set for {self.alert_symbol} at ${price}", position="bottom-right"
         )
 
@@ -308,9 +310,14 @@ class WatchlistState(rx.State):
 
     @rx.event
     def toggle_alert_active(self, alert_id: str):
-        new_alerts = []
-        for a in self.alerts:
-            if a["id"] == alert_id:
-                a["active"] = not a["active"]
-            new_alerts.append(a)
-        self.alerts = new_alerts
+        self.alerts = [
+            {
+                "id": a["id"],
+                "symbol": a["symbol"],
+                "target_price": a["target_price"],
+                "condition": a["condition"],
+                "active": not a["active"] if a["id"] == alert_id else a["active"],
+                "created_at": a["created_at"],
+            }
+            for a in self.alerts
+        ]

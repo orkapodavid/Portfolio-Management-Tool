@@ -4,99 +4,143 @@ from app.states.portfolio_dashboard_state import (
     KPIMetric,
     TopMover,
 )
+from app.constants import (
+    POSITIVE_GREEN,
+    NEGATIVE_RED,
+    KPI_HEIGHT,
+    MOVERS_ROW_HEIGHT,
+    MOVERS_EXPANDED_HEIGHT,
+    NAV_HEIGHT,
+    FINANCIAL_GREY,
+    ICON_KPI_SIZE,
+)
 
 
 def kpi_card(metric: KPIMetric) -> rx.Component:
-    """A single KPI metric card."""
+    """An ultra-compact KPI metric card with deep vertical shrinkage."""
+    accent_color = rx.cond(
+        metric["is_positive"], f"border-[{POSITIVE_GREEN}]", f"border-[{NEGATIVE_RED}]"
+    )
+    text_color = rx.cond(
+        metric["is_positive"], f"text-[{POSITIVE_GREEN}]", f"text-[{NEGATIVE_RED}]"
+    )
     return rx.el.div(
-        rx.el.span(
-            metric["label"],
-            class_name="text-[10px] font-bold text-gray-500 uppercase tracking-wide truncate",
-        ),
         rx.el.div(
-            metric["value"],
-            class_name=rx.cond(
-                metric["is_positive"],
-                "text-lg font-bold text-[#00AA00] tracking-tight",
-                "text-lg font-bold text-[#DD0000] tracking-tight",
+            rx.el.span(
+                metric["label"],
+                class_name="text-[7px] font-black text-gray-400 uppercase tracking-[0.15em] truncate mr-2",
             ),
+            rx.el.span(
+                metric["value"],
+                class_name=f"text-[10px] font-black {text_color} tracking-tighter",
+            ),
+            class_name="flex items-center justify-between w-full",
         ),
-        class_name="flex flex-col bg-white p-3 rounded-md shadow-sm border border-gray-200 min-w-[140px] flex-1 lg:flex-none",
+        class_name=f"flex items-center bg-white px-2 h-[{KPI_HEIGHT}] rounded-none shadow-sm border-l-[3px] {accent_color} border-y border-r border-gray-200 min-w-[155px] flex-1 hover:bg-gray-50 transition-colors",
     )
 
 
 def mover_row(item: TopMover) -> rx.Component:
-    """Row for the top movers grid."""
+    """Ultra-compact row for top movers."""
     return rx.el.tr(
-        rx.el.td(item["ticker"], class_name="py-1 pl-2 font-bold text-gray-900"),
-        rx.el.td(item["name"], class_name="py-1 text-gray-500 truncate max-w-[60px]"),
-        rx.el.td(item["value"], class_name="py-1 font-medium text-gray-800 text-right"),
+        rx.el.td(
+            item["ticker"],
+            class_name="py-0 pl-2 font-black text-gray-900 truncate text-[8px]",
+        ),
+        rx.el.td(
+            item["value"],
+            class_name="py-0 font-bold text-gray-700 text-right truncate text-[8px]",
+        ),
         rx.el.td(
             item["change"],
             class_name=rx.cond(
                 item["is_positive"],
-                "py-1 pr-2 font-bold text-[#00AA00] text-right",
-                "py-1 pr-2 font-bold text-[#DD0000] text-right",
+                f"py-0 pr-2 font-black text-[{POSITIVE_GREEN}] text-right truncate text-[8px]",
+                f"py-0 pr-2 font-black text-[{NEGATIVE_RED}] text-right truncate text-[8px]",
             ),
         ),
-        class_name="text-[10px] border-b border-gray-100 last:border-0 hover:bg-gray-50",
+        class_name=f"border-b border-gray-100 last:border-0 hover:bg-gray-100 transition-colors h-[{MOVERS_ROW_HEIGHT}]",
     )
 
 
 def mini_grid(title: str, data: list[TopMover]) -> rx.Component:
-    """A compact 4-column grid for Top Movers."""
+    """A compact grid for Top Movers."""
     return rx.el.div(
         rx.el.h4(
             title,
-            class_name="text-[11px] font-bold text-[#333333] mb-1 px-2 pt-2 pb-1 border-b border-gray-200 uppercase tracking-wider",
+            class_name="text-[8px] font-black text-[#333333] px-2 py-0.5 border-b border-gray-200 uppercase tracking-widest bg-gray-100/50",
         ),
         rx.el.table(
-            rx.el.thead(
-                rx.el.tr(
-                    rx.el.th(
-                        "Ticker",
-                        class_name="pl-2 text-left font-semibold text-gray-400",
-                    ),
-                    rx.el.th(
-                        "Name", class_name="text-left font-semibold text-gray-400"
-                    ),
-                    rx.el.th(
-                        "Value", class_name="text-right font-semibold text-gray-400"
-                    ),
-                    rx.el.th(
-                        "Chg", class_name="pr-2 text-right font-semibold text-gray-400"
-                    ),
-                ),
-                class_name="text-[9px] bg-gray-50",
-            ),
-            rx.el.tbody(rx.foreach(data, mover_row)),
-            class_name="w-full",
+            rx.el.tbody(rx.foreach(data, mover_row)), class_name="w-full table-fixed"
         ),
-        class_name="bg-white rounded-md shadow-sm border border-gray-200 flex-1 min-w-[280px] overflow-hidden",
+        class_name="bg-white border border-gray-200 overflow-hidden w-full shadow-sm rounded-sm",
     )
 
 
 def performance_header() -> rx.Component:
-    """The persistent performance header (Region 2)."""
+    """Persistently visible ultra-compact header with collapsible grid."""
     return rx.el.section(
         rx.el.div(
             rx.el.div(
-                rx.foreach(PortfolioDashboardState.kpi_metrics, kpi_card),
-                class_name="flex flex-wrap gap-2 lg:flex-nowrap lg:w-auto w-full mb-4 lg:mb-0",
+                rx.el.div(
+                    rx.foreach(PortfolioDashboardState.kpi_metrics, kpi_card),
+                    class_name="flex flex-nowrap gap-0 overflow-x-auto no-scrollbar w-full",
+                ),
+                class_name="flex items-center gap-0 w-full px-0 py-0",
             ),
             rx.el.div(
-                mini_grid(
-                    "Top Movers (Ops PnL)", PortfolioDashboardState.top_movers_ops
+                rx.el.button(
+                    rx.el.div(
+                        rx.el.span(
+                            rx.cond(
+                                PortfolioDashboardState.show_top_movers,
+                                "Hide Top Movers",
+                                "Show Top Movers",
+                            ),
+                            class_name="text-[6px] font-black uppercase tracking-[0.3em]",
+                        ),
+                        rx.icon(
+                            rx.cond(
+                                PortfolioDashboardState.show_top_movers,
+                                "chevron-up",
+                                "chevron-down",
+                            ),
+                            size=ICON_KPI_SIZE,
+                        ),
+                        class_name="flex items-center gap-1 text-gray-500",
+                    ),
+                    on_click=PortfolioDashboardState.toggle_top_movers,
+                    class_name="w-full flex items-center justify-center py-0 bg-gray-100 border-y border-gray-200 hover:bg-gray-200 transition-colors h-[12px]",
                 ),
-                mini_grid(
-                    "Top Movers (YTD PnL)", PortfolioDashboardState.top_movers_ytd
+                rx.cond(
+                    PortfolioDashboardState.show_top_movers,
+                    rx.el.div(
+                        rx.el.div(
+                            mini_grid(
+                                "Ops PnL", PortfolioDashboardState.top_movers_ops
+                            ),
+                            mini_grid(
+                                "YTD PnL", PortfolioDashboardState.top_movers_ytd
+                            ),
+                            mini_grid(
+                                "Delta Leaders",
+                                PortfolioDashboardState.top_movers_delta,
+                            ),
+                            mini_grid(
+                                "Price Movers", PortfolioDashboardState.top_movers_price
+                            ),
+                            mini_grid(
+                                "Volume Leaders",
+                                PortfolioDashboardState.top_movers_volume,
+                            ),
+                            class_name="flex flex-col gap-1 w-full p-1 bg-gray-100/30",
+                        ),
+                        class_name=f"block w-full bg-white border-b border-gray-300 animate-in fade-in slide-in-from-top-1 duration-300 ease-in-out shadow-inner overflow-hidden h-[{MOVERS_EXPANDED_HEIGHT}] overflow-y-auto",
+                    ),
                 ),
-                mini_grid("$ Delta Leaders", PortfolioDashboardState.top_movers_delta),
-                mini_grid("Price Movers", PortfolioDashboardState.top_movers_price),
-                mini_grid("Volume Leaders", PortfolioDashboardState.top_movers_volume),
-                class_name="flex gap-2 flex-1 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent",
+                class_name="w-full",
             ),
-            class_name="flex flex-col xl:flex-row gap-4 w-full items-start",
+            class_name="flex flex-col w-full items-start justify-between",
         ),
-        class_name="bg-[#F0F0F0] border-b border-[#CCCCCC] p-4 shrink-0 shadow-[0_2px_4px_rgba(0,0,0,0.02)] sticky top-0 z-30",
+        class_name=f"bg-[{FINANCIAL_GREY}] shrink-0 shadow-sm border-b border-gray-300 sticky top-[{NAV_HEIGHT}] z-50 bg-opacity-100",
     )

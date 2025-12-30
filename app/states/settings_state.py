@@ -16,7 +16,7 @@ class SettingsState(rx.State):
     @rx.event
     def toggle_theme(self):
         self.theme_mode = "dark" if self.theme_mode == "light" else "light"
-        rx.toast(f"Theme switched to {self.theme_mode}", position="bottom-right")
+        yield rx.toast(f"Theme switched to {self.theme_mode}", position="bottom-right")
 
     @rx.event
     def update_notification(self, key: str, value: bool):
@@ -28,7 +28,7 @@ class SettingsState(rx.State):
             self.sms_notifications = value
         elif key == "marketing":
             self.marketing_emails = value
-        rx.toast("Notification preferences updated", position="bottom-right")
+        yield rx.toast("Notification preferences updated", position="bottom-right")
 
     @rx.event
     def update_privacy(self, key: str, value: bool):
@@ -38,7 +38,7 @@ class SettingsState(rx.State):
             self.show_holdings = value
         elif key == "data":
             self.allow_data_collection = value
-        rx.toast("Privacy settings updated", position="bottom-right")
+        yield rx.toast("Privacy settings updated", position="bottom-right")
 
     @rx.event
     def set_currency(self, value: str):
@@ -50,14 +50,14 @@ class SettingsState(rx.State):
 
     @rx.event
     def export_data(self):
-        rx.toast(
+        yield rx.toast(
             "Data export started. You will receive an email shortly.",
             position="bottom-right",
         )
 
     @rx.event
     def delete_account(self):
-        rx.toast(
+        yield rx.toast(
             "Account deletion request sent to support.",
             position="bottom-right",
             color_scheme="red",

@@ -174,7 +174,7 @@ class PortfolioState(rx.State):
         symbol = form_data.get("symbol", "").upper()
         shares = float(form_data.get("shares", 0))
         price = float(form_data.get("price", 0))
-        date = form_data.get("date", datetime.date.today())
+        date = str(form_data.get("date", datetime.date.today().strftime("%Y-%m-%d")))
         t_type = self.transaction_type
         if not symbol or shares <= 0 or price < 0:
             return

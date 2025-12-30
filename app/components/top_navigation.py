@@ -1,86 +1,89 @@
 import reflex as rx
 from app.states.portfolio_dashboard_state import PortfolioDashboardState
+from app.constants import NAV_HEIGHT, NAV_BG, ICON_NAV_SIZE
 
 
 def nav_button(module_name: str, icon_name: str) -> rx.Component:
-    """Creates a navigation button for a module."""
+    """Creates an ultra-compact navigation button with inline icon and text."""
     is_active = PortfolioDashboardState.active_module == module_name
     return rx.el.button(
         rx.el.div(
             rx.icon(
                 icon_name,
-                size=16,
+                size=ICON_NAV_SIZE,
                 class_name=rx.cond(is_active, "text-white", "text-gray-400"),
             ),
             rx.el.span(
                 module_name,
                 class_name=rx.cond(
                     is_active,
-                    "text-xs font-bold text-white tracking-wide",
-                    "text-xs font-medium text-gray-400 hover:text-gray-200",
+                    "text-[9px] font-bold text-white tracking-tighter uppercase whitespace-nowrap",
+                    "text-[9px] font-medium text-gray-400 hover:text-gray-200 uppercase whitespace-nowrap",
                 ),
             ),
-            class_name="flex flex-col items-center gap-1",
+            class_name="flex flex-row items-center gap-1.5",
         ),
-        on_click=lambda: PortfolioDashboardState.set_module(module_name),
+        on_click=PortfolioDashboardState.set_module(module_name),
+        title=module_name,
         class_name=rx.cond(
             is_active,
-            "px-4 py-2 h-full border-b-2 border-blue-500 bg-white/10 transition-colors duration-200",
-            "px-4 py-2 h-full border-b-2 border-transparent hover:bg-white/5 transition-colors duration-200",
+            "px-2 h-full border-b-2 border-blue-500 bg-white/10 transition-colors duration-75 flex items-center",
+            "px-2 h-full border-b-2 border-transparent hover:bg-white/5 transition-colors duration-75 flex items-center",
         ),
     )
 
 
 def top_navigation() -> rx.Component:
-    """The top navigation bar component (Region 1)."""
+    """Compacted top navigation bar (Region 1). Height 40px."""
     return rx.el.nav(
         rx.el.div(
             rx.el.div(
-                rx.icon("activity", size=20, class_name="text-blue-400"),
+                rx.icon("activity", size=16, class_name="text-blue-400"),
                 rx.el.h1(
-                    "REFLEX", class_name="text-lg font-bold text-white tracking-wider"
+                    "REFLEX",
+                    class_name="text-[10px] font-black text-white tracking-widest",
                 ),
-                rx.el.span(
-                    "PORTFOLIO",
-                    class_name="text-xs font-light text-gray-400 self-end mb-1",
-                ),
-                class_name="flex items-center gap-2 mr-8 px-4 border-r border-gray-700 h-full",
+                class_name="flex items-center gap-2 mr-2 px-2 border-r border-gray-700 h-full shrink-0",
             ),
             rx.el.div(
                 rx.foreach(
-                    PortfolioDashboardState.module_icons,
+                    PortfolioDashboardState.module_icons.entries(),
                     lambda item: nav_button(item[0], item[1]),
                 ),
-                class_name="flex items-center h-full overflow-x-auto no-scrollbar",
+                class_name="flex items-center h-full overflow-x-auto no-scrollbar gap-0",
             ),
             rx.el.div(
                 rx.el.button(
                     rx.el.div(
                         rx.icon(
                             "bell",
-                            size=18,
+                            size=16,
                             class_name="text-gray-400 group-hover:text-white",
                         ),
                         rx.cond(
                             PortfolioDashboardState.unread_count > 0,
                             rx.el.span(
-                                PortfolioDashboardState.unread_count,
-                                class_name="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm",
+                                PortfolioDashboardState.unread_count.to_string(),
+                                class_name=f"absolute -top-1 -right-1 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-red-500 text-[7px] font-black text-white ring-1 ring-[{NAV_BG}] animate-pulse",
                             ),
                         ),
                         class_name="relative",
                     ),
                     on_click=PortfolioDashboardState.toggle_sidebar,
-                    class_name="group relative p-2 rounded-full hover:bg-white/10 transition-colors",
+                    class_name=rx.cond(
+                        PortfolioDashboardState.is_sidebar_open,
+                        "group p-1 rounded-md bg-white/20 text-white transition-all duration-200",
+                        "group p-1 rounded-md hover:bg-white/10 transition-all duration-200",
+                    ),
                 ),
                 rx.icon(
                     "user",
-                    size=18,
-                    class_name="text-gray-400 hover:text-white cursor-pointer",
+                    size=16,
+                    class_name="text-gray-400 hover:text-white cursor-pointer ml-1",
                 ),
-                class_name="ml-auto flex items-center gap-4 px-6 border-l border-gray-700 h-full",
+                class_name="ml-auto flex items-center gap-1 px-2 border-l border-gray-700 h-full shrink-0",
             ),
-            class_name="flex items-center h-full w-full max-w-[1920px] mx-auto",
+            class_name="flex items-center h-full w-full max-w-full",
         ),
-        class_name="w-full h-16 bg-[#333333] shadow-md z-50 shrink-0",
+        class_name=f"w-full h-[{NAV_HEIGHT}] bg-[{NAV_BG}] shadow-md z-[60] shrink-0",
     )

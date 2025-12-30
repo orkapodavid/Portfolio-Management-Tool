@@ -29,7 +29,7 @@ def stock_card(stock: WatchedStock) -> rx.Component:
                         size=20,
                         class_name="text-gray-300 hover:text-indigo-600 transition-colors",
                     ),
-                    on_click=lambda: WatchlistState.open_alert_modal(stock["symbol"]),
+                    on_click=WatchlistState.open_alert_modal(stock["symbol"]),
                     class_name="p-2 hover:bg-indigo-50 rounded-full transition-all duration-200",
                     title="Set Alert",
                 ),
@@ -87,7 +87,7 @@ def stock_card(stock: WatchedStock) -> rx.Component:
             ),
             rx.el.button(
                 "Remove",
-                on_click=lambda: WatchlistState.remove_from_watchlist(stock),
+                on_click=WatchlistState.remove_from_watchlist(stock),
                 class_name="w-full py-2.5 text-xs font-bold text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all duration-200 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0",
             ),
             class_name="flex flex-col",

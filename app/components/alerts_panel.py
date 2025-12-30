@@ -25,7 +25,7 @@ def alert_item(alert: StockAlert) -> rx.Component:
                         alert["active"], "text-indigo-600", "text-gray-300"
                     ),
                 ),
-                on_click=lambda: WatchlistState.toggle_alert_active(alert["id"]),
+                on_click=WatchlistState.toggle_alert_active(alert["id"]),
                 class_name="p-2 hover:bg-gray-100 rounded-full transition-colors",
                 title="Toggle Active",
             ),
@@ -33,7 +33,7 @@ def alert_item(alert: StockAlert) -> rx.Component:
                 rx.icon(
                     "trash-2", size=16, class_name="text-gray-400 hover:text-red-500"
                 ),
-                on_click=lambda: WatchlistState.delete_alert(alert["id"]),
+                on_click=WatchlistState.delete_alert(alert["id"]),
                 class_name="p-2 hover:bg-red-50 rounded-full transition-colors",
             ),
             class_name="flex items-center gap-1",
@@ -73,9 +73,7 @@ def create_alert_modal() -> rx.Component:
                             rx.el.button(
                                 "Price Above",
                                 type="button",
-                                on_click=lambda: WatchlistState.set_alert_condition(
-                                    "Above"
-                                ),
+                                on_click=WatchlistState.set_alert_condition("Above"),
                                 class_name=rx.cond(
                                     WatchlistState.alert_condition == "Above",
                                     "flex-1 py-2 text-sm font-semibold bg-indigo-100 text-indigo-700 rounded-lg transition-colors border border-indigo-200",
@@ -85,9 +83,7 @@ def create_alert_modal() -> rx.Component:
                             rx.el.button(
                                 "Price Below",
                                 type="button",
-                                on_click=lambda: WatchlistState.set_alert_condition(
-                                    "Below"
-                                ),
+                                on_click=WatchlistState.set_alert_condition("Below"),
                                 class_name=rx.cond(
                                     WatchlistState.alert_condition == "Below",
                                     "flex-1 py-2 text-sm font-semibold bg-indigo-100 text-indigo-700 rounded-lg transition-colors border border-indigo-200",

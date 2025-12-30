@@ -175,16 +175,16 @@ class GoalsState(rx.State):
             self.goals = [
                 g if g["id"] != self.editing_goal_id else new_goal for g in self.goals
             ]
-            rx.toast("Goal updated successfully", position="bottom-right")
+            yield rx.toast("Goal updated successfully", position="bottom-right")
         else:
             self.goals.append(new_goal)
-            rx.toast("New goal created successfully", position="bottom-right")
+            yield rx.toast("New goal created successfully", position="bottom-right")
         self.is_modal_open = False
 
     @rx.event
     def delete_goal(self, goal_id: str):
         self.goals = [g for g in self.goals if g["id"] != goal_id]
-        rx.toast("Goal deleted", position="bottom-right")
+        yield rx.toast("Goal deleted", position="bottom-right")
 
     @rx.event
     def get_projection_data(self, goal: Goal) -> list[ProjectionPoint]:

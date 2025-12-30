@@ -89,6 +89,6 @@ class ReportsState(rx.State):
 
     @rx.event
     def export_report(self):
-        rx.toast(
+        yield rx.toast(
             "Report generated and downloaded successfully.", position="bottom-right"
         )

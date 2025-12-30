@@ -1,5 +1,7 @@
-import reflex as rx
+import random
+from datetime import datetime
 from typing import TypedDict
+import reflex as rx
 
 
 class NotificationItem(TypedDict):
@@ -30,7 +32,8 @@ class PortfolioDashboardState(rx.State):
     active_module: str = "Market Data"
     _active_subtabs: dict[str, str] = {}
     _filters: dict[str, dict] = {}
-    is_sidebar_open: bool = True
+    is_sidebar_open: bool = False
+    show_top_movers: bool = False
     kpi_metrics: list[KPIMetric] = [
         {"label": "Daily PnL", "value": "+$1.2M", "is_positive": True},
         {"label": "Daily Pos FX", "value": "($45K)", "is_positive": False},
@@ -367,6 +370,10 @@ class PortfolioDashboardState(rx.State):
     def toggle_sidebar(self):
         self.is_sidebar_open = not self.is_sidebar_open
 
+    @rx.event
+    def toggle_top_movers(self):
+        self.show_top_movers = not self.show_top_movers
+
     @rx.var
     def unread_count(self) -> int:
         return len([n for n in self.notifications if not n.get("read", False)])
@@ -404,12 +411,12 @@ class PortfolioDashboardState(rx.State):
     @rx.event
     def handle_generate(self, page_name: str):
         """Handle the generate action."""
-        rx.toast(f"Generating report for {page_name}...", duration=2000)
+        yield rx.toast(f"Generating report for {page_name}...", duration=2000)
 
     @rx.var
     def mock_table_data(self) -> list[dict]:
-        """Returns mock data for the placeholder table."""
-        return [
+        """Returns mock data for the placeholder table with expanded rows."""
+        base_data = [
             {
                 "id": 1,
                 "ticker": "AAPL",
@@ -523,3 +530,10 @@ class PortfolioDashboardState(rx.State):
                 "is_reconciled": True,
             },
         ]
+        expanded_data = []
+        for i in range(50):
+            for item in base_data:
+                new_item = item.copy()
+                new_item["id"] = len(expanded_data) + 1
+                expanded_data.append(new_item)
+        return expanded_data
