@@ -64,23 +64,31 @@ def alert_card(notification: NotificationItem) -> rx.Component:
 def pagination_footer() -> rx.Component:
     return rx.el.div(
         rx.el.button(
-            rx.icon("chevron-left", size=12),
+            rx.el.div(
+                rx.icon("chevron-left", size=12),
+                rx.el.span("Prev", class_name="ml-1"),
+                class_name="flex items-center",
+            ),
             on_click=NotificationPaginationState.prev_page,
             disabled=NotificationPaginationState.current_page == 1,
-            class_name="p-1 rounded hover:bg-gray-200 disabled:opacity-20 transition-colors",
+            class_name="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-[9px] font-black uppercase tracking-tighter",
         ),
         rx.el.span(
-            f"Page {NotificationPaginationState.current_page} of {NotificationPaginationState.total_pages}",
-            class_name="text-[9px] font-bold text-gray-500 uppercase tracking-widest",
+            f"{NotificationPaginationState.current_page} / {NotificationPaginationState.total_pages}",
+            class_name="text-[10px] font-black text-gray-600 tabular-nums",
         ),
         rx.el.button(
-            rx.icon("chevron-right", size=12),
+            rx.el.div(
+                rx.el.span("Next", class_name="mr-1"),
+                rx.icon("chevron-right", size=12),
+                class_name="flex items-center",
+            ),
             on_click=NotificationPaginationState.next_page,
             disabled=NotificationPaginationState.current_page
             == NotificationPaginationState.total_pages,
-            class_name="p-1 rounded hover:bg-gray-200 disabled:opacity-20 transition-colors",
+            class_name="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-[9px] font-black uppercase tracking-tighter",
         ),
-        class_name="flex items-center justify-between px-3 py-2 border-t border-gray-200 bg-white/50 backdrop-blur-sm sticky bottom-0",
+        class_name="flex items-center justify-between px-3 py-2 border-t border-gray-200 bg-white/80 backdrop-blur-sm sticky bottom-0",
     )
 
 
@@ -91,9 +99,16 @@ def notification_sidebar() -> rx.Component:
             rx.el.div(
                 rx.el.div(
                     rx.el.div(
-                        rx.el.h3(
-                            "NOTIFICATIONS",
-                            class_name="text-[10px] font-bold text-gray-500 tracking-widest",
+                        rx.el.div(
+                            rx.el.h3(
+                                "NOTIFICATIONS",
+                                class_name="text-[10px] font-black text-gray-500 tracking-widest",
+                            ),
+                            rx.el.span(
+                                PortfolioDashboardState.notifications.length().to_string(),
+                                class_name="ml-2 bg-gray-200 text-gray-700 text-[8px] font-black px-1.5 py-0.5 rounded-full",
+                            ),
+                            class_name="flex items-center",
                         ),
                         rx.el.div(
                             rx.el.button(
@@ -118,15 +133,32 @@ def notification_sidebar() -> rx.Component:
                     ),
                     rx.scroll_area(
                         rx.el.div(
-                            rx.foreach(
-                                NotificationPaginationState.paginated_notifications,
-                                alert_card,
+                            rx.cond(
+                                NotificationPaginationState.paginated_notifications.length()
+                                > 0,
+                                rx.foreach(
+                                    NotificationPaginationState.paginated_notifications,
+                                    alert_card,
+                                ),
+                                rx.el.div(
+                                    rx.icon(
+                                        "bell-off",
+                                        size=24,
+                                        class_name="text-gray-300 mb-2",
+                                    ),
+                                    rx.el.p(
+                                        "No active alerts",
+                                        class_name="text-[10px] font-bold text-gray-400 uppercase",
+                                    ),
+                                    class_name="flex flex-col items-center justify-center h-full opacity-60",
+                                ),
                             ),
-                            class_name="flex flex-col gap-2 p-2 contain-content",
+                            class_name="flex flex-col gap-2 p-2 min-h-0",
                         ),
                         type="hover",
                         scrollbars="vertical",
                         class_name="flex-1 w-full",
+                        style={"height": "calc(100vh - 200px)"},
                     ),
                     pagination_footer(),
                     class_name="h-full w-full flex flex-col min-w-[220px]",
