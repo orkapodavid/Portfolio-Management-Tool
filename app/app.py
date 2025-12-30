@@ -1,16 +1,16 @@
 import reflex as rx
-from app.components.top_navigation import top_navigation
-from app.components.performance_header import performance_header
-from app.components.contextual_workspace import contextual_workspace
-from app.components.notification_sidebar import notification_sidebar
-from app.pages.portfolio_page import portfolio_page
-from app.pages.watchlist_page import watchlist_page
-from app.pages.research_page import research_page
-from app.pages.reports_page import reports_page
-from app.pages.goals_page import goals_page
-from app.pages.profile_page import profile_page
-from app.pages.notifications_page import notifications_page
-from app.pages.settings_page import settings_page
+from app.components.shared.top_navigation import top_navigation
+from app.components.shared.performance_header import performance_header
+from app.components.shared.contextual_workspace import contextual_workspace
+from app.components.shared.notification_sidebar import notification_sidebar
+from app.pages.portfolio.portfolio_page import portfolio_page
+from app.pages.portfolio.watchlist_page import watchlist_page
+from app.pages.research.research_page import research_page
+from app.pages.reports.reports_page import reports_page
+from app.pages.portfolio.goals_page import goals_page
+from app.pages.user.profile_page import profile_page
+from app.pages.notifications.notifications_page import notifications_page
+from app.pages.user.settings_page import settings_page
 from app.constants import FINANCIAL_GREY, DEFAULT_FONT
 
 

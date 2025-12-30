@@ -16,40 +16,80 @@ A professional portfolio management web dashboard built with [Reflex](https://re
 
 ## Prerequisites
 
-- **Python**: 3.11 or higher
+- **Python**: 3.13 (recommended) or 3.11+
+  - Note: Python 3.14+ is not compatible with Reflex 0.8.20 due to Pydantic V1 limitations
 - **Reflex**: 0.8.20+
 - **Node.js**: 18+ (installed automatically by Reflex)
+- **uv** (recommended): Fast Python package installer - [Install uv](https://docs.astral.sh/uv/getting-started/installation/)
 
 ## Installation
 
-1. **Clone the repository**:
-   bash
+### Option 1: Using uv (Recommended - Fast & Simple)
+
+1. **Install uv** (if not already installed):
+   ```bash
+   # macOS/Linux
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   
+   # Or via Homebrew
+   brew install uv
+   
+   # Windows
+   powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+   ```
+
+2. **Clone and setup**:
+   ```bash
    git clone <repository-url>
-   cd portfolio-dashboard
+   cd Portfolio-Management-Tool
    
+   # Create virtual environment with Python 3.13
+   uv venv --python 3.13 .venv
+   
+   # Install dependencies (much faster than pip!)
+   uv pip install -r requirements.txt
+   ```
 
-2. **Create a virtual environment**:
-   bash
-   python -m venv .venv
+### Option 2: Using standard pip
+
+1. **Ensure Python 3.13 is installed**:
+   ```bash
+   # macOS
+   brew install python@3.13
+   
+   # Check version
+   python3.13 --version
+   ```
+
+2. **Clone the repository**:
+   ```bash
+   git clone <repository-url>
+   cd Portfolio-Management-Tool
+   ```
+
+3. **Create a virtual environment**:
+   ```bash
+   python3.13 -m venv .venv
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   
+   ```
 
-3. **Install dependencies**:
-   bash
+4. **Install dependencies**:
+   ```bash
    pip install -r requirements.txt
-   
+   ```
 
    The `requirements.txt` includes:
-   
+   ```
    reflex==0.8.20
    yfinance
    PyGithub
-   
+   ```
 
-4. **Initialize the Reflex project** (first time only):
-   bash
+
+5. **Initialize the Reflex project** (first time only):
+   ```bash
    reflex init
-   
+   ```
 
 ## Running the Application
 
@@ -158,9 +198,19 @@ bash
 reflex run --frontend-port 3001 --backend-port 8001
 
 
+**Pydantic V1 compatibility warning (Python 3.14+)**:
+```bash
+# Recreate virtual environment with Python 3.13
+uv venv --python 3.13 .venv
+uv pip install -r requirements.txt
+```
+
 **Dependency conflicts**:
-bash
+```bash
 pip install --upgrade reflex
+# Or with uv:
+uv pip install --upgrade reflex
+```
 
 
 **Frontend not building**:
