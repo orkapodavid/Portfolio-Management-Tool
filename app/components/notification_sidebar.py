@@ -3,6 +3,7 @@ from app.states.portfolio_dashboard_state import (
     PortfolioDashboardState,
     NotificationItem,
 )
+from app.states.notification_pagination_state import NotificationPaginationState
 
 
 def alert_card(notification: NotificationItem) -> rx.Component:
@@ -60,8 +61,31 @@ def alert_card(notification: NotificationItem) -> rx.Component:
     )
 
 
+def pagination_footer() -> rx.Component:
+    return rx.el.div(
+        rx.el.button(
+            rx.icon("chevron-left", size=12),
+            on_click=NotificationPaginationState.prev_page,
+            disabled=NotificationPaginationState.current_page == 1,
+            class_name="p-1 rounded hover:bg-gray-200 disabled:opacity-20 transition-colors",
+        ),
+        rx.el.span(
+            f"Page {NotificationPaginationState.current_page} of {NotificationPaginationState.total_pages}",
+            class_name="text-[9px] font-bold text-gray-500 uppercase tracking-widest",
+        ),
+        rx.el.button(
+            rx.icon("chevron-right", size=12),
+            on_click=NotificationPaginationState.next_page,
+            disabled=NotificationPaginationState.current_page
+            == NotificationPaginationState.total_pages,
+            class_name="p-1 rounded hover:bg-gray-200 disabled:opacity-20 transition-colors",
+        ),
+        class_name="flex items-center justify-between px-3 py-2 border-t border-gray-200 bg-white/50 backdrop-blur-sm sticky bottom-0",
+    )
+
+
 def notification_sidebar() -> rx.Component:
-    """The right sidebar component for notifications (Region 4) with slide transition."""
+    """The right sidebar component for notifications (Region 4) with slide transition and pagination."""
     return rx.el.aside(
         rx.el.div(
             rx.el.div(
@@ -71,18 +95,32 @@ def notification_sidebar() -> rx.Component:
                             "NOTIFICATIONS",
                             class_name="text-[10px] font-bold text-gray-500 tracking-widest",
                         ),
-                        rx.el.button(
-                            rx.icon("circle_plus", size=12, class_name="text-gray-400"),
-                            on_click=PortfolioDashboardState.add_simulated_notification,
-                            title="Simulate Live Alert",
-                            class_name="hover:text-indigo-600 transition-colors",
+                        rx.el.div(
+                            rx.el.button(
+                                rx.icon(
+                                    "rotate-ccw", size=12, class_name="text-gray-400"
+                                ),
+                                on_click=NotificationPaginationState.reset_pagination,
+                                title="Reset Page",
+                                class_name="hover:text-blue-600 transition-colors mr-2",
+                            ),
+                            rx.el.button(
+                                rx.icon(
+                                    "circle_plus", size=12, class_name="text-gray-400"
+                                ),
+                                on_click=PortfolioDashboardState.add_simulated_notification,
+                                title="Simulate Live Alert",
+                                class_name="hover:text-indigo-600 transition-colors",
+                            ),
+                            class_name="flex items-center",
                         ),
                         class_name="flex items-center justify-between mb-2 px-3 pt-3",
                     ),
                     rx.scroll_area(
                         rx.el.div(
                             rx.foreach(
-                                PortfolioDashboardState.notifications, alert_card
+                                NotificationPaginationState.paginated_notifications,
+                                alert_card,
                             ),
                             class_name="flex flex-col gap-2 p-2 contain-content",
                         ),
@@ -90,6 +128,7 @@ def notification_sidebar() -> rx.Component:
                         scrollbars="vertical",
                         class_name="flex-1 w-full",
                     ),
+                    pagination_footer(),
                     class_name="h-full w-full flex flex-col min-w-[220px]",
                 ),
                 class_name="h-full w-full overflow-hidden",
