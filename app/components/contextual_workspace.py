@@ -9,7 +9,7 @@ def table_header_cell(text: str, align: str = "left") -> rx.Component:
     )
     return rx.el.th(
         text,
-        class_name=f"px-2 py-2 {align_class} text-[10px] font-bold text-gray-700 uppercase tracking-widest sticky top-[36px] bg-[#E5E7EB] border-b-2 border-gray-300 z-20 shadow-[0_2px_4px_rgba(0,0,0,0.05)]",
+        class_name=f"px-3 py-3 {align_class} text-[10px] font-bold text-gray-700 uppercase tracking-widest border-b-2 border-gray-400 align-middle whitespace-nowrap h-[44px]",
     )
 
 
@@ -17,7 +17,7 @@ def table_row(item: dict) -> rx.Component:
     """An optimized, high-density data row with row selection and financial formatting."""
     from app.constants import POSITIVE_GREEN, NEGATIVE_RED, ROW_HIGHLIGHT
 
-    table_row_height = "32px"
+    table_row_height = "40px"
     is_selected = PortfolioDashboardState.selected_row_id == item["id"]
     pnl_color = rx.cond(
         item["is_positive"], f"text-[{POSITIVE_GREEN}]", f"text-[{NEGATIVE_RED}]"
@@ -25,31 +25,31 @@ def table_row(item: dict) -> rx.Component:
     return rx.el.tr(
         rx.el.td(
             item["ticker"],
-            class_name="px-3 text-[10px] font-black text-gray-900 border-b border-gray-200 text-left align-middle",
+            class_name="px-3 py-2 text-[10px] font-black text-gray-900 border-b border-gray-200 text-left align-middle",
         ),
         rx.el.td(
             item["description"],
-            class_name="px-3 text-[10px] font-bold text-gray-600 border-b border-gray-200 truncate max-w-[140px] text-left align-middle",
+            class_name="px-3 py-2 text-[10px] font-bold text-gray-600 border-b border-gray-200 truncate max-w-[140px] text-left align-middle",
         ),
         rx.el.td(
             item["asset_class"],
-            class_name="px-3 text-[10px] font-medium text-gray-500 border-b border-gray-200 text-left align-middle",
+            class_name="px-3 py-2 text-[10px] font-medium text-gray-500 border-b border-gray-200 text-left align-middle",
         ),
         rx.el.td(
             item["qty"],
-            class_name="px-3 text-[10px] font-mono font-bold text-gray-700 text-right border-b border-gray-200 align-middle",
+            class_name="px-3 py-2 text-[10px] font-mono font-bold text-gray-700 text-right border-b border-gray-200 align-middle",
         ),
         rx.el.td(
             f"${item['price']}",
-            class_name="px-3 text-[10px] font-mono font-bold text-gray-700 text-right border-b border-gray-200 align-middle",
+            class_name="px-3 py-2 text-[10px] font-mono font-bold text-gray-700 text-right border-b border-gray-200 align-middle",
         ),
         rx.el.td(
             f"${item['mkt_value']}",
-            class_name="px-3 text-[10px] font-black font-mono text-gray-900 text-right border-b border-gray-200 align-middle",
+            class_name="px-3 py-2 text-[10px] font-black font-mono text-gray-900 text-right border-b border-gray-200 align-middle",
         ),
         rx.el.td(
             f"${item['daily_pnl']}",
-            class_name=f"px-3 text-[10px] font-black font-mono {pnl_color} text-right border-b border-gray-200 align-middle",
+            class_name=f"px-3 py-2 text-[10px] font-black font-mono {pnl_color} text-right border-b border-gray-200 align-middle",
         ),
         rx.el.td(
             rx.el.div(
@@ -59,7 +59,7 @@ def table_row(item: dict) -> rx.Component:
                 ),
                 class_name="flex items-center justify-center",
             ),
-            class_name="px-3 text-center border-b border-gray-200 align-middle",
+            class_name="px-3 py-2 text-center border-b border-gray-200 align-middle",
         ),
         rx.el.td(
             rx.cond(
@@ -79,15 +79,15 @@ def table_row(item: dict) -> rx.Component:
                     class_name="flex items-center justify-center",
                 ),
             ),
-            class_name="px-3 text-center border-b border-gray-200 align-middle",
+            class_name="px-3 py-2 text-center border-b border-gray-200 align-middle",
         ),
         on_click=lambda: PortfolioDashboardState.set_selected_row(item["id"]),
         class_name=rx.cond(
             is_selected,
             f"bg-[{ROW_HIGHLIGHT}]",
-            "odd:bg-gray-50 even:bg-white hover:bg-gray-100",
+            "odd:bg-white even:bg-gray-50 hover:bg-gray-100",
         )
-        + f" cursor-pointer h-[{table_row_height}] transition-colors duration-75",
+        + f" cursor-pointer h-[{table_row_height}] min-h-[40px] transition-colors duration-75",
     )
 
 
@@ -167,13 +167,13 @@ def mock_data_table() -> rx.Component:
                         table_header_cell("PnL", "right"),
                         table_header_cell("Status", "center"),
                         table_header_cell("Rec", "center"),
-                        class_name="bg-gray-50 border-b border-gray-200 shadow-[0_1px_2px_rgba(0,0,0,0.05)]",
+                        class_name="bg-[#E5E7EB] sticky top-0 z-30 shadow-[0_2px_4px_rgba(0,0,0,0.1)] h-[44px] min-h-[44px]",
                     )
                 ),
                 rx.el.tbody(
                     rx.foreach(PortfolioDashboardState.paginated_table_data, table_row)
                 ),
-                class_name="w-full min-w-[800px] table-auto border-collapse",
+                class_name="w-full min-w-[800px] table-auto border-separate border-spacing-0",
             ),
             type="hover",
             scrollbars="both",
