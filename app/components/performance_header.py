@@ -4,6 +4,7 @@ from app.states.portfolio_dashboard_state import (
     KPIMetric,
     TopMover,
 )
+from app.components.summary_cards import portfolio_summary
 from app.constants import (
     POSITIVE_GREEN,
     NEGATIVE_RED,
@@ -84,9 +85,10 @@ def performance_header() -> rx.Component:
             rx.el.div(
                 rx.el.div(
                     rx.foreach(PortfolioDashboardState.kpi_metrics, kpi_card),
-                    class_name="flex flex-wrap md:flex-nowrap gap-0 overflow-visible w-full",
+                    class_name="flex flex-wrap md:flex-nowrap gap-0 overflow-visible flex-1",
                 ),
-                class_name="flex items-center gap-0 w-full px-0 py-0",
+                portfolio_summary(),
+                class_name="flex items-center gap-2 w-full px-2 py-0",
             ),
             rx.el.div(
                 rx.el.button(

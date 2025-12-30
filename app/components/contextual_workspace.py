@@ -1,101 +1,23 @@
 import reflex as rx
 from app.states.portfolio_dashboard_state import PortfolioDashboardState
-from app.components.summary_cards import portfolio_summary
-
-
-def sub_tab(name: str) -> rx.Component:
-    """A sub-tab item with active state highlighting."""
-    is_active = PortfolioDashboardState.active_subtab == name
-    return rx.el.button(
-        name,
-        on_click=PortfolioDashboardState.set_subtab(name),
-        class_name=rx.cond(
-            is_active,
-            "px-2 py-0 text-[10px] font-bold text-gray-800 border-b-2 border-blue-600 bg-white transition-colors duration-150 h-[28px]",
-            "px-2 py-0 text-[10px] font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-colors duration-150 border-b-2 border-transparent h-[28px]",
-        ),
-    )
-
-
-def workspace_controls() -> rx.Component:
-    """Merged controls row with summary cards and the relocated Generate button."""
-    active_page_name = rx.cond(
-        PortfolioDashboardState.active_subtab != "",
-        PortfolioDashboardState.active_subtab,
-        PortfolioDashboardState.active_module,
-    )
-    return rx.el.div(
-        rx.el.div(
-            rx.el.div(
-                rx.el.span(
-                    "Date:",
-                    class_name="text-[10px] font-bold text-gray-500 uppercase mr-2 tracking-wide",
-                ),
-                rx.el.input(
-                    type="date",
-                    on_change=PortfolioDashboardState.set_current_date,
-                    class_name="bg-white border border-gray-300 rounded px-2 py-0 text-[10px] text-gray-700 focus:outline-none focus:border-blue-500 shadow-sm h-6",
-                    default_value=PortfolioDashboardState.current_date_filter,
-                ),
-                class_name="flex items-center",
-            ),
-            rx.el.div(
-                rx.icon(
-                    "search",
-                    size=12,
-                    class_name="text-gray-400 absolute left-2 top-1/2 -translate-y-1/2",
-                ),
-                rx.el.input(
-                    placeholder="Filter...",
-                    on_change=PortfolioDashboardState.set_current_search,
-                    class_name="pl-7 pr-2 py-0 bg-white border border-gray-300 rounded text-[10px] text-gray-700 w-32 focus:outline-none focus:border-blue-500 shadow-sm h-6",
-                    default_value=PortfolioDashboardState.current_search_query,
-                ),
-                class_name="relative",
-            ),
-            rx.el.div(
-                rx.el.span(
-                    "Refresh",
-                    class_name="text-[10px] font-bold text-gray-500 uppercase mr-2 tracking-wide",
-                ),
-                rx.switch(
-                    checked=PortfolioDashboardState.current_auto_refresh,
-                    on_change=PortfolioDashboardState.toggle_auto_refresh,
-                    color_scheme="grass",
-                    size="1",
-                ),
-                class_name="flex items-center bg-white px-2 py-0 rounded border border-gray-200 shadow-sm h-6",
-            ),
-            rx.el.button(
-                f"GENERATE {active_page_name}",
-                on_click=PortfolioDashboardState.handle_generate(active_page_name),
-                class_name="bg-[#2563EB] text-white px-3 h-6 rounded shadow-sm hover:bg-blue-700 transition-all duration-200 text-[9px] font-black uppercase tracking-wider flex items-center justify-center",
-            ),
-            class_name="flex items-center gap-2",
-        ),
-        portfolio_summary(),
-        class_name="flex items-center justify-between px-2 py-0.5 bg-gray-50 border-b border-gray-200 shrink-0 h-[36px] sticky top-0 z-30",
-    )
 
 
 def table_header_cell(text: str, align: str = "left") -> rx.Component:
-    """A standardized table header cell with compact padding."""
-    align_class = f"text-{align}"
+    """A standardized table header cell with enhanced separation and dark background."""
+    align_class = rx.match(
+        align, ("right", "text-right"), ("center", "text-center"), "text-left"
+    )
     return rx.el.th(
         text,
-        class_name=f"px-2 py-0.5 {align_class} text-[9px] font-bold text-gray-500 uppercase tracking-wider sticky top-[36px] bg-gray-50 border-b border-gray-200 z-10 shadow-sm",
+        class_name=f"px-2 py-2 {align_class} text-[10px] font-bold text-gray-700 uppercase tracking-widest sticky top-[36px] bg-[#E5E7EB] border-b-2 border-gray-300 z-20 shadow-[0_2px_4px_rgba(0,0,0,0.05)]",
     )
 
 
 def table_row(item: dict) -> rx.Component:
     """An optimized, high-density data row with row selection and financial formatting."""
-    from app.constants import (
-        POSITIVE_GREEN,
-        NEGATIVE_RED,
-        ROW_HIGHLIGHT,
-        TABLE_ROW_HEIGHT,
-    )
+    from app.constants import POSITIVE_GREEN, NEGATIVE_RED, ROW_HIGHLIGHT
 
+    table_row_height = "32px"
     is_selected = PortfolioDashboardState.selected_row_id == item["id"]
     pnl_color = rx.cond(
         item["is_positive"], f"text-[{POSITIVE_GREEN}]", f"text-[{NEGATIVE_RED}]"
@@ -103,75 +25,69 @@ def table_row(item: dict) -> rx.Component:
     return rx.el.tr(
         rx.el.td(
             item["ticker"],
-            class_name="px-3 text-[10px] font-black text-gray-900 border-b border-gray-100 text-left",
+            class_name="px-3 text-[10px] font-black text-gray-900 border-b border-gray-200 text-left align-middle",
         ),
         rx.el.td(
             item["description"],
-            class_name="px-3 text-[10px] font-bold text-gray-600 border-b border-gray-100 truncate max-w-[140px] text-left",
+            class_name="px-3 text-[10px] font-bold text-gray-600 border-b border-gray-200 truncate max-w-[140px] text-left align-middle",
         ),
         rx.el.td(
             item["asset_class"],
-            class_name="px-3 text-[10px] font-medium text-gray-500 border-b border-gray-100 text-left",
+            class_name="px-3 text-[10px] font-medium text-gray-500 border-b border-gray-200 text-left align-middle",
         ),
         rx.el.td(
             item["qty"],
-            class_name="px-3 text-[10px] font-mono font-bold text-gray-700 text-right border-b border-gray-100",
+            class_name="px-3 text-[10px] font-mono font-bold text-gray-700 text-right border-b border-gray-200 align-middle",
         ),
         rx.el.td(
             f"${item['price']}",
-            class_name="px-3 text-[10px] font-mono font-bold text-gray-700 text-right border-b border-gray-100",
+            class_name="px-3 text-[10px] font-mono font-bold text-gray-700 text-right border-b border-gray-200 align-middle",
         ),
         rx.el.td(
             f"${item['mkt_value']}",
-            class_name="px-3 text-[10px] font-black font-mono text-gray-900 text-right border-b border-gray-100",
+            class_name="px-3 text-[10px] font-black font-mono text-gray-900 text-right border-b border-gray-200 align-middle",
         ),
         rx.el.td(
             f"${item['daily_pnl']}",
-            class_name=f"px-3 text-[10px] font-black font-mono {pnl_color} text-right border-b border-gray-100",
+            class_name=f"px-3 text-[10px] font-black font-mono {pnl_color} text-right border-b border-gray-200 align-middle",
         ),
         rx.el.td(
-            rx.el.span(
-                item["status"],
-                class_name="px-1.5 py-0.5 rounded-[2px] text-[8px] font-black uppercase tracking-tighter bg-gray-100 text-gray-600",
+            rx.el.div(
+                rx.el.span(
+                    item["status"],
+                    class_name="px-1.5 py-0.5 rounded-[2px] text-[8px] font-black uppercase tracking-tighter bg-gray-100 text-gray-600",
+                ),
+                class_name="flex items-center justify-center",
             ),
-            class_name="px-3 text-center border-b border-gray-100",
+            class_name="px-3 text-center border-b border-gray-200 align-middle",
         ),
         rx.el.td(
             rx.cond(
                 item["is_reconciled"],
-                rx.tooltip(
-                    rx.el.div(
-                        rx.icon(
-                            "check", size=12, class_name=f"text-[{POSITIVE_GREEN}]"
-                        ),
-                        rx.el.span(
-                            "REC",
-                            class_name="text-[8px] font-bold text-emerald-600 ml-1",
-                        ),
-                        class_name="flex items-center justify-center cursor-help",
+                rx.el.div(
+                    rx.icon("check", size=12, class_name=f"text-[{POSITIVE_GREEN}]"),
+                    rx.el.span(
+                        "REC", class_name="text-[8px] font-bold text-emerald-600 ml-1"
                     ),
-                    content="Reconciled: Data matches internal records.",
+                    class_name="flex items-center justify-center",
                 ),
-                rx.tooltip(
-                    rx.el.div(
-                        rx.icon("x", size=12, class_name=f"text-[{NEGATIVE_RED}]"),
-                        rx.el.span(
-                            "VAR", class_name="text-[8px] font-bold text-red-600 ml-1"
-                        ),
-                        class_name="flex items-center justify-center cursor-help",
+                rx.el.div(
+                    rx.icon("x", size=12, class_name=f"text-[{NEGATIVE_RED}]"),
+                    rx.el.span(
+                        "VAR", class_name="text-[8px] font-bold text-red-600 ml-1"
                     ),
-                    content="Variance: Discrepancy detected in data.",
+                    class_name="flex items-center justify-center",
                 ),
             ),
-            class_name="px-3 text-center border-b border-gray-100",
+            class_name="px-3 text-center border-b border-gray-200 align-middle",
         ),
-        on_click=PortfolioDashboardState.set_selected_row(item["id"]),
+        on_click=lambda: PortfolioDashboardState.set_selected_row(item["id"]),
         class_name=rx.cond(
             is_selected,
             f"bg-[{ROW_HIGHLIGHT}]",
             "odd:bg-gray-50 even:bg-white hover:bg-gray-100",
         )
-        + f" cursor-pointer h-[{TABLE_ROW_HEIGHT}] transition-colors duration-75",
+        + f" cursor-pointer h-[{table_row_height}] transition-colors duration-75",
     )
 
 
@@ -268,13 +184,61 @@ def mock_data_table() -> rx.Component:
     )
 
 
+def sub_tab(name: str) -> rx.Component:
+    is_active = PortfolioDashboardState.active_subtab == name
+    return rx.el.button(
+        name,
+        on_click=lambda: PortfolioDashboardState.set_subtab(name),
+        class_name=rx.cond(
+            is_active,
+            "px-3 h-full text-[9px] font-black text-blue-600 border-b-2 border-blue-600 uppercase tracking-tighter whitespace-nowrap",
+            "px-3 h-full text-[9px] font-bold text-gray-400 border-b-2 border-transparent hover:text-gray-600 uppercase tracking-tighter whitespace-nowrap",
+        ),
+    )
+
+
+def workspace_controls() -> rx.Component:
+    return rx.el.div(
+        rx.el.div(
+            rx.el.div(
+                rx.icon("search", size=12, class_name="text-gray-400 mr-1.5"),
+                rx.el.input(
+                    placeholder="Search tickers...",
+                    on_change=PortfolioDashboardState.set_current_search,
+                    class_name="bg-transparent text-[10px] font-bold outline-none w-full text-gray-700",
+                ),
+                class_name="flex items-center bg-gray-100 border border-gray-200 rounded px-2 h-6 flex-1 max-w-[200px]",
+            ),
+            rx.el.div(
+                rx.el.input(
+                    type="date",
+                    on_change=PortfolioDashboardState.set_current_date,
+                    class_name="bg-gray-100 border border-gray-200 rounded px-2 h-6 text-[10px] font-bold text-gray-600 outline-none",
+                ),
+                class_name="flex items-center",
+            ),
+            class_name="flex items-center gap-3 flex-1",
+        ),
+        rx.el.div(
+            rx.el.button(
+                rx.el.div(
+                    rx.icon("zap", size=10),
+                    rx.el.span("Generate", class_name="ml-1"),
+                    class_name="flex items-center",
+                ),
+                on_click=lambda: PortfolioDashboardState.handle_generate(
+                    PortfolioDashboardState.active_subtab
+                ),
+                class_name="px-3 h-6 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded hover:bg-blue-700 transition-colors",
+            ),
+            class_name="flex items-center gap-2",
+        ),
+        class_name="flex items-center justify-between px-3 py-1 bg-[#F9F9F9] border-b border-gray-200 shrink-0 h-[36px]",
+    )
+
+
 def contextual_workspace() -> rx.Component:
     """The main workspace area (Region 3) with maximized table height."""
-    active_page_name = rx.cond(
-        PortfolioDashboardState.active_subtab != "",
-        PortfolioDashboardState.active_subtab,
-        PortfolioDashboardState.active_module,
-    )
     return rx.el.div(
         rx.el.div(
             rx.foreach(PortfolioDashboardState.current_subtabs, sub_tab),
