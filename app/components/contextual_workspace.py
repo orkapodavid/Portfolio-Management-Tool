@@ -278,7 +278,7 @@ def contextual_workspace() -> rx.Component:
     return rx.el.div(
         rx.el.div(
             rx.foreach(PortfolioDashboardState.current_subtabs, sub_tab),
-            class_name="flex items-center bg-white border-b border-gray-200 px-2 pt-0.5 overflow-x-auto shrink-0 h-[28px] no-scrollbar",
+            class_name="flex flex-row items-center bg-white border-b border-gray-200 px-2 pt-0.5 overflow-hidden shrink-0 h-[28px] w-full max-w-full flex-nowrap",
         ),
         rx.el.div(
             workspace_controls(),
