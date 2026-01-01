@@ -1,7 +1,10 @@
 import reflex as rx
 from app.components.shared.sidebar import sidebar
 from app.components.shared.mobile_nav import mobile_nav
-from app.components.portfolio.portfolio_modals import add_portfolio_modal, add_transaction_modal
+from app.components.portfolio.portfolio_modals import (
+    add_portfolio_modal,
+    add_transaction_modal,
+)
 from app.components.portfolio.holdings_table import holdings_table
 from app.components.portfolio.transaction_history import transaction_history
 from app.components.portfolio.dividend_tracker import dividend_tracker

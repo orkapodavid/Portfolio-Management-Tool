@@ -3,19 +3,9 @@ from .dividend_tracker import dividend_tracker
 from .goal_components import goal_card, add_edit_goal_modal
 from .holdings_table import holdings_table
 from .news_feed import news_feed
-from .portfolio_modals import (
-    add_portfolio_modal,
-    add_transaction_modal,
-)
-from .report_charts import (
-    performance_chart,
-    allocation_report,
-    summary_stats,
-)
-from .research_components import (
-    stock_analysis_card,
-    stock_detail_modal,
-)
+from .portfolio_modals import add_portfolio_modal, add_transaction_modal
+from .report_charts import performance_chart, allocation_report, summary_stats
+from .research_components import stock_analysis_card, stock_detail_modal
 from .sector_breakdown import sector_breakdown
 from .stock_card import stock_card
 from .summary_cards import portfolio_summary

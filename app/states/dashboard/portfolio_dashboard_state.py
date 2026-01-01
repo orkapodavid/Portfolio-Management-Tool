@@ -1,662 +1,58 @@
 import random
 from datetime import datetime
-from typing import TypedDict
 import reflex as rx
-
-
-class PositionItem(TypedDict):
-    id: int
-    trade_date: str
-    deal_num: str
-    detail_id: str
-    underlying: str
-    ticker: str
-    company_name: str
-    account_id: str
-    pos_loc: str
-
-
-class StockPositionItem(TypedDict):
-    id: int
-    trade_date: str
-    deal_num: str
-    detail_id: str
-    ticker: str
-    company_name: str
-    sec_id: str
-    sec_type: str
-    currency: str
-    account_id: str
-    position_location: str
-    notional: str
-
-
-class WarrantPositionItem(TypedDict):
-    id: int
-    trade_date: str
-    deal_num: str
-    detail_id: str
-    underlying: str
-    ticker: str
-    company_name: str
-    sec_id: str
-    sec_type: str
-    subtype: str
-    currency: str
-    account_id: str
-
-
-class BondPositionItem(TypedDict):
-    id: int
-    trade_date: str
-    deal_num: str
-    detail_id: str
-    underlying: str
-    ticker: str
-    company_name: str
-    sec_id: str
-    sec_type: str
-    subtype: str
-    currency: str
-    account_id: str
-
-
-class TradeSummaryItem(TypedDict):
-    id: int
-    deal_num: str
-    detail_id: str
-    ticker: str
-    underlying: str
-    account_id: str
-    company_name: str
-    sec_id: str
-    sec_type: str
-    subtype: str
-    currency: str
-    closing_date: str
-    divisor: str
-
-
-class NotificationItem(TypedDict):
-    id: int
-    header: str
-    ticker: str
-    timestamp: str
-    instruction: str
-    type: str
-    read: bool
-
-
-class KPIMetric(TypedDict):
-    label: str
-    value: str
-    is_positive: bool
-
-
-class TopMover(TypedDict):
-    ticker: str
-    name: str
-    value: str
-    change: str
-    is_positive: bool
-
-
-class PnLChangeItem(TypedDict):
-    id: int
-    trade_date: str
-    underlying: str
-    ticker: str
-    pnl_ytd: str
-    pnl_chg_1d: str
-    pnl_chg_1w: str
-    pnl_chg_1m: str
-    pnl_chg_pct_1d: str
-    pnl_chg_pct_1w: str
-    pnl_chg_pct_1m: str
-
-
-class PnLSummaryItem(TypedDict):
-    id: int
-    trade_date: str
-    underlying: str
-    currency: str
-    price: str
-    price_t_1: str
-    price_change: str
-    fx_rate: str
-    fx_rate_t_1: str
-    fx_rate_change: str
-    dtl: str
-    last_volume: str
-    adv_3m: str
-
-
-class PnLCurrencyItem(TypedDict):
-    id: int
-    trade_date: str
-    currency: str
-    fx_rate: str
-    fx_rate_t_1: str
-    fx_rate_change: str
-    ccy_exposure: str
-    usd_exposure: str
-    pos_ccy_expo: str
-    ccy_hedged_pnl: str
-    pos_ccy_pnl: str
-    net_ccy: str
-    pos_c_truncated: str
-
-
-class RestrictedListItem(TypedDict):
-    id: int
-    ticker: str
-    company_name: str
-    in_emdx: str
-    compliance_type: str
-    firm_block: str
-    compliance_start: str
-    nda_end: str
-    mnpi_end: str
-    wc_end: str
-
-
-class UndertakingItem(TypedDict):
-    id: int
-    deal_num: str
-    ticker: str
-    company_name: str
-    account: str
-    undertaking_expiry: str
-    undertaking_type: str
-    undertaking_details: str
-
-
-class BeneficialOwnershipItem(TypedDict):
-    id: int
-    trade_date: str
-    ticker: str
-    company_name: str
-    nosh_reported: str
-    nosh_bbg: str
-    nosh_proforma: str
-    stock_shares: str
-    warrant_shares: str
-    bond_shares: str
-    total_shares: str
-
-
-class MonthlyExerciseLimitItem(TypedDict):
-    id: int
-    underlying: str
-    ticker: str
-    company_name: str
-    sec_type: str
-    original_nosh: str
-    original_quantity: str
-    monthly_exercised_quantity: str
-    monthly_exercised_pct: str
-    monthly_sal: str
-
-
-class PayToHoldItem(TypedDict):
-    id: int
-    trade_date: str
-    ticker: str
-    currency: str
-    counter_party: str
-    side: str
-    sl_rate: str
-    pth_amount_sod: str
-    pth_amount: str
-    emsa_order: str
-    emsa_remark: str
-    emsa_working: str
-    emsa_order_col: str
-    emsa_filled: str
-
-
-class ShortECLItem(TypedDict):
-    id: int
-    trade_date: str
-    ticker: str
-    company_name: str
-    pos_loc: str
-    account: str
-    short_position: str
-    nosh: str
-    short_ownership: str
-    last_volume: str
-    short_pos_truncated: str
-
-
-class StockBorrowItem(TypedDict):
-    id: int
-    trade_date: str
-    ticker: str
-    company_name: str
-    jpm_req: str
-    jpm_firm: str
-    borrow_rate: str
-    bofa_req: str
-    bofa_firm: str
-
-
-class POSettlementItem(TypedDict):
-    id: int
-    deal_num: str
-    ticker: str
-    company_name: str
-    structure: str
-    currency: str
-    fx_rate: str
-    last_price: str
-    current_position: str
-    shares_allocated: str
-    shares_swap: str
-    shares_hedged: str
-
-
-class DealIndicationItem(TypedDict):
-    id: int
-    ticker: str
-    company_name: str
-    identification: str
-    deal_type: str
-    agent: str
-    captain: str
-    indication_date: str
-    currency: str
-    market_cap_loc: str
-    gross_proceed_loc: str
-    indication_amount: str
-
-
-class ResetDateItem(TypedDict):
-    id: int
-    underlying: str
-    ticker: str
-    company_name: str
-    sec_type: str
-    currency: str
-    trade_date: str
-    first_reset: str
-    expiry: str
-    latest_reset: str
-    reset_up_down: str
-    market_price: str
-
-
-class ComingResetItem(TypedDict):
-    id: int
-    deal_num: str
-    detail_id: str
-    ticker: str
-    account: str
-    company_name: str
-    announce_date: str
-    closing_date: str
-    cal_days: str
-    biz_days: str
-
-
-class CBInstallmentItem(TypedDict):
-    id: int
-    underlying: str
-    ticker: str
-    currency: str
-    installment_date: str
-    total_amount: str
-    outstanding: str
-    redeemed: str
-    deferred: str
-    converted: str
-    installment_amount: str
-    period: str
-
-
-class ExcessAmountItem(TypedDict):
-    id: int
-    deal_num: str
-    underlying: str
-    ticker: str
-    company_name: str
-    warrants: str
-    excess_amount: str
-    threshold: str
-    cb_redeem: str
-    redeem: str
-
-
-class PPSReconItem(TypedDict):
-    id: int
-    value_date: str
-    trade_date: str
-    underlying: str
-    ticker: str
-    code: str
-    company_name: str
-    sec_type: str
-    pos_loc: str
-    account: str
-
-
-class SettlementReconItem(TypedDict):
-    id: int
-    trade_date: str
-    ml_report_date: str
-    underlying: str
-    ticker: str
-    company_name: str
-    pos_loc: str
-    currency: str
-    sec_type: str
-    position_settled: str
-    ml_inventory: str
-
-
-class FailedTradeItem(TypedDict):
-    id: int
-    report_date: str
-    trade_date: str
-    value_date: str
-    settlement_date: str
-    portfolio_code: str
-    instrument_ref: str
-    instrument_name: str
-    ticker: str
-    company_name: str
-    isin: str
-    sedol: str
-    broker: str
-    glass_reference: str
-    trade_reference: str
-    deal_type: str
-    q: str
-
-
-class PnLReconItem(TypedDict):
-    id: int
-    trade_date: str
-    report_date: str
-    deal_num: str
-    row_index: str
-    underlying: str
-    pos_loc: str
-    stock_sec_id: str
-    warrant_sec_id: str
-    bond_sec_id: str
-    stock_position: str
-
-
-class RiskInputReconItem(TypedDict):
-    id: int
-    value_date: str
-    underlying: str
-    ticker: str
-    sec_type: str
-    spot_mc: str
-    spot_ppd: str
-    position: str
-    value_mc: str
-    value_ppd: str
-
-
-class DailyProcedureItem(TypedDict):
-    id: int
-    check_date: str
-    host_run_date: str
-    scheduled_time: str
-    procedure_name: str
-    status: str
-    error_message: str
-    frequency: str
-    scheduled_day: str
-    created_by: str
-    created_time: str
-
-
-class OperationProcessItem(TypedDict):
-    id: int
-    process: str
-    status: str
-    last_run_time: str
-
-
-class MarketDataItem(TypedDict):
-    id: int
-    ticker: str
-    listed_shares: str
-    last_volume: str
-    last_price: str
-    vwap_price: str
-    bid: str
-    ask: str
-    chg_1d_pct: str
-    implied_vol_pct: str
-    market_status: str
-    created_by: str
-
-
-class FXDataItem(TypedDict):
-    id: int
-    ticker: str
-    last_price: str
-    bid: str
-    ask: str
-    created_by: str
-    created_time: str
-    updated_by: str
-    update: str
-
-
-class HistoricalDataItem(TypedDict):
-    id: int
-    trade_date: str
-    ticker: str
-    vwap_price: str
-    last_price: str
-    last_volume: str
-    chg_1d_pct: str
-    created_by: str
-    created_time: str
-    updated_by: str
-    update: str
-
-
-class TradingCalendarItem(TypedDict):
-    id: int
-    trade_date: str
-    day_of_week: str
-    usa: str
-    hkg: str
-    jpn: str
-    aus: str
-    nzl: str
-    kor: str
-    chn: str
-    twn: str
-    ind: str
-
-
-class MarketHoursItem(TypedDict):
-    id: int
-    market: str
-    ticker: str
-    session: str
-    local_time: str
-    session_period: str
-    is_open: str
-    timezone: str
-
-
-class EventCalendarItem(TypedDict):
-    id: int
-    underlying: str
-    ticker: str
-    company: str
-    event_date: str
-    day_of_week: str
-    event_type: str
-    time: str
-
-
-class EventStreamItem(TypedDict):
-    id: int
-    symbol: str
-    record_date: str
-    event_date: str
-    day_of_week: str
-    event_type: str
-    subject: str
-    notes: str
-    alerted: str
-    recur: str
-    created_by: str
-    created_time: str
-    updated_by: str
-    updated_time: str
-
-
-class ReverseInquiryItem(TypedDict):
-    id: int
-    ticker: str
-    company: str
-    inquiry_date: str
-    expiry_date: str
-    deal_point: str
-    agent: str
-    notes: str
-
-
-class TickerDataItem(TypedDict):
-    id: int
-    ticker: str
-    currency: str
-    fx_rate: str
-    sector: str
-    company: str
-    po_lead_manager: str
-    fmat_cap: str
-    smkt_cap: str
-    chg_1d_pct: str
-    dtl: str
-
-
-class StockScreenerItem(TypedDict):
-    id: int
-    otl: str
-    mkt_cap_37_pct: str
-    ticker: str
-    company: str
-    country: str
-    industry: str
-    last_price: str
-    mkt_cap_loc: str
-    mkt_cap_usd: str
-    adv_3m: str
-    locate_qty_mm: str
-    locate_f: str
-
-
-class SpecialTermItem(TypedDict):
-    id: int
-    deal_num: str
-    ticker: str
-    company_name: str
-    sec_type: str
-    pos_loc: str
-    account: str
-    effective_date: str
-    position: str
-
-
-class InstrumentDataItem(TypedDict):
-    id: int
-    deal_num: str
-    detail_id: str
-    underlying: str
-    ticker: str
-    company_name: str
-    sec_id: str
-    sec_type: str
-    pos_loc: str
-    account: str
-
-
-class InstrumentTermItem(TypedDict):
-    id: int
-    deal_num: str
-    detail_id: str
-    underlying: str
-    ticker: str
-    company_name: str
-    sec_type: str
-    effective_date: str
-    maturity_date: str
-    first_reset_da: str
-
-
-class DeltaChangeItem(TypedDict):
-    id: int
-    ticker: str
-    company_name: str
-    structure: str
-    currency: str
-    fx_rate: str
-    current_price: str
-    valuation_price: str
-    pos_delta: str
-    pos_delta_small: str
-    pos_g: str
-
-
-class RiskMeasureItem(TypedDict):
-    id: int
-    seed: str
-    simulation_num: str
-    trial_num: str
-    underlying: str
-    ticker: str
-    sec_type: str
-    is_private: str
-    national: str
-    national_used: str
-    national_current: str
-    currency: str
-    fx_rate: str
-    spot_price: str
-
-
-class RiskInputItem(TypedDict):
-    id: int
-    seed: str
-    simulation_num: str
-    trial_num: str
-    underlying: str
-    ticker: str
-    sec_type: str
-    is_private: str
-    national: str
-    national_used: str
-    national_current: str
-    currency: str
-    fx_rate: str
-    spot_price: str
-
-
-class EMSAOrderItem(TypedDict):
-    id: int
-    sequence: str
-    underlying: str
-    ticker: str
-    broker: str
-    pos_loc: str
-    side: str
-    status: str
-    emsa_amount: str
-    emsa_routed: str
-    emsa_working: str
-    emsa_filled: str
+import asyncio
+from app.config import PMT_INTEGRATION_MODE
+from app.states.dashboard.portfolio_dashboard_types import (
+    PositionItem,
+    StockPositionItem,
+    WarrantPositionItem,
+    BondPositionItem,
+    TradeSummaryItem,
+    NotificationItem,
+    KPIMetric,
+    TopMover,
+    PnLChangeItem,
+    PnLSummaryItem,
+    PnLCurrencyItem,
+    RestrictedListItem,
+    UndertakingItem,
+    BeneficialOwnershipItem,
+    MonthlyExerciseLimitItem,
+    PayToHoldItem,
+    ShortECLItem,
+    StockBorrowItem,
+    POSettlementItem,
+    DealIndicationItem,
+    ResetDateItem,
+    ComingResetItem,
+    CBInstallmentItem,
+    ExcessAmountItem,
+    PPSReconItem,
+    SettlementReconItem,
+    FailedTradeItem,
+    PnLReconItem,
+    RiskInputReconItem,
+    DailyProcedureItem,
+    OperationProcessItem,
+    MarketDataItem,
+    FXDataItem,
+    HistoricalDataItem,
+    TradingCalendarItem,
+    MarketHoursItem,
+    EventCalendarItem,
+    EventStreamItem,
+    ReverseInquiryItem,
+    TickerDataItem,
+    StockScreenerItem,
+    SpecialTermItem,
+    InstrumentDataItem,
+    InstrumentTermItem,
+    DeltaChangeItem,
+    RiskMeasureItem,
+    RiskInputItem,
+    EMSAOrderItem,
+)
 
 
 def _fmt_usd(val: float) -> str:
@@ -2068,6 +1464,97 @@ class PortfolioDashboardState(rx.State):
     def unread_count(self) -> int:
         return len([n for n in self.notifications if not n.get("read", False)])
 
+    @rx.var
+    def integration_mode(self) -> str:
+        return PMT_INTEGRATION_MODE
+
+    is_adapter_loading: bool = False
+
+    @rx.event
+    async def load_data_from_adapters(self):
+        """Main entry point to load all data from adapters if not in standalone mode."""
+        if self.integration_mode == "standalone":
+            return
+        self.is_adapter_loading = True
+        yield
+        try:
+            await asyncio.gather(
+                self.load_pnl_data(),
+                self.load_positions_data(),
+                self.load_compliance_data(),
+                self.load_market_data(),
+                self.load_recon_data(),
+            )
+        except Exception as e:
+            import logging
+
+            logging.exception(f"Error loading data from adapters: {e}")
+            yield rx.toast("Failed to load data from backend. Using cached data.")
+        finally:
+            self.is_adapter_loading = False
+
+    @rx.event
+    async def load_pnl_data(self):
+        """Fetch PnL related data via ReportingAdapter."""
+        pnl_change = await ReportingAdapter.get_pnl_change()
+        if pnl_change:
+            self.pnl_change_data = pnl_change
+        pnl_summary = await ReportingAdapter.get_pnl_summary()
+        if pnl_summary:
+            self.pnl_summary_data = pnl_summary
+        pnl_currency = await ReportingAdapter.get_pnl_currency()
+        if pnl_currency:
+            self.pnl_currency_data = pnl_currency
+
+    @rx.event
+    async def load_positions_data(self):
+        """Fetch Positions related data via PortfolioAdapter."""
+        positions = await PortfolioAdapter.get_positions()
+        if positions:
+            self.positions_data = positions
+        stock_pos = await PortfolioAdapter.get_stock_positions()
+        if stock_pos:
+            self.stock_positions = stock_pos
+        warrant_pos = await PortfolioAdapter.get_warrant_positions()
+        if warrant_pos:
+            self.warrant_positions = warrant_pos
+        bond_pos = await PortfolioAdapter.get_bond_positions()
+        if bond_pos:
+            self.bond_positions = bond_pos
+        trade_sums = await PortfolioAdapter.get_trade_summaries()
+        if trade_sums:
+            self.trade_summaries = trade_sums
+
+    @rx.event
+    async def load_compliance_data(self):
+        """Fetch Compliance related data via ReportingAdapter."""
+        restricted = await ReportingAdapter.get_restricted_list()
+        if restricted:
+            self.restricted_list_data = restricted
+
+    @rx.event
+    async def load_market_data(self):
+        """Fetch Market Data related data via PricingAdapter."""
+        mkt = await PricingAdapter.get_market_data()
+        if mkt:
+            self.market_data_list = mkt
+        fx = await PricingAdapter.get_fx_data()
+        if fx:
+            self.fx_data_list = fx
+        hist = await PricingAdapter.get_historical_data()
+        if hist:
+            self.historical_data_list = hist
+
+    @rx.event
+    async def load_recon_data(self):
+        """Fetch Reconciliation data via ReportingAdapter."""
+        pnl_recon = await ReportingAdapter.get_pnl_recon()
+        if pnl_recon:
+            self.pnl_recon_data = pnl_recon
+        risk_recon = await ReportingAdapter.get_risk_input_recon()
+        if risk_recon:
+            self.risk_input_recon_data = risk_recon
+
     @rx.event
     def add_simulated_notification(self):
         import random
@@ -2107,18 +1594,23 @@ class PortfolioDashboardState(rx.State):
 
     @rx.event
     async def refresh_prices(self):
-        """Simulates refreshing market data for all PnL views."""
+        """Refreshes market data. Uses adapters if not in standalone mode."""
         self.is_loading = True
         yield
         try:
-            self.pnl_change_data = _generate_pnl_change_data()
-            self.pnl_summary_data = _generate_pnl_summary_data()
-            self.pnl_currency_data = _generate_pnl_currency_data()
-            yield rx.toast("Market data refreshed", position="bottom-right")
+            if self.integration_mode != "standalone":
+                await self.load_data_from_adapters()
+                yield rx.toast("Data refreshed from backend", position="bottom-right")
+            else:
+                self.pnl_change_data = _generate_pnl_change_data()
+                self.pnl_summary_data = _generate_pnl_summary_data()
+                self.pnl_currency_data = _generate_pnl_currency_data()
+                yield rx.toast("Market data refreshed (Mock)", position="bottom-right")
         except Exception as e:
             import logging
 
             logging.exception(f"Error refreshing portfolio dashboard prices: {e}")
+            yield rx.toast("Error refreshing data")
         finally:
             self.is_loading = False
 

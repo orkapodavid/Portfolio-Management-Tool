@@ -2,7 +2,10 @@ import reflex as rx
 from app.components.shared.sidebar import sidebar
 from app.components.shared.mobile_nav import mobile_nav
 from app.states.research.research_state import ResearchState
-from app.components.portfolio.research_components import stock_analysis_card, stock_detail_modal
+from app.components.portfolio.research_components import (
+    stock_analysis_card,
+    stock_detail_modal,
+)
 
 
 def research_page() -> rx.Component:

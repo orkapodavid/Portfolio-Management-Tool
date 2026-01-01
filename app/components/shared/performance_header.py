@@ -1,9 +1,6 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import (
-    PortfolioDashboardState,
-    KPIMetric,
-    TopMover,
-)
+from app.states.dashboard.portfolio_dashboard_state import PortfolioDashboardState
+from app.states.dashboard.portfolio_dashboard_types import KPIMetric, TopMover
 from app.components.portfolio.summary_cards import portfolio_summary
 from app.constants import (
     POSITIVE_GREEN,

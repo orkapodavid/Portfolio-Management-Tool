@@ -1,6 +1,6 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import (
-    PortfolioDashboardState,
+from app.states.dashboard.portfolio_dashboard_state import PortfolioDashboardState
+from app.states.dashboard.portfolio_dashboard_types import (
     PayToHoldItem,
     ShortECLItem,
     StockBorrowItem,
