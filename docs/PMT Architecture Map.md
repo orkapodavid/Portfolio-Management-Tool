@@ -122,6 +122,8 @@ This notes the structure and data plumbing of the Portfolio Management Tool (PyQ
 
 ## Reusing the codebase in a Python Reflex app (keep filesystem intact)
 
+> Note: This section describes a minimal "keep filesystem intact" strategy for integrating a web app with the existing PyQt codebase. For the current integration project, we are instead using a `pmt_core`-based shared package as described in `integration_with_pyqt.md`. Treat the guidance below as conceptual patterns that will ultimately be implemented via `pmt_core.services` and adapters, rather than having the web app import directly from `source/*`.
+
 * **Keep the data layer:** reuse `resources/config/report` plus `source/models/*` and `source/reports/*` classes. They already expose `ReportClass.extract_report_data`, `merge_report_data`, and `data_model_header` (column metadata). No file moves needed.
 * **Add a thin API/service layer:** create a new folder (for example `reflex_app/`) alongside existing code that imports `ModelConfig` and `class_mapping`. Provide FastAPI-style endpoints or Reflex `State` methods that call `report_class.extract_report_data()` and serialize `data_model_header` for column definitions.
 * **Build Reflex views from configs:** for each `ReportClass`, generate tables using `data_model_header` (labels, formats, freeze/display flags) and auto-wire refresh intervals from `auto_refresh`. Use `[Merges]` to orchestrate upstream fetch order in state.
