@@ -11,11 +11,16 @@ The file `app/states/portfolio/portfolio_state.py` currently uses hardcoded data
 
 *   **Action:** Modify `PortfolioState` to fetch data using `app.adapters.portfolio_adapter.PortfolioAdapter`.
 *   **Details:**
-    *   Import `PortfolioAdapter`.
-    *   Use `asyncio.to_thread` if calling synchronous mock services directly, or rely on the Adapter's async methods if they handle it (check `app/adapters/base_adapter.py`).
-    *   Maintain the existing state variables (`portfolios`, `selected_portfolio_index`) but populate them from the adapter data instead of the hardcoded list.
-    *   Ensure the "Add Portfolio" and "Add Transaction" logic is either preserved or mocked appropriately if the adapter doesn't support write operations yet (mocks usually don't persist).
-    *   Handle `PMT_INTEGRATION_MODE` check implicitly via the Adapter (which already handles it).
+    *   **Enhance Adapter:** The current `PortfolioAdapter` only fetches flat lists of positions. You need to add functionality to `PortfolioAdapter` (and corresponding mocks in `app/mocks/pmt_core`) to support the data structure required by `PortfolioState` (specifically `holdings`, and optionally `transactions`/`dividends` if feasible, otherwise keep them empty or mocked).
+        *   Implement a method like `get_user_portfolio_holdings(portfolio_id)` in the adapter.
+        *   Map the `PositionItem` or `StockPositionItem` from the core/mock to the `Holding` TypedDict used in `PortfolioState`.
+    *   **Update State:**
+        *   Import `PortfolioAdapter`.
+        *   In `PortfolioState`, replace the hardcoded `holdings` list in the `portfolios` state variable with data fetched from the adapter.
+        *   Use `asyncio.to_thread` for mock service calls if needed (handled by Adapter base class usually).
+        *   Initialize the state by fetching data in an event handler (e.g., `on_load` or similar) or keep a default structure that populates on first access.
+    *   **Maintain State Structure:** Keep the `Portfolio` TypedDict and `portfolios` list structure to ensure UI compatibility. Group fetched positions by account ID or create a default portfolio to hold them.
+    *   **Handle Mode:** Ensure the `PMT_INTEGRATION_MODE` check is handled implicitly via the Adapter.
 
 ### 2. Update `requirements.txt` (Refer to Prompt 7)
 The dependency file is missing the placeholder for the future `pmt_core` package.
@@ -30,7 +35,7 @@ The dependency file is missing the placeholder for the future `pmt_core` package
 There are no integration tests to verify the adapter layer.
 
 *   **Action:** Create a new directory `tests/integration/` and add the following files:
-    *   `tests/integration/test_portfolio_adapter.py`: Test that `PortfolioAdapter` correctly transforms data from the mock service.
+    *   `tests/integration/test_portfolio_adapter.py`: Test that `PortfolioAdapter` correctly transforms data from the mock service into the expected format (including the new holdings mapping).
     *   `tests/integration/test_pmt_state_integration.py`: Test that a state (like `PortfolioState`) correctly loads data when initialized or when an event is triggered.
     *   `tests/integration/test_mock_pmt_core.py`: Verify that the mock services in `app/mocks/pmt_core` return data in the expected format.
 *   **Details:** Use `pytest` conventions. You may need to mock `rx.State` behavior or just test the logic methods.
