@@ -1,18 +1,11 @@
 from app.adapters.base_adapter import BaseAdapter
-from app.states.dashboard.portfolio_dashboard_types import (
-    PositionItem,
-    StockPositionItem,
-    WarrantPositionItem,
-    BondPositionItem,
-    TradeSummaryItem,
-)
 
 
 class PortfolioAdapter(BaseAdapter):
     """Adapter for Portfolio specific data aggregation and transformation."""
 
     @classmethod
-    async def get_positions(cls) -> list[PositionItem]:
+    async def get_positions(cls) -> list[dict]:
         """Fetches and adapts standard positions data."""
         service = cls.get_service("reporting")
         if not service:
@@ -38,7 +31,7 @@ class PortfolioAdapter(BaseAdapter):
         return adapted_data
 
     @classmethod
-    async def get_stock_positions(cls) -> list[StockPositionItem]:
+    async def get_stock_positions(cls) -> list[dict]:
         """Fetches and adapts stock positions data."""
         service = cls.get_service("reporting")
         if not service:
@@ -67,7 +60,7 @@ class PortfolioAdapter(BaseAdapter):
         return adapted_data
 
     @classmethod
-    async def get_warrant_positions(cls) -> list[WarrantPositionItem]:
+    async def get_warrant_positions(cls) -> list[dict]:
         """Fetches and adapts warrant positions data."""
         service = cls.get_service("reporting")
         if not service:
@@ -96,7 +89,7 @@ class PortfolioAdapter(BaseAdapter):
         return adapted_data
 
     @classmethod
-    async def get_bond_positions(cls) -> list[BondPositionItem]:
+    async def get_bond_positions(cls) -> list[dict]:
         """Fetches and adapts bond positions data."""
         service = cls.get_service("reporting")
         if not service:
@@ -125,7 +118,7 @@ class PortfolioAdapter(BaseAdapter):
         return adapted_data
 
     @classmethod
-    async def get_trade_summaries(cls) -> list[TradeSummaryItem]:
+    async def get_trade_summaries(cls) -> list[dict]:
         """Fetches and adapts trade summary data."""
         service = cls.get_service("reporting")
         if not service:

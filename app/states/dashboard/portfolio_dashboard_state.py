@@ -3,7 +3,9 @@ from datetime import datetime
 import reflex as rx
 import asyncio
 from app.config import PMT_INTEGRATION_MODE
-from app.adapters import ReportingAdapter, PortfolioAdapter, PricingAdapter
+from app.adapters.reporting_adapter import ReportingAdapter
+from app.adapters.portfolio_adapter import PortfolioAdapter
+from app.adapters.pricing_adapter import PricingAdapter
 from app.states.dashboard.portfolio_dashboard_types import (
     PositionItem,
     StockPositionItem,

@@ -1,16 +1,11 @@
 from app.adapters.base_adapter import BaseAdapter
-from app.states.dashboard.portfolio_dashboard_types import (
-    MarketDataItem,
-    FXDataItem,
-    HistoricalDataItem,
-)
 
 
 class PricingAdapter(BaseAdapter):
     """Adapter for Pricing services including Market Data, FX, and History."""
 
     @classmethod
-    async def get_market_data(cls, tickers: list[str] = None) -> list[MarketDataItem]:
+    async def get_market_data(cls, tickers: list[str] = None) -> list[dict]:
         """Fetches and adapts live market data."""
         service = cls.get_service("pricing")
         if not service:
@@ -39,7 +34,7 @@ class PricingAdapter(BaseAdapter):
         return adapted_data
 
     @classmethod
-    async def get_fx_data(cls) -> list[FXDataItem]:
+    async def get_fx_data(cls) -> list[dict]:
         """Fetches and adapts FX data."""
         service = cls.get_service("pricing")
         if not service:
@@ -65,7 +60,7 @@ class PricingAdapter(BaseAdapter):
         return adapted_data
 
     @classmethod
-    async def get_historical_data(cls) -> list[HistoricalDataItem]:
+    async def get_historical_data(cls) -> list[dict]:
         """Fetches and adapts historical price data."""
         service = cls.get_service("pricing")
         if not service:

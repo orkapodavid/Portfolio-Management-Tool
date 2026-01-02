@@ -1,19 +1,11 @@
 from app.adapters.base_adapter import BaseAdapter
-from app.states.dashboard.portfolio_dashboard_types import (
-    PnLChangeItem,
-    PnLSummaryItem,
-    PnLCurrencyItem,
-    RestrictedListItem,
-    PnLReconItem,
-    RiskInputReconItem,
-)
 
 
 class ReportingAdapter(BaseAdapter):
     """Adapter for Reporting services covering PnL, Compliance, and Recon."""
 
     @classmethod
-    async def get_pnl_change(cls) -> list[PnLChangeItem]:
+    async def get_pnl_change(cls) -> list[dict]:
         """Fetches and adapts PnL Change data."""
         service = cls.get_service("reporting")
         if not service:
@@ -41,7 +33,7 @@ class ReportingAdapter(BaseAdapter):
         return adapted_data
 
     @classmethod
-    async def get_pnl_summary(cls) -> list[PnLSummaryItem]:
+    async def get_pnl_summary(cls) -> list[dict]:
         """Fetches and adapts PnL Summary data."""
         service = cls.get_service("reporting")
         if not service:
@@ -71,7 +63,7 @@ class ReportingAdapter(BaseAdapter):
         return adapted_data
 
     @classmethod
-    async def get_pnl_currency(cls) -> list[PnLCurrencyItem]:
+    async def get_pnl_currency(cls) -> list[dict]:
         """Fetches and adapts PnL Currency data."""
         service = cls.get_service("reporting")
         if not service:
@@ -101,7 +93,7 @@ class ReportingAdapter(BaseAdapter):
         return adapted_data
 
     @classmethod
-    async def get_restricted_list(cls) -> list[RestrictedListItem]:
+    async def get_restricted_list(cls) -> list[dict]:
         """Fetches and adapts Restricted List data."""
         service = cls.get_service("reporting")
         if not service:
@@ -128,7 +120,7 @@ class ReportingAdapter(BaseAdapter):
         return adapted_data
 
     @classmethod
-    async def get_pnl_recon(cls) -> list[PnLReconItem]:
+    async def get_pnl_recon(cls) -> list[dict]:
         """Fetches and adapts PnL Reconciliation data."""
         service = cls.get_service("reporting")
         if not service:
@@ -156,7 +148,7 @@ class ReportingAdapter(BaseAdapter):
         return adapted_data
 
     @classmethod
-    async def get_risk_input_recon(cls) -> list[RiskInputReconItem]:
+    async def get_risk_input_recon(cls) -> list[dict]:
         """Fetches and adapts Risk Input Reconciliation data."""
         service = cls.get_service("reporting")
         if not service:
