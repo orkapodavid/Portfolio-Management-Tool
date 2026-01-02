@@ -31,24 +31,14 @@ The dependency file is missing the placeholder for the future `pmt_core` package
     # -e ../pmt_core
     ```
 
-### 3. Create Integration Tests (Refer to Prompt 8)
-There are no integration tests to verify the adapter layer.
-
-*   **Action:** Create a new directory `tests/integration/` and add the following files:
-    *   `tests/integration/test_portfolio_adapter.py`: Test that `PortfolioAdapter` correctly transforms data from the mock service into the expected format (including the new holdings mapping).
-    *   `tests/integration/test_pmt_state_integration.py`: Test that a state (like `PortfolioState`) correctly loads data when initialized or when an event is triggered.
-    *   `tests/integration/test_mock_pmt_core.py`: Verify that the mock services in `app/mocks/pmt_core` return data in the expected format.
-*   **Details:** Use `pytest` conventions. You may need to mock `rx.State` behavior or just test the logic methods.
-
-### 4. Create Integration Status Documentation (Refer to Prompt 10)
+### 3. Create Integration Status Documentation (Refer to Prompt 10)
 The status tracking document is missing.
 
 *   **Action:** Create `docs/reflex_integration_status.md`.
 *   **Details:**
     *   List what has been done (Adapters, Mocks, Dashboard State integration).
-    *   List what you have just completed (Portfolio State integration, Tests, Config).
+    *   List what you have just completed (Portfolio State integration, Config).
     *   Create the "Integration Checklist" as described in Prompt 10 of the prep guide.
-    *   Document how to run the new integration tests.
 
 **Note:**
 *   You do **not** need to create `app/components/pmt/` (Prompt 9) as similar components appear to have been integrated directly into domain-specific folders (e.g., `app/components/compliance`).
