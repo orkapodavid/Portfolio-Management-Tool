@@ -6,6 +6,7 @@ from app.config import PMT_INTEGRATION_MODE
 from app.adapters.reporting_adapter import ReportingAdapter
 from app.adapters.portfolio_adapter import PortfolioAdapter
 from app.adapters.pricing_adapter import PricingAdapter
+from app.states.dashboard.modules import PositionsState, PnLState
 from app.states.dashboard.portfolio_dashboard_types import (
     PositionItem,
     StockPositionItem,
@@ -56,286 +57,6 @@ from app.states.dashboard.portfolio_dashboard_types import (
     RiskInputItem,
     EMSAOrderItem,
 )
-
-
-def _fmt_usd(val: float) -> str:
-    return f"${val:,.2f}" if val >= 0 else f"$({abs(val):,.2f})"
-
-
-def _fmt_num(val: float) -> str:
-    return f"{val:,.2f}" if val >= 0 else f"({abs(val):,.2f})"
-
-
-def _fmt_pct(val: float) -> str:
-    return f"{val:,.2f}%"
-
-
-def _generate_pnl_change_data() -> list[PnLChangeItem]:
-    tickers = [
-        "AAPL",
-        "MSFT",
-        "GOOGL",
-        "AMZN",
-        "TSLA",
-        "NVDA",
-        "META",
-        "NFLX",
-        "AMD",
-        "INTC",
-        "JPM",
-        "BAC",
-        "WFC",
-        "C",
-        "GS",
-        "MS",
-        "BLK",
-        "SPY",
-        "QQQ",
-        "IWM",
-    ]
-    data = []
-    for i, ticker in enumerate(tickers):
-        base_pnl = random.uniform(-50000, 150000)
-        chg_1d = random.uniform(-5000, 5000)
-        data.append(
-            {
-                "id": i,
-                "trade_date": datetime.now().strftime("%Y-%m-%d"),
-                "underlying": f"{ticker} US Equity",
-                "ticker": ticker,
-                "pnl_ytd": _fmt_usd(base_pnl),
-                "pnl_chg_1d": _fmt_usd(chg_1d),
-                "pnl_chg_1w": _fmt_usd(chg_1d * 3.5),
-                "pnl_chg_1m": _fmt_usd(chg_1d * 12.0),
-                "pnl_chg_pct_1d": _fmt_pct(random.uniform(-3, 3)),
-                "pnl_chg_pct_1w": _fmt_pct(random.uniform(-8, 8)),
-                "pnl_chg_pct_1m": _fmt_pct(random.uniform(-15, 15)),
-            }
-        )
-    return data
-
-
-def _generate_pnl_summary_data() -> list[PnLSummaryItem]:
-    tickers = [
-        "AAPL",
-        "MSFT",
-        "GOOGL",
-        "AMZN",
-        "TSLA",
-        "NVDA",
-        "META",
-        "NFLX",
-        "AMD",
-        "INTC",
-    ]
-    currencies = ["USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY", "HKD", "SGD"]
-    data = []
-    for i in range(20):
-        ticker = tickers[i % len(tickers)]
-        ccy = currencies[i % len(currencies)]
-        price = random.uniform(100, 1000)
-        price_t1 = price * random.uniform(0.95, 1.05)
-        fx = random.uniform(0.8, 1.5)
-        fx_t1 = fx * random.uniform(0.99, 1.01)
-        data.append(
-            {
-                "id": i,
-                "trade_date": datetime.now().strftime("%Y-%m-%d"),
-                "underlying": f"{ticker} US Equity",
-                "currency": ccy,
-                "price": _fmt_num(price),
-                "price_t_1": _fmt_num(price_t1),
-                "price_change": _fmt_num(price - price_t1),
-                "fx_rate": f"{fx:,.4f}",
-                "fx_rate_t_1": f"{fx_t1:,.4f}",
-                "fx_rate_change": _fmt_num(fx - fx_t1),
-                "dtl": f"{random.uniform(0, 1000):,.0f}",
-                "last_volume": f"{random.randint(100000, 5000000):,.0f}",
-                "adv_3m": f"{random.randint(100000, 5000000):,.0f}",
-            }
-        )
-    return data
-
-
-def _generate_pnl_currency_data() -> list[PnLCurrencyItem]:
-    currencies = [
-        "USD",
-        "EUR",
-        "GBP",
-        "JPY",
-        "CAD",
-        "AUD",
-        "CHF",
-        "CNY",
-        "HKD",
-        "SGD",
-        "SEK",
-        "NOK",
-        "DKK",
-        "NZD",
-        "MXN",
-        "BRL",
-        "INR",
-        "KRW",
-        "ZAR",
-        "TRY",
-    ]
-    data = []
-    for i, ccy in enumerate(currencies):
-        fx = random.uniform(0.5, 1.5)
-        fx_t1 = fx * random.uniform(0.98, 1.02)
-        data.append(
-            {
-                "id": i,
-                "trade_date": datetime.now().strftime("%Y-%m-%d"),
-                "currency": ccy,
-                "fx_rate": f"{fx:,.4f}",
-                "fx_rate_t_1": f"{fx_t1:,.4f}",
-                "fx_rate_change": _fmt_num(fx - fx_t1),
-                "ccy_exposure": _fmt_usd(random.uniform(-1000000, 1000000)),
-                "usd_exposure": _fmt_usd(random.uniform(-1000000, 1000000)),
-                "pos_ccy_expo": _fmt_usd(random.uniform(-500000, 500000)),
-                "ccy_hedged_pnl": _fmt_usd(random.uniform(-10000, 10000)),
-                "pos_ccy_pnl": _fmt_usd(random.uniform(-20000, 20000)),
-                "net_ccy": _fmt_usd(random.uniform(-5000, 5000)),
-                "pos_c_truncated": _fmt_usd(random.uniform(-500, 500)),
-            }
-        )
-    return data
-
-
-def _generate_positions_data() -> list[PositionItem]:
-    tickers = ["AAPL", "MSFT", "GOOGL", "TSLA", "NVDA", "BTC-USD", "EURUSD", "US10Y"]
-    companies = {
-        "AAPL": "Apple Inc.",
-        "MSFT": "Microsoft Corp.",
-        "GOOGL": "Alphabet Inc.",
-        "TSLA": "Tesla Inc.",
-        "NVDA": "NVIDIA Corp.",
-        "BTC-USD": "Bitcoin",
-        "EURUSD": "Euro/USD",
-        "US10Y": "US Treasury 10Y",
-    }
-    data = []
-    for i, t in enumerate(tickers):
-        data.append(
-            {
-                "id": i,
-                "trade_date": datetime.now().strftime("%Y-%m-%d"),
-                "deal_num": f"{random.randint(100000, 999999)}",
-                "detail_id": f"{random.randint(1000, 9999)}",
-                "underlying": f"{t} US",
-                "ticker": t,
-                "company_name": companies.get(t, t),
-                "account_id": f"ACC-{random.randint(10, 99)}",
-                "pos_loc": random.choice(["NY", "LN", "HK"]),
-            }
-        )
-    return data
-
-
-def _generate_stock_positions() -> list[StockPositionItem]:
-    tickers = ["AAPL", "MSFT", "AMZN", "GOOGL", "META", "NVDA", "NFLX"]
-    companies = {
-        "AAPL": "Apple Inc.",
-        "MSFT": "Microsoft Corp.",
-        "AMZN": "Amazon.com",
-        "GOOGL": "Alphabet Inc.",
-        "META": "Meta Platforms",
-        "NVDA": "NVIDIA Corp.",
-        "NFLX": "Netflix Inc.",
-    }
-    data = []
-    for i, t in enumerate(tickers):
-        data.append(
-            {
-                "id": i,
-                "trade_date": datetime.now().strftime("%Y-%m-%d"),
-                "deal_num": f"{random.randint(100000, 999999)}",
-                "detail_id": f"{random.randint(1000, 9999)}",
-                "ticker": t,
-                "company_name": companies.get(t, t),
-                "sec_id": f"US{random.randint(100000000, 999999999)}",
-                "sec_type": "Common Stock",
-                "currency": "USD",
-                "account_id": f"ACC-{random.randint(10, 99)}",
-                "position_location": random.choice(["NY", "LN", "HK"]),
-                "notional": _fmt_usd(random.uniform(100000, 5000000)),
-            }
-        )
-    return data
-
-
-def _generate_warrant_positions() -> list[WarrantPositionItem]:
-    underlyings = ["AAPL", "TSLA", "NVDA", "AMZN"]
-    data = []
-    for i in range(10):
-        und = random.choice(underlyings)
-        data.append(
-            {
-                "id": i,
-                "trade_date": datetime.now().strftime("%Y-%m-%d"),
-                "deal_num": f"{random.randint(100000, 999999)}",
-                "detail_id": f"{random.randint(1000, 9999)}",
-                "underlying": und,
-                "ticker": f"{und}-W",
-                "company_name": f"{und} Warrant",
-                "sec_id": f"W{random.randint(100000, 999999)}",
-                "sec_type": "Warrant",
-                "subtype": random.choice(["Call", "Put"]),
-                "currency": "USD",
-                "account_id": f"ACC-{random.randint(10, 99)}",
-            }
-        )
-    return data
-
-
-def _generate_bond_positions() -> list[BondPositionItem]:
-    issuers = ["US GOVT", "APPLE INC", "MICROSOFT", "GOLDMAN SACHS", "JPM"]
-    data = []
-    for i, issuer in enumerate(issuers):
-        data.append(
-            {
-                "id": i,
-                "trade_date": datetime.now().strftime("%Y-%m-%d"),
-                "deal_num": f"{random.randint(100000, 999999)}",
-                "detail_id": f"{random.randint(1000, 9999)}",
-                "underlying": issuer,
-                "ticker": f"{issuer[:4]} 4.5%",
-                "company_name": issuer,
-                "sec_id": f"US{random.randint(100000000, 999999999)}",
-                "sec_type": "Corp Bond",
-                "subtype": "Fixed",
-                "currency": "USD",
-                "account_id": f"ACC-{random.randint(10, 99)}",
-            }
-        )
-    return data
-
-
-def _generate_trade_summaries() -> list[TradeSummaryItem]:
-    tickers = ["AAPL", "MSFT", "TSLA", "EURUSD", "US10Y"]
-    data = []
-    for i in range(15):
-        ticker = random.choice(tickers)
-        data.append(
-            {
-                "id": i,
-                "deal_num": f"{random.randint(100000, 999999)}",
-                "detail_id": f"{random.randint(1000, 9999)}",
-                "ticker": ticker,
-                "underlying": f"{ticker} US",
-                "account_id": f"ACC-{random.randint(10, 99)}",
-                "company_name": f"{ticker} Inc",
-                "sec_id": f"US{random.randint(100000000, 999999999)}",
-                "sec_type": "Equity",
-                "subtype": "Common",
-                "currency": "USD",
-                "closing_date": "2024-12-31",
-                "divisor": f"{random.uniform(0.1, 1.0):.4f}",
-            }
-        )
-    return data
 
 
 def _generate_compliance_data() -> tuple[list, list, list, list]:
@@ -1106,7 +827,7 @@ def _generate_mock_data() -> list[dict]:
     return expanded_data
 
 
-class PortfolioDashboardState(rx.State):
+class PortfolioDashboardState(PnLState):
     active_module: str = "Market Data"
     _active_subtabs: dict[str, str] = {}
     _filters: dict[str, dict] = {}
@@ -1497,38 +1218,6 @@ class PortfolioDashboardState(rx.State):
             self.is_adapter_loading = False
 
     @rx.event
-    async def load_pnl_data(self):
-        """Fetch PnL related data via ReportingAdapter."""
-        pnl_change = await ReportingAdapter.get_pnl_change()
-        if pnl_change:
-            self.pnl_change_data = pnl_change
-        pnl_summary = await ReportingAdapter.get_pnl_summary()
-        if pnl_summary:
-            self.pnl_summary_data = pnl_summary
-        pnl_currency = await ReportingAdapter.get_pnl_currency()
-        if pnl_currency:
-            self.pnl_currency_data = pnl_currency
-
-    @rx.event
-    async def load_positions_data(self):
-        """Fetch Positions related data via PortfolioAdapter."""
-        positions = await PortfolioAdapter.get_positions()
-        if positions:
-            self.positions_data = positions
-        stock_pos = await PortfolioAdapter.get_stock_positions()
-        if stock_pos:
-            self.stock_positions = stock_pos
-        warrant_pos = await PortfolioAdapter.get_warrant_positions()
-        if warrant_pos:
-            self.warrant_positions = warrant_pos
-        bond_pos = await PortfolioAdapter.get_bond_positions()
-        if bond_pos:
-            self.bond_positions = bond_pos
-        trade_sums = await PortfolioAdapter.get_trade_summaries()
-        if trade_sums:
-            self.trade_summaries = trade_sums
-
-    @rx.event
     async def load_compliance_data(self):
         """Fetch Compliance related data via ReportingAdapter."""
         restricted = await ReportingAdapter.get_restricted_list()
@@ -1625,14 +1314,6 @@ class PortfolioDashboardState(rx.State):
     page_size: int = 50
     page_size_options: list[int] = [25, 50, 100]
     _all_table_data: list[dict] = _generate_mock_data()
-    pnl_change_data: list[PnLChangeItem] = _generate_pnl_change_data()
-    pnl_summary_data: list[PnLSummaryItem] = _generate_pnl_summary_data()
-    pnl_currency_data: list[PnLCurrencyItem] = _generate_pnl_currency_data()
-    positions_data: list[PositionItem] = _generate_positions_data()
-    stock_positions: list[StockPositionItem] = _generate_stock_positions()
-    warrant_positions: list[WarrantPositionItem] = _generate_warrant_positions()
-    bond_positions: list[BondPositionItem] = _generate_bond_positions()
-    trade_summaries: list[TradeSummaryItem] = _generate_trade_summaries()
     _comp_data = _generate_compliance_data()
     restricted_list_data: list[RestrictedListItem] = _comp_data[0]
     undertakings_data: list[UndertakingItem] = _comp_data[1]
@@ -1679,80 +1360,6 @@ class PortfolioDashboardState(rx.State):
     _emsa_data = _generate_emsa_data()
     emsa_orders_list: list[EMSAOrderItem] = _emsa_data[0]
     emsa_routes_list: list[EMSAOrderItem] = _emsa_data[1]
-
-    @rx.var(cache=True)
-    def filtered_positions(self) -> list[PositionItem]:
-        query = self.current_search_query.lower()
-        if not query:
-            return self.positions_data
-        return [p for p in self.positions_data if query in p["ticker"].lower()]
-
-    @rx.var(cache=True)
-    def filtered_stock_positions(self) -> list[StockPositionItem]:
-        query = self.current_search_query.lower()
-        if not query:
-            return self.stock_positions
-        return [
-            p
-            for p in self.stock_positions
-            if query in p["ticker"].lower() or query in p["sector"].lower()
-        ]
-
-    @rx.var(cache=True)
-    def filtered_warrant_positions(self) -> list[WarrantPositionItem]:
-        query = self.current_search_query.lower()
-        if not query:
-            return self.warrant_positions
-        return [
-            p
-            for p in self.warrant_positions
-            if query in p["ticker"].lower() or query in p["underlying"].lower()
-        ]
-
-    @rx.var(cache=True)
-    def filtered_bond_positions(self) -> list[BondPositionItem]:
-        query = self.current_search_query.lower()
-        if not query:
-            return self.bond_positions
-        return [p for p in self.bond_positions if query in p["issuer"].lower()]
-
-    @rx.var(cache=True)
-    def filtered_trade_summaries(self) -> list[TradeSummaryItem]:
-        query = self.current_search_query.lower()
-        if not query:
-            return self.trade_summaries
-        return [p for p in self.trade_summaries if query in p["ticker"].lower()]
-
-    @rx.var(cache=True)
-    def filtered_pnl_change(self) -> list[PnLChangeItem]:
-        query = self.current_search_query.lower()
-        if not query:
-            return self.pnl_change_data
-        return [
-            item
-            for item in self.pnl_change_data
-            if query in item["ticker"].lower() or query in item["underlying"].lower()
-        ]
-
-    @rx.var(cache=True)
-    def filtered_pnl_summary(self) -> list[PnLSummaryItem]:
-        query = self.current_search_query.lower()
-        if not query:
-            return self.pnl_summary_data
-        return [
-            item
-            for item in self.pnl_summary_data
-            if query in item["underlying"].lower() or query in item["currency"].lower()
-        ]
-
-    @rx.var(cache=True)
-    def filtered_pnl_currency(self) -> list[PnLCurrencyItem]:
-        query = self.current_search_query.lower()
-        if not query:
-            return self.pnl_currency_data
-        return [
-            item for item in self.pnl_currency_data if query in item["currency"].lower()
-        ]
 
     @rx.var(cache=True)
     def filtered_restricted_list(self) -> list[RestrictedListItem]:
