@@ -10,12 +10,41 @@ from app.states.dashboard.portfolio_dashboard_state import (
 from app.constants import POSITIVE_GREEN, NEGATIVE_RED
 
 
-def header_cell(text: str, align: str = "right") -> rx.Component:
+def header_cell(
+    text: str, column_key: str = "", align: str = "right", sortable: bool = True
+) -> rx.Component:
     align_class = rx.match(
         align, ("left", "text-left"), ("center", "text-center"), "text-right"
     )
+    is_sorted = PortfolioDashboardState.sort_column == column_key
     return rx.el.th(
-        text,
+        rx.el.div(
+            rx.el.span(text),
+            rx.cond(
+                sortable,
+                rx.cond(
+                    is_sorted,
+                    rx.icon(
+                        rx.cond(
+                            PortfolioDashboardState.sort_direction == "asc",
+                            "arrow-up",
+                            "arrow-down",
+                        ),
+                        size=10,
+                        class_name="ml-1 text-blue-600",
+                    ),
+                    rx.icon(
+                        "arrow-up-down",
+                        size=10,
+                        class_name="ml-1 text-gray-400 opacity-0 group-hover:opacity-100",
+                    ),
+                ),
+            ),
+            class_name=f"flex items-center {rx.match(align, ('left', 'justify-start'), ('center', 'justify-center'), 'justify-end')} group cursor-pointer",
+            on_click=lambda: rx.cond(
+                sortable, PortfolioDashboardState.toggle_sort(column_key), None
+            ),
+        ),
         class_name=f"px-3 py-3 {align_class} text-[10px] font-bold text-gray-700 uppercase tracking-widest border-b-2 border-gray-400 bg-[#E5E7EB] sticky top-0 z-30 shadow-[0_2px_4px_rgba(0,0,0,0.1)] h-[44px]",
     )
 

@@ -9,7 +9,7 @@ from app.states.notifications.notification_pagination_state import (
 
 
 def alert_card(notification: NotificationItem) -> rx.Component:
-    """Renders a single notification card with standardized Amber styling."""
+    """Enhanced notification card with actions and read status."""
     from app.constants import ALERT_AMBER
 
     bg_color = rx.match(
@@ -29,11 +29,19 @@ def alert_card(notification: NotificationItem) -> rx.Component:
     text_color = rx.cond(
         notification["type"] == "info", "text-blue-900", "text-gray-900"
     )
+    card_opacity = rx.cond(notification["read"], "opacity-60", "opacity-100")
     return rx.el.div(
         rx.el.div(
-            rx.el.h4(
-                notification["header"],
-                class_name=f"text-[11px] font-black {text_color} leading-tight uppercase tracking-wider",
+            rx.el.div(
+                rx.cond(
+                    ~notification["read"],
+                    rx.el.div(class_name="w-1.5 h-1.5 bg-blue-600 rounded-full mr-1.5"),
+                ),
+                rx.el.h4(
+                    notification["header"],
+                    class_name=f"text-[11px] font-black {text_color} leading-tight uppercase tracking-wider",
+                ),
+                class_name="flex items-center",
             ),
             rx.el.button(
                 rx.icon("circle-x", size=14),
@@ -59,7 +67,26 @@ def alert_card(notification: NotificationItem) -> rx.Component:
             notification["instruction"],
             class_name=f"text-[10px] font-bold {text_color} leading-snug",
         ),
-        class_name=f"{bg_color} p-3 rounded-md border-l-4 {border_color} shadow-sm hover:shadow-md transition-all duration-300 animate-in slide-in-from-right fade-in",
+        rx.el.div(
+            rx.el.button(
+                rx.icon("check", size=12),
+                on_click=PortfolioDashboardState.mark_notification_read(
+                    notification["id"]
+                ),
+                title="Mark as read",
+                class_name="p-1 rounded hover:bg-white/60 text-gray-700 transition-colors",
+            ),
+            rx.el.button(
+                rx.icon("arrow-right", size=12),
+                on_click=lambda: PortfolioDashboardState.navigate_to_notification(
+                    notification["id"]
+                ),
+                title="Go to details",
+                class_name="p-1 rounded hover:bg-white/60 text-gray-700 transition-colors",
+            ),
+            class_name="flex gap-1 mt-2 pt-2 border-t border-black/10",
+        ),
+        class_name=f"{bg_color} {card_opacity} p-3 rounded-md border-l-4 {border_color} shadow-sm hover:shadow-md transition-all duration-300 animate-in slide-in-from-right fade-in",
     )
 
 
@@ -94,44 +121,69 @@ def pagination_footer() -> rx.Component:
     )
 
 
+def filter_tab(label: str, filter_val: str) -> rx.Component:
+    is_active = PortfolioDashboardState.notification_filter == filter_val
+    return rx.el.button(
+        label,
+        on_click=lambda: PortfolioDashboardState.set_notification_filter(filter_val),
+        class_name=rx.cond(
+            is_active,
+            "px-2 py-1 bg-blue-600 text-white rounded text-[8px] font-black uppercase shadow-sm",
+            "px-2 py-1 bg-gray-200 text-gray-600 rounded text-[8px] font-bold uppercase hover:bg-gray-300 transition-colors",
+        ),
+    )
+
+
 def notification_sidebar() -> rx.Component:
-    """The right sidebar component for notifications (Region 4) with slide transition and pagination."""
+    """The right sidebar component for notifications (Region 4) with filtering."""
     return rx.el.aside(
         rx.el.div(
             rx.el.div(
                 rx.el.div(
                     rx.el.div(
                         rx.el.div(
-                            rx.el.h3(
-                                "NOTIFICATIONS",
-                                class_name="text-[10px] font-black text-gray-500 tracking-widest",
+                            rx.el.div(
+                                rx.el.h3(
+                                    "NOTIFICATIONS",
+                                    class_name="text-[10px] font-black text-gray-500 tracking-widest",
+                                ),
+                                rx.el.span(
+                                    PortfolioDashboardState.unread_count.to_string(),
+                                    class_name="ml-2 bg-blue-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full",
+                                ),
+                                class_name="flex items-center",
                             ),
-                            rx.el.span(
-                                PortfolioDashboardState.notifications.length().to_string(),
-                                class_name="ml-2 bg-gray-200 text-gray-700 text-[8px] font-black px-1.5 py-0.5 rounded-full",
+                            rx.el.div(
+                                rx.el.button(
+                                    rx.icon(
+                                        "rotate-ccw",
+                                        size=12,
+                                        class_name="text-gray-400",
+                                    ),
+                                    on_click=NotificationPaginationState.reset_pagination,
+                                    title="Reset Page",
+                                    class_name="hover:text-blue-600 transition-colors mr-2",
+                                ),
+                                rx.el.button(
+                                    rx.icon(
+                                        "circle_plus",
+                                        size=12,
+                                        class_name="text-gray-400",
+                                    ),
+                                    on_click=PortfolioDashboardState.add_simulated_notification,
+                                    title="Simulate Live Alert",
+                                    class_name="hover:text-indigo-600 transition-colors",
+                                ),
+                                class_name="flex items-center",
                             ),
-                            class_name="flex items-center",
+                            class_name="flex items-center justify-between mb-2 px-3 pt-3",
                         ),
                         rx.el.div(
-                            rx.el.button(
-                                rx.icon(
-                                    "rotate-ccw", size=12, class_name="text-gray-400"
-                                ),
-                                on_click=NotificationPaginationState.reset_pagination,
-                                title="Reset Page",
-                                class_name="hover:text-blue-600 transition-colors mr-2",
-                            ),
-                            rx.el.button(
-                                rx.icon(
-                                    "circle_plus", size=12, class_name="text-gray-400"
-                                ),
-                                on_click=PortfolioDashboardState.add_simulated_notification,
-                                title="Simulate Live Alert",
-                                class_name="hover:text-indigo-600 transition-colors",
-                            ),
-                            class_name="flex items-center",
+                            filter_tab("All", "all"),
+                            filter_tab("Alerts", "alert"),
+                            filter_tab("Info", "info"),
+                            class_name="flex gap-1 px-3 pb-2 border-b border-gray-200",
                         ),
-                        class_name="flex items-center justify-between mb-2 px-3 pt-3",
                     ),
                     rx.scroll_area(
                         rx.el.div(

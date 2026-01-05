@@ -37,13 +37,46 @@ def pnl_full_table() -> rx.Component:
     )
 
 
-def header_cell(text: str, align: str = "right", width: str = "auto") -> rx.Component:
-    """Standardized header cell for PnL tables."""
+def header_cell(
+    text: str,
+    column_key: str = "",
+    align: str = "right",
+    sortable: bool = True,
+    width: str = "auto",
+) -> rx.Component:
+    """Standardized header cell for PnL tables with sorting."""
     align_class = rx.match(
         align, ("left", "text-left"), ("center", "text-center"), "text-right"
     )
+    is_sorted = PortfolioDashboardState.sort_column == column_key
     return rx.el.th(
-        text,
+        rx.el.div(
+            rx.el.span(text),
+            rx.cond(
+                sortable,
+                rx.cond(
+                    is_sorted,
+                    rx.icon(
+                        rx.cond(
+                            PortfolioDashboardState.sort_direction == "asc",
+                            "arrow-up",
+                            "arrow-down",
+                        ),
+                        size=10,
+                        class_name="ml-1 text-blue-600",
+                    ),
+                    rx.icon(
+                        "arrow-up-down",
+                        size=10,
+                        class_name="ml-1 text-gray-400 opacity-0 group-hover:opacity-100",
+                    ),
+                ),
+            ),
+            class_name=f"flex items-center {rx.match(align, ('left', 'justify-start'), ('center', 'justify-center'), 'justify-end')} group cursor-pointer",
+            on_click=lambda: rx.cond(
+                sortable, PortfolioDashboardState.toggle_sort(column_key), None
+            ),
+        ),
         class_name=f"px-3 py-3 {align_class} text-[10px] font-bold text-gray-700 uppercase tracking-widest border-b-2 border-gray-400 align-middle whitespace-nowrap h-[44px] bg-[#E5E7EB] sticky top-0 z-30 shadow-[0_2px_4px_rgba(0,0,0,0.1)]",
         width=width,
     )
@@ -99,16 +132,16 @@ def pnl_change_table() -> rx.Component:
         rx.el.table(
             rx.el.thead(
                 rx.el.tr(
-                    header_cell("Trade Date", align="left"),
-                    header_cell("Underlying", align="left"),
-                    header_cell("Ticker", align="left"),
-                    header_cell("PnL YTD"),
-                    header_cell("PnL Chg 1D"),
-                    header_cell("PnL Chg 1W"),
-                    header_cell("PnL Chg 1M"),
-                    header_cell("PnL Chg% 1D"),
-                    header_cell("PnL Chg% 1W"),
-                    header_cell("PnL Chg% 1M"),
+                    header_cell("Trade Date", column_key="trade_date", align="left"),
+                    header_cell("Underlying", column_key="underlying", align="left"),
+                    header_cell("Ticker", column_key="ticker", align="left"),
+                    header_cell("PnL YTD", column_key="pnl_ytd"),
+                    header_cell("PnL Chg 1D", column_key="pnl_chg_1d"),
+                    header_cell("PnL Chg 1W", column_key="pnl_chg_1w"),
+                    header_cell("PnL Chg 1M", column_key="pnl_chg_1m"),
+                    header_cell("PnL Chg% 1D", column_key="pnl_chg_pct_1d"),
+                    header_cell("PnL Chg% 1W", column_key="pnl_chg_pct_1w"),
+                    header_cell("PnL Chg% 1M", column_key="pnl_chg_pct_1m"),
                 )
             ),
             rx.el.tbody(

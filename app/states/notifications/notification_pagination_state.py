@@ -35,7 +35,9 @@ class NotificationPaginationState(rx.State):
     async def paginated_notifications(self) -> list[NotificationItem]:
         dashboard = await self.get_state(PortfolioDashboardState)
         sliced_data, _, _ = get_paginated_alerts(
-            dashboard.notifications, self.current_page, self.items_per_page
+            dashboard.filtered_notifications_list,
+            self.current_page,
+            self.items_per_page,
         )
         return sliced_data
 

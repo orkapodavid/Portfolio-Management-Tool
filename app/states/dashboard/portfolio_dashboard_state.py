@@ -1717,6 +1717,39 @@ class PortfolioDashboardState(rx.State):
     show_top_movers: bool = False
     selected_row_id: int = -1
     is_loading: bool = False
+    sort_column: str = ""
+    sort_direction: str = "asc"
+    notification_filter: str = "all"
+
+    @rx.event
+    def toggle_sort(self, column: str):
+        if self.sort_column == column:
+            self.sort_direction = "desc" if self.sort_direction == "asc" else "asc"
+        else:
+            self.sort_column = column
+            self.sort_direction = "asc"
+
+    @rx.event
+    def set_notification_filter(self, filter_val: str):
+        self.notification_filter = filter_val
+
+    @rx.var
+    def filtered_notifications_list(self) -> list[NotificationItem]:
+        if self.notification_filter == "all":
+            return self.notifications
+        return [n for n in self.notifications if n["type"] == self.notification_filter]
+
+    @rx.event
+    def mark_notification_read(self, notif_id: int):
+        self.notifications = [
+            {**n, "read": True} if n["id"] == notif_id else n
+            for n in self.notifications
+        ]
+
+    @rx.event
+    def navigate_to_notification(self, notif_id: int):
+        yield rx.toast(f"Navigating to details for ID: {notif_id}")
+
     kpi_metrics: list[KPIMetric] = [
         {"label": "Daily PnL", "value": "+$1.2M", "is_positive": True},
         {"label": "Daily Pos FX", "value": "($45K)", "is_positive": False},
