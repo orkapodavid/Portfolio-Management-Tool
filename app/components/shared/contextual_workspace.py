@@ -68,14 +68,36 @@ from app.components.risk import (
 from app.components.emsa import emsa_order_table, emsa_route_table
 
 
-def table_header_cell(text: str, align: str = "left") -> rx.Component:
-    """A standardized table header cell with enhanced separation and dark background."""
+def table_header_cell(
+    text: str, align: str = "left", column_key: str = ""
+) -> rx.Component:
+    """A standardized table header cell with enhanced separation and sorting."""
     align_class = rx.match(
         align, ("right", "text-right"), ("center", "text-center"), "text-left"
     )
+    sort_icon = rx.cond(
+        PortfolioDashboardState.sort_column == column_key,
+        rx.cond(
+            PortfolioDashboardState.sort_direction == "asc",
+            rx.icon("arrow-up", size=10, class_name="ml-1 text-blue-600"),
+            rx.icon("arrow-down", size=10, class_name="ml-1 text-blue-600"),
+        ),
+        rx.icon(
+            "arrow-up-down",
+            size=10,
+            class_name="ml-1 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity",
+        ),
+    )
     return rx.el.th(
-        text,
-        class_name=f"px-3 py-3 {align_class} text-[10px] font-bold text-gray-700 uppercase tracking-widest border-b-2 border-gray-400 align-middle whitespace-nowrap h-[44px]",
+        rx.el.div(
+            text,
+            sort_icon,
+            class_name=f"flex items-center {rx.match(align, ('right', 'justify-end'), ('center', 'justify-center'), 'justify-start')}",
+        ),
+        on_click=lambda: rx.cond(
+            column_key, PortfolioDashboardState.toggle_sort(column_key), None
+        ),
+        class_name=f"px-3 py-3 {align_class} text-[10px] font-bold text-gray-700 uppercase tracking-widest border-b-2 border-gray-400 align-middle whitespace-nowrap h-[44px] cursor-pointer hover:bg-gray-200 transition-colors group select-none",
     )
 
 
@@ -252,25 +274,47 @@ def mock_data_table() -> rx.Component:
             ),
         ),
         rx.scroll_area(
-            rx.el.table(
-                rx.el.thead(
-                    rx.el.tr(
-                        table_header_cell("Ticker"),
-                        table_header_cell("Description"),
-                        table_header_cell("Class"),
-                        table_header_cell("Qty", "right"),
-                        table_header_cell("Price", "right"),
-                        table_header_cell("Mkt Val", "right"),
-                        table_header_cell("PnL", "right"),
-                        table_header_cell("Status", "center"),
-                        table_header_cell("Rec", "center"),
-                        class_name="bg-[#E5E7EB] sticky top-0 z-30 shadow-[0_2px_4px_rgba(0,0,0,0.1)] h-[44px] min-h-[44px]",
-                    )
+            rx.cond(
+                PortfolioDashboardState.paginated_table_data.length() > 0,
+                rx.el.table(
+                    rx.el.thead(
+                        rx.el.tr(
+                            table_header_cell("Ticker", column_key="ticker"),
+                            table_header_cell("Description", column_key="description"),
+                            table_header_cell("Class", column_key="asset_class"),
+                            table_header_cell("Qty", "right", column_key="qty"),
+                            table_header_cell("Price", "right", column_key="price"),
+                            table_header_cell(
+                                "Mkt Val", "right", column_key="mkt_value"
+                            ),
+                            table_header_cell("PnL", "right", column_key="daily_pnl"),
+                            table_header_cell("Status", "center", column_key="status"),
+                            table_header_cell(
+                                "Rec", "center", column_key="is_reconciled"
+                            ),
+                            class_name="bg-[#E5E7EB] sticky top-0 z-30 shadow-[0_2px_4px_rgba(0,0,0,0.1)] h-[44px] min-h-[44px]",
+                        )
+                    ),
+                    rx.el.tbody(
+                        rx.foreach(
+                            PortfolioDashboardState.paginated_table_data, table_row
+                        )
+                    ),
+                    class_name="w-full min-w-[800px] table-auto border-separate border-spacing-0",
                 ),
-                rx.el.tbody(
-                    rx.foreach(PortfolioDashboardState.paginated_table_data, table_row)
+                rx.el.div(
+                    rx.icon("search-x", size=48, class_name="text-gray-300 mb-2"),
+                    rx.el.p(
+                        "No results found matching your search",
+                        class_name="text-sm font-bold text-gray-500",
+                    ),
+                    rx.el.button(
+                        "Clear Search",
+                        on_click=PortfolioDashboardState.clear_search,
+                        class_name="mt-4 text-xs font-bold text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-1.5 rounded transition-colors",
+                    ),
+                    class_name="flex flex-col items-center justify-center py-20 w-full",
                 ),
-                class_name="w-full min-w-[800px] table-auto border-separate border-spacing-0",
             ),
             type="hover",
             scrollbars="both",
@@ -333,13 +377,74 @@ def workspace_controls() -> rx.Component:
                 ),
                 class_name="relative",
             ),
-            rx.el.button(
-                rx.el.div(
-                    rx.icon("download", size=12),
-                    rx.el.span("Export", class_name="ml-1.5"),
-                    class_name="flex items-center",
+            rx.el.div(
+                rx.el.button(
+                    rx.el.div(
+                        rx.cond(
+                            PortfolioDashboardState.is_exporting,
+                            rx.icon("loader", size=12, class_name="animate-spin"),
+                            rx.icon("download", size=12),
+                        ),
+                        rx.el.span("Export", class_name="ml-1.5"),
+                        rx.icon("chevron-down", size=10, class_name="ml-1 opacity-70"),
+                        class_name="flex items-center",
+                    ),
+                    on_click=PortfolioDashboardState.toggle_export_dropdown,
+                    disabled=PortfolioDashboardState.is_exporting,
+                    class_name="px-3 h-6 bg-white border border-gray-200 text-gray-600 text-[10px] font-bold uppercase tracking-widest rounded hover:bg-gray-50 hover:text-blue-600 transition-colors shadow-sm flex items-center disabled:opacity-70 disabled:cursor-not-allowed",
                 ),
-                class_name="px-3 h-6 bg-white border border-gray-200 text-gray-600 text-[10px] font-bold uppercase tracking-widest rounded hover:bg-gray-50 hover:text-blue-600 transition-colors shadow-sm flex items-center",
+                rx.cond(
+                    PortfolioDashboardState.export_dropdown_open,
+                    rx.el.div(
+                        rx.el.div(
+                            class_name="fixed inset-0 z-40",
+                            on_click=PortfolioDashboardState.toggle_export_dropdown,
+                        ),
+                        rx.el.div(
+                            rx.el.button(
+                                rx.el.div(
+                                    rx.icon(
+                                        "file-spreadsheet",
+                                        size=14,
+                                        class_name="text-green-600 mr-2",
+                                    ),
+                                    "Export to CSV",
+                                    class_name="flex items-center",
+                                ),
+                                on_click=PortfolioDashboardState.export_data("CSV"),
+                                class_name="w-full text-left px-4 py-2 text-[10px] font-bold text-gray-700 hover:bg-gray-100 flex items-center",
+                            ),
+                            rx.el.button(
+                                rx.el.div(
+                                    rx.icon(
+                                        "table",
+                                        size=14,
+                                        class_name="text-emerald-600 mr-2",
+                                    ),
+                                    "Export to Excel",
+                                    class_name="flex items-center",
+                                ),
+                                on_click=PortfolioDashboardState.export_data("XLSX"),
+                                class_name="w-full text-left px-4 py-2 text-[10px] font-bold text-gray-700 hover:bg-gray-100 flex items-center",
+                            ),
+                            rx.el.button(
+                                rx.el.div(
+                                    rx.icon(
+                                        "file-text",
+                                        size=14,
+                                        class_name="text-red-600 mr-2",
+                                    ),
+                                    "Export to PDF",
+                                    class_name="flex items-center",
+                                ),
+                                on_click=PortfolioDashboardState.export_data("PDF"),
+                                class_name="w-full text-left px-4 py-2 text-[10px] font-bold text-gray-700 hover:bg-gray-100 flex items-center border-t border-gray-100",
+                            ),
+                            class_name="absolute top-full left-0 mt-1 w-40 bg-white rounded-md shadow-lg border border-gray-100 py-1 z-50 animate-in fade-in slide-in-from-top-1 duration-100",
+                        ),
+                    ),
+                ),
+                class_name="relative",
             ),
             rx.el.button(
                 rx.icon(
@@ -353,13 +458,24 @@ def workspace_controls() -> rx.Component:
                 class_name="h-6 w-6 flex items-center justify-center bg-white border border-gray-200 text-gray-600 rounded hover:bg-gray-50 hover:text-blue-600 transition-colors shadow-sm",
             ),
             rx.el.div(
-                rx.icon("search", size=12, class_name="text-gray-400 mr-1.5"),
+                rx.icon("search", size=12, class_name="text-gray-400 mr-1.5 shrink-0"),
                 rx.el.input(
                     placeholder="Search data...",
-                    on_change=PortfolioDashboardState.set_current_search,
-                    class_name="bg-transparent text-[10px] font-bold outline-none w-full text-gray-700",
+                    on_change=PortfolioDashboardState.set_current_search.debounce(300),
+                    class_name="bg-transparent text-[10px] font-bold outline-none w-full text-gray-700 placeholder-gray-400",
+                    default_value=PortfolioDashboardState.current_search_query,
                 ),
-                class_name="flex items-center bg-white border border-gray-200 rounded px-2 h-6 flex-1 max-w-[200px] shadow-sm ml-2",
+                rx.cond(
+                    PortfolioDashboardState.current_search_query != "",
+                    rx.el.button(
+                        rx.icon(
+                            "x", size=10, class_name="text-gray-400 hover:text-gray-600"
+                        ),
+                        on_click=PortfolioDashboardState.clear_search,
+                        class_name="p-0.5 rounded-full hover:bg-gray-100 ml-1 transition-colors",
+                    ),
+                ),
+                class_name="flex items-center bg-white border border-gray-200 rounded px-2 h-6 flex-1 max-w-[200px] shadow-sm ml-2 transition-all focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-100",
             ),
             rx.el.div(
                 rx.el.input(

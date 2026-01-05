@@ -80,16 +80,16 @@ def header_cell(
                     rx.icon(
                         "arrow-up-down",
                         size=10,
-                        class_name="ml-1 text-gray-400 opacity-0 group-hover:opacity-100",
+                        class_name="ml-1 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity",
                     ),
                 ),
             ),
-            class_name=f"flex items-center {rx.match(align, ('left', 'justify-start'), ('center', 'justify-center'), 'justify-end')} group cursor-pointer",
-            on_click=lambda: rx.cond(
-                sortable, PortfolioDashboardState.toggle_sort(column_key), None
-            ),
+            class_name=f"flex items-center {rx.match(align, ('left', 'justify-start'), ('center', 'justify-center'), 'justify-end')}",
         ),
-        class_name=f"px-3 py-3 {align_class} text-[10px] font-bold text-gray-700 uppercase tracking-widest border-b-2 border-gray-400 align-middle whitespace-nowrap h-[44px] bg-[#E5E7EB] sticky top-0 z-30 shadow-[0_2px_4px_rgba(0,0,0,0.1)]",
+        on_click=lambda: rx.cond(
+            sortable, PortfolioDashboardState.toggle_sort(column_key), None
+        ),
+        class_name=f"px-3 py-3 {align_class} text-[10px] font-bold text-gray-700 uppercase tracking-widest border-b-2 border-gray-400 align-middle whitespace-nowrap h-[44px] bg-[#E5E7EB] sticky top-0 z-30 shadow-[0_2px_4px_rgba(0,0,0,0.1)] cursor-pointer hover:bg-gray-200 transition-colors group select-none",
         width=width,
     )
 

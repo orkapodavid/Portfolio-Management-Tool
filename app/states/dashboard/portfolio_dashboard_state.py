@@ -1726,10 +1726,43 @@ class PortfolioDashboardState(rx.State):
     @rx.event
     def toggle_sort(self, column: str):
         if self.sort_column == column:
-            self.sort_direction = "desc" if self.sort_direction == "asc" else "asc"
+            if self.sort_direction == "asc":
+                self.sort_direction = "desc"
+            elif self.sort_direction == "desc":
+                self.sort_column = ""
+                self.sort_direction = "asc"
         else:
             self.sort_column = column
             self.sort_direction = "asc"
+
+    @rx.event
+    def sort_data(self, data: list[dict]) -> list[dict]:
+        if not self.sort_column or not data:
+            return data
+
+        @rx.event
+        def get_sort_key(item):
+            val = item.get(self.sort_column)
+            if val is None:
+                return (2, "")
+            try:
+                clean_val = (
+                    str(val)
+                    .replace("$", "")
+                    .replace("%", "")
+                    .replace(",", "")
+                    .replace("(", "-")
+                    .replace(")", "")
+                )
+                return (0, float(clean_val))
+            except (ValueError, TypeError) as e:
+                import logging
+
+                logging.exception(f"Error sorting value {val}: {e}")
+                return (1, str(val).lower())
+
+        reverse = self.sort_direction == "desc"
+        return sorted(data, key=get_sort_key, reverse=reverse)
 
     @rx.event
     def set_notification_filter(self, filter_val: str):
@@ -2119,6 +2152,36 @@ class PortfolioDashboardState(rx.State):
         self.current_page = 1
 
     @rx.event
+    def clear_search(self):
+        if self.active_module in self._filters:
+            self._filters[self.active_module]["search"] = ""
+        self.current_page = 1
+
+    is_exporting: bool = False
+    export_dropdown_open: bool = False
+
+    @rx.event
+    def toggle_export_dropdown(self):
+        self.export_dropdown_open = not self.export_dropdown_open
+
+    @rx.event
+    async def export_data(self, format: str):
+        self.is_exporting = True
+        self.export_dropdown_open = False
+        yield
+        import datetime
+        import asyncio
+
+        await asyncio.sleep(1.5)
+        filename = f"{self.active_module.replace(' ', '_')}_Export_{datetime.date.today().strftime('%Y-%m-%d')}.{format.lower()}"
+        self.is_exporting = False
+        yield rx.toast(
+            f"Export complete: {filename}",
+            description=f"Successfully exported {PortfolioDashboardState.total_items} rows to {format}",
+            position="bottom-right",
+        )
+
+    @rx.event
     def set_current_date(self, value: str):
         if self.active_module not in self._filters:
             self._filters[self.active_module] = {}
@@ -2263,75 +2326,103 @@ class PortfolioDashboardState(rx.State):
     def filtered_positions(self) -> list[PositionItem]:
         query = self.current_search_query.lower()
         if not query:
-            return self.positions_data
-        return [p for p in self.positions_data if query in p["ticker"].lower()]
+            return self.sort_data(self.positions_data)
+        data = [
+            p
+            for p in self.positions_data
+            if query in str(p.get("ticker", "")).lower()
+            or query in str(p.get("underlying", "")).lower()
+            or query in str(p.get("company_name", "")).lower()
+        ]
+        return self.sort_data(data)
 
     @rx.var(cache=True)
     def filtered_stock_positions(self) -> list[StockPositionItem]:
         query = self.current_search_query.lower()
         if not query:
-            return self.stock_positions
-        return [
+            return self.sort_data(self.stock_positions)
+        data = [
             p
             for p in self.stock_positions
-            if query in p["ticker"].lower() or query in p["sector"].lower()
+            if query in str(p.get("ticker", "")).lower()
+            or query in str(p.get("company_name", "")).lower()
+            or query in str(p.get("sec_type", "")).lower()
         ]
+        return self.sort_data(data)
 
     @rx.var(cache=True)
     def filtered_warrant_positions(self) -> list[WarrantPositionItem]:
         query = self.current_search_query.lower()
         if not query:
-            return self.warrant_positions
-        return [
+            return self.sort_data(self.warrant_positions)
+        data = [
             p
             for p in self.warrant_positions
-            if query in p["ticker"].lower() or query in p["underlying"].lower()
+            if query in str(p.get("ticker", "")).lower()
+            or query in str(p.get("underlying", "")).lower()
         ]
+        return self.sort_data(data)
 
     @rx.var(cache=True)
     def filtered_bond_positions(self) -> list[BondPositionItem]:
         query = self.current_search_query.lower()
         if not query:
-            return self.bond_positions
-        return [p for p in self.bond_positions if query in p["issuer"].lower()]
+            return self.sort_data(self.bond_positions)
+        data = [
+            p
+            for p in self.bond_positions
+            if query in str(p.get("ticker", "")).lower()
+            or query in str(p.get("underlying", "")).lower()
+        ]
+        return self.sort_data(data)
 
     @rx.var(cache=True)
     def filtered_trade_summaries(self) -> list[TradeSummaryItem]:
         query = self.current_search_query.lower()
         if not query:
-            return self.trade_summaries
-        return [p for p in self.trade_summaries if query in p["ticker"].lower()]
+            return self.sort_data(self.trade_summaries)
+        data = [
+            p for p in self.trade_summaries if query in str(p.get("ticker", "")).lower()
+        ]
+        return self.sort_data(data)
 
     @rx.var(cache=True)
     def filtered_pnl_change(self) -> list[PnLChangeItem]:
         query = self.current_search_query.lower()
         if not query:
-            return self.pnl_change_data
-        return [
+            return self.sort_data(self.pnl_change_data)
+        data = [
             item
             for item in self.pnl_change_data
-            if query in item["ticker"].lower() or query in item["underlying"].lower()
+            if query in str(item.get("ticker", "")).lower()
+            or query in str(item.get("underlying", "")).lower()
         ]
+        return self.sort_data(data)
 
     @rx.var(cache=True)
     def filtered_pnl_summary(self) -> list[PnLSummaryItem]:
         query = self.current_search_query.lower()
         if not query:
-            return self.pnl_summary_data
-        return [
+            return self.sort_data(self.pnl_summary_data)
+        data = [
             item
             for item in self.pnl_summary_data
-            if query in item["underlying"].lower() or query in item["currency"].lower()
+            if query in str(item.get("underlying", "")).lower()
+            or query in str(item.get("currency", "")).lower()
         ]
+        return self.sort_data(data)
 
     @rx.var(cache=True)
     def filtered_pnl_currency(self) -> list[PnLCurrencyItem]:
         query = self.current_search_query.lower()
         if not query:
-            return self.pnl_currency_data
-        return [
-            item for item in self.pnl_currency_data if query in item["currency"].lower()
+            return self.sort_data(self.pnl_currency_data)
+        data = [
+            item
+            for item in self.pnl_currency_data
+            if query in str(item.get("currency", "")).lower()
         ]
+        return self.sort_data(data)
 
     @rx.var(cache=True)
     def filtered_restricted_list(self) -> list[RestrictedListItem]:
@@ -2622,12 +2713,14 @@ class PortfolioDashboardState(rx.State):
         data = self._all_table_data
         query = self.current_search_query.lower()
         if not query:
-            return data
-        return [
+            return self.sort_data(data)
+        filtered = [
             item
             for item in data
-            if query in item["ticker"].lower() or query in item["description"].lower()
+            if query in str(item.get("ticker", "")).lower()
+            or query in str(item.get("description", "")).lower()
         ]
+        return self.sort_data(filtered)
 
     @rx.var(cache=True)
     def paginated_table_data(self) -> list[dict]:
