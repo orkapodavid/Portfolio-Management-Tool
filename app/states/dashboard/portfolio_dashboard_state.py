@@ -91,6 +91,7 @@ class KPIMetric(TypedDict):
     label: str
     value: str
     is_positive: bool
+    trend_data: str
 
 
 class TopMover(TypedDict):
@@ -1717,6 +1718,7 @@ class PortfolioDashboardState(rx.State):
     show_top_movers: bool = False
     selected_row_id: int = -1
     is_loading: bool = False
+    is_loading_data: bool = False
     sort_column: str = ""
     sort_direction: str = "asc"
     notification_filter: str = "all"
@@ -1751,11 +1753,36 @@ class PortfolioDashboardState(rx.State):
         yield rx.toast(f"Navigating to details for ID: {notif_id}")
 
     kpi_metrics: list[KPIMetric] = [
-        {"label": "Daily PnL", "value": "+$1.2M", "is_positive": True},
-        {"label": "Daily Pos FX", "value": "($45K)", "is_positive": False},
-        {"label": "Daily CCY Hedged", "value": "+$12K", "is_positive": True},
-        {"label": "YTD Disc PnL", "value": "+$45.8M", "is_positive": True},
-        {"label": "YTD R/U PnL", "value": "($2.1M)", "is_positive": False},
+        {
+            "label": "Daily PnL",
+            "value": "+$1.2M",
+            "is_positive": True,
+            "trend_data": "0,20 5,15 10,18 15,10 20,12 25,8 30,14 35,5 40,9 45,2 50,6",
+        },
+        {
+            "label": "Daily Pos FX",
+            "value": "($45K)",
+            "is_positive": False,
+            "trend_data": "0,5 5,10 10,8 15,15 20,13 25,18 30,12 35,20 40,16 45,22 50,18",
+        },
+        {
+            "label": "Daily CCY Hedged",
+            "value": "+$12K",
+            "is_positive": True,
+            "trend_data": "0,15 10,12 20,14 30,10 40,8 50,5",
+        },
+        {
+            "label": "YTD Disc PnL",
+            "value": "+$45.8M",
+            "is_positive": True,
+            "trend_data": "0,22 5,20 10,18 15,15 20,12 25,10 30,8 35,6 40,4 45,2 50,0",
+        },
+        {
+            "label": "YTD R/U PnL",
+            "value": "($2.1M)",
+            "is_positive": False,
+            "trend_data": "0,0 5,2 10,4 15,6 20,8 25,10 30,12 35,14 40,16 45,18 50,20",
+        },
     ]
     top_movers_ops: list[TopMover] = [
         {

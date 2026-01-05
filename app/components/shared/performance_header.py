@@ -18,13 +18,14 @@ from app.constants import (
 
 
 def kpi_card(metric: KPIMetric) -> rx.Component:
-    """An ultra-compact KPI metric card with deep vertical shrinkage."""
+    """An ultra-compact KPI metric card with deep vertical shrinkage and trend sparkline."""
     accent_color = rx.cond(
         metric["is_positive"], f"border-[{POSITIVE_GREEN}]", f"border-[{NEGATIVE_RED}]"
     )
     text_color = rx.cond(
         metric["is_positive"], f"text-[{POSITIVE_GREEN}]", f"text-[{NEGATIVE_RED}]"
     )
+    sparkline_color = rx.cond(metric["is_positive"], POSITIVE_GREEN, NEGATIVE_RED)
     value_display = rx.cond(
         metric["is_positive"],
         metric["value"],
@@ -32,13 +33,26 @@ def kpi_card(metric: KPIMetric) -> rx.Component:
     )
     return rx.el.div(
         rx.el.div(
-            rx.el.span(
-                metric["label"],
-                class_name="text-[7px] font-black text-gray-400 uppercase tracking-[0.15em] truncate mr-2",
+            rx.el.div(
+                rx.el.span(
+                    metric["label"],
+                    class_name="text-[7px] font-black text-gray-400 uppercase tracking-[0.15em] truncate",
+                ),
+                rx.el.span(
+                    value_display,
+                    class_name=f"text-[10px] font-black {text_color} tracking-tighter",
+                ),
+                class_name="flex flex-col",
             ),
-            rx.el.span(
-                value_display,
-                class_name=f"text-[10px] font-black {text_color} tracking-tighter",
+            rx.el.svg(
+                rx.el.svg.polyline(
+                    points=metric["trend_data"],
+                    stroke=sparkline_color,
+                    fill="none",
+                    stroke_width="2",
+                ),
+                view_box="0 0 50 24",
+                class_name="w-8 h-4 opacity-40 shrink-0 ml-auto",
             ),
             class_name="flex items-center justify-between w-full",
         ),

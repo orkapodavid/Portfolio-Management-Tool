@@ -43,15 +43,27 @@ def header_cell(
     align: str = "right",
     sortable: bool = True,
     width: str = "auto",
+    tooltip: str = "",
 ) -> rx.Component:
-    """Standardized header cell for PnL tables with sorting."""
+    """Standardized header cell for PnL tables with sorting and tooltips."""
     align_class = rx.match(
         align, ("left", "text-left"), ("center", "text-center"), "text-right"
     )
     is_sorted = PortfolioDashboardState.sort_column == column_key
     return rx.el.th(
         rx.el.div(
-            rx.el.span(text),
+            rx.el.div(
+                rx.el.span(text),
+                rx.cond(
+                    tooltip != "",
+                    rx.el.span(
+                        rx.icon("info", size=10, class_name="ml-1 text-gray-400"),
+                        title=tooltip,
+                        class_name="cursor-help shrink-0",
+                    ),
+                ),
+                class_name="flex items-center",
+            ),
             rx.cond(
                 sortable,
                 rx.cond(
@@ -83,11 +95,20 @@ def header_cell(
 
 
 def value_cell(
-    value: str, is_positive: bool = None, align: str = "right"
+    value: str,
+    is_positive: bool = None,
+    align: str = "right",
+    magnitude: str = "normal",
 ) -> rx.Component:
     if is_positive != None:
         color_class = rx.cond(
             is_positive, f"text-[{POSITIVE_GREEN}]", f"text-[{NEGATIVE_RED}]"
+        )
+        bg_class = rx.match(
+            magnitude,
+            ("high", rx.cond(is_positive, "bg-green-50", "bg-red-50")),
+            ("medium", rx.cond(is_positive, "bg-green-50/50", "bg-red-50/50")),
+            "bg-transparent",
         )
     else:
         is_negative = value.to_string().startswith("-") | value.to_string().startswith(
@@ -96,9 +117,15 @@ def value_cell(
         color_class = rx.cond(
             is_negative, f"text-[{NEGATIVE_RED}]", f"text-[{POSITIVE_GREEN}]"
         )
+        bg_class = rx.match(
+            magnitude,
+            ("high", rx.cond(~is_negative, "bg-green-50", "bg-red-50")),
+            ("medium", rx.cond(~is_negative, "bg-green-50/50", "bg-red-50/50")),
+            "bg-transparent",
+        )
     return rx.el.td(
         value,
-        class_name=f"px-3 py-2 text-[10px] font-mono font-bold {color_class} text-{align} border-b border-gray-200 align-middle whitespace-nowrap",
+        class_name=f"px-3 py-2 text-[10px] font-mono font-bold {color_class} {bg_class} text-{align} border-b border-gray-200 align-middle whitespace-nowrap",
     )
 
 
@@ -116,14 +143,15 @@ def pnl_change_row(item: PnLChangeItem) -> rx.Component:
         text_cell(item["trade_date"], align="left"),
         text_cell(item["underlying"], align="left", bold=True),
         text_cell(item["ticker"], align="left"),
-        value_cell(item["pnl_ytd"]),
-        value_cell(item["pnl_chg_1d"]),
+        value_cell(item["pnl_ytd"], magnitude="high"),
+        value_cell(item["pnl_chg_1d"], magnitude="medium"),
         value_cell(item["pnl_chg_1w"]),
         value_cell(item["pnl_chg_1m"]),
         value_cell(item["pnl_chg_pct_1d"]),
         value_cell(item["pnl_chg_pct_1w"]),
         value_cell(item["pnl_chg_pct_1m"]),
-        class_name="odd:bg-white even:bg-gray-50 hover:bg-gray-100 h-[40px] transition-colors",
+        on_click=lambda: PortfolioDashboardState.set_selected_row(item["id"]),
+        class_name="odd:bg-white even:bg-gray-50 hover:bg-blue-50 hover:shadow-sm h-[40px] transition-all duration-150 cursor-pointer",
     )
 
 
@@ -187,9 +215,9 @@ def pnl_summary_table() -> rx.Component:
                     header_cell("FX Rate"),
                     header_cell("FX Rate (T-1)"),
                     header_cell("FX Rate Change"),
-                    header_cell("DTL"),
+                    header_cell("DTL", tooltip="Days To Liquidation"),
                     header_cell("Last Volume"),
-                    header_cell("ADV 3M"),
+                    header_cell("ADV 3M", tooltip="Average Daily Volume (3 Month)"),
                 )
             ),
             rx.el.tbody(

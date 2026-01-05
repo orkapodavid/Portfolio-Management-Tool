@@ -25,7 +25,7 @@ def text_cell(
 
 
 def status_badge(status: str) -> rx.Component:
-    """Colored badge for status fields with auto-detection."""
+    """Colored badge for status fields with auto-detection and accessibility icons."""
     colors = rx.match(
         status.lower(),
         ("success", "bg-green-100 text-green-700 border-green-300"),
@@ -38,9 +38,21 @@ def status_badge(status: str) -> rx.Component:
         ("warning", "bg-amber-100 text-amber-700 border-amber-300"),
         "bg-blue-100 text-blue-700 border-blue-300",
     )
+    icon_name = rx.match(
+        status.lower(),
+        ("success", "check-circle"),
+        ("filled", "check-circle"),
+        ("active", "play-circle"),
+        ("failed", "x-circle"),
+        ("error", "alert-circle"),
+        ("warning", "alert-triangle"),
+        ("running", "loader"),
+        "info",
+    )
     return rx.el.span(
+        rx.icon(icon_name, size=10, class_name="mr-1 shrink-0"),
         status,
-        class_name=f"px-2 py-0.5 rounded-full text-[9px] font-bold border {colors} uppercase tracking-tight shadow-sm",
+        class_name=f"inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold border {colors} uppercase tracking-tight shadow-sm",
     )
 
 

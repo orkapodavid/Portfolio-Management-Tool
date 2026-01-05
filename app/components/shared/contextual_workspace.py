@@ -375,9 +375,28 @@ def workspace_controls() -> rx.Component:
     )
 
 
+def table_skeleton() -> rx.Component:
+    """Loading skeleton for tables with pulse animation."""
+    return rx.el.div(
+        rx.foreach(
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            lambda _: rx.el.div(
+                rx.el.div(
+                    rx.el.div(class_name="h-3 bg-gray-200 rounded w-1/4 animate-pulse"),
+                    rx.el.div(class_name="h-3 bg-gray-200 rounded w-1/2 animate-pulse"),
+                    rx.el.div(class_name="h-3 bg-gray-200 rounded w-1/6 animate-pulse"),
+                    class_name="flex justify-between items-center w-full",
+                ),
+                class_name="px-4 py-4 border-b border-gray-100",
+            ),
+        ),
+        class_name="w-full bg-white flex-1",
+    )
+
+
 def contextual_workspace() -> rx.Component:
-    """The main workspace area (Region 3) with maximized table height."""
-    content = rx.match(
+    """The main workspace area (Region 3) with maximized table height and loading state."""
+    workspace_content = rx.match(
         PortfolioDashboardState.active_module,
         (
             "PnL",
@@ -515,7 +534,11 @@ def contextual_workspace() -> rx.Component:
         rx.el.div(
             workspace_controls(),
             rx.el.div(
-                content,
+                rx.cond(
+                    PortfolioDashboardState.is_loading_data,
+                    table_skeleton(),
+                    workspace_content,
+                ),
                 class_name="flex-1 flex flex-col min-h-0 overflow-hidden bg-white",
             ),
             class_name="flex flex-col flex-1 min-h-0 h-full",
