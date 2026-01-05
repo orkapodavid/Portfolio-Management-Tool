@@ -1,6 +1,6 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import PortfolioDashboardState
-from app.states.dashboard.portfolio_dashboard_types import (
+from app.states.dashboard.portfolio_dashboard_state import (
+    PortfolioDashboardState,
     DailyProcedureItem,
     OperationProcessItem,
 )
@@ -13,11 +13,17 @@ def header_cell(text: str, align: str = "left") -> rx.Component:
     )
 
 
-def text_cell(val: str) -> rx.Component:
-    return rx.el.td(
-        val,
-        class_name="px-3 py-2 text-[10px] font-medium text-gray-700 border-b border-gray-200 align-middle whitespace-nowrap",
-    )
+def text_cell(
+    val: str, align: str = "left", bold: bool = False, clickable: bool = False
+) -> rx.Component:
+    base_class = f"px-3 py-2 text-[10px] text-gray-700 text-{align} border-b border-gray-200 align-middle whitespace-nowrap"
+    if clickable:
+        return rx.el.td(
+            rx.el.a(val, class_name="text-blue-600 hover:underline cursor-pointer"),
+            class_name=base_class,
+        )
+    weight = rx.cond(bold, "font-black", "font-medium")
+    return rx.el.td(val, class_name=f"{base_class} {weight}")
 
 
 def daily_proc_row(item: DailyProcedureItem) -> rx.Component:
@@ -30,7 +36,7 @@ def daily_proc_row(item: DailyProcedureItem) -> rx.Component:
     )
     return rx.el.tr(
         text_cell(item["check_date"]),
-        text_cell(item["host_run_date"]),
+        text_cell(item["host_run_date"], clickable=False),
         text_cell(item["scheduled_time"]),
         text_cell(item["procedure_name"]),
         rx.el.td(

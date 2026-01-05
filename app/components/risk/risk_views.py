@@ -1,6 +1,6 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import PortfolioDashboardState
-from app.states.dashboard.portfolio_dashboard_types import (
+from app.states.dashboard.portfolio_dashboard_state import (
+    PortfolioDashboardState,
     DeltaChangeItem,
     RiskMeasureItem,
     RiskInputItem,
@@ -49,8 +49,8 @@ def delta_change_table() -> rx.Component:
                     header_cell("FX Rate"),
                     header_cell("Current Price"),
                     header_cell("Valuation Price"),
-                    header_cell("Pos Delta"),
-                    header_cell("posDelta"),
+                    header_cell("POS DELTA"),
+                    header_cell("POS DELTA SMALL"),
                     header_cell("Pos G"),
                 )
             ),

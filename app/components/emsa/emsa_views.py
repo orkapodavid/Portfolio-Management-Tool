@@ -1,6 +1,8 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import PortfolioDashboardState
-from app.states.dashboard.portfolio_dashboard_types import EMSAOrderItem
+from app.states.dashboard.portfolio_dashboard_state import (
+    PortfolioDashboardState,
+    EMSAOrderItem,
+)
 
 
 def header_cell(text: str, align: str = "left") -> rx.Component:

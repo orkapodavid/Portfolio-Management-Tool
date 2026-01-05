@@ -33,9 +33,7 @@ app = rx.App(
         "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
     ],
 )
-from app.states.dashboard.portfolio_dashboard_state import PortfolioDashboardState
-
-app.add_page(index, route="/", on_load=PortfolioDashboardState.load_data_from_adapters)
+app.add_page(index, route="/")
 app.add_page(portfolio_page, route="/portfolios")
 app.add_page(watchlist_page, route="/watchlist")
 app.add_page(research_page, route="/research")

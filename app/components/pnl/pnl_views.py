@@ -1,6 +1,6 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import PortfolioDashboardState
-from app.states.dashboard.portfolio_dashboard_types import (
+from app.states.dashboard.portfolio_dashboard_state import (
+    PortfolioDashboardState,
     PnLChangeItem,
     PnLSummaryItem,
     PnLCurrencyItem,
@@ -52,16 +52,16 @@ def header_cell(text: str, align: str = "right", width: str = "auto") -> rx.Comp
 def value_cell(
     value: str, is_positive: bool = None, align: str = "right"
 ) -> rx.Component:
-    """Formats a value cell with color coding for positive/negative values."""
-    value_str = value.to_string()
-    color_class = rx.cond(
-        value_str.contains("(") | value_str.contains("-"),
-        f"text-[{NEGATIVE_RED}]",
-        f"text-[{POSITIVE_GREEN}]",
-    )
     if is_positive != None:
         color_class = rx.cond(
             is_positive, f"text-[{POSITIVE_GREEN}]", f"text-[{NEGATIVE_RED}]"
+        )
+    else:
+        is_negative = value.to_string().startswith("-") | value.to_string().startswith(
+            "("
+        )
+        color_class = rx.cond(
+            is_negative, f"text-[{NEGATIVE_RED}]", f"text-[{POSITIVE_GREEN}]"
         )
     return rx.el.td(
         value,

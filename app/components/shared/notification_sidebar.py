@@ -1,6 +1,8 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import PortfolioDashboardState
-from app.states.dashboard.portfolio_dashboard_types import NotificationItem
+from app.states.dashboard.portfolio_dashboard_state import (
+    PortfolioDashboardState,
+    NotificationItem,
+)
 from app.states.notifications.notification_pagination_state import (
     NotificationPaginationState,
 )

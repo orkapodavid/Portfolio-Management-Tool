@@ -1,6 +1,6 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import PortfolioDashboardState
-from app.states.dashboard.portfolio_dashboard_types import (
+from app.states.dashboard.portfolio_dashboard_state import (
+    PortfolioDashboardState,
     PayToHoldItem,
     ShortECLItem,
     StockBorrowItem,
@@ -59,11 +59,11 @@ def pay_to_hold_table() -> rx.Component:
                     header_cell("SL Rate"),
                     header_cell("PTH Amount SOD"),
                     header_cell("PTH Amount"),
-                    header_cell("EMSA Order"),
+                    header_cell("EMSA ORDER AMOUNT"),
                     header_cell("EMSA Order Remark"),
                     header_cell("EMSA Working"),
-                    header_cell("EMSA order"),
-                    header_cell("EMSA order Filled"),
+                    header_cell("EMSA ORDER CONFIRMED"),
+                    header_cell("EMSA ORDER FILLED"),
                 )
             ),
             rx.el.tbody(rx.foreach(PortfolioDashboardState.filtered_pth, pth_row)),

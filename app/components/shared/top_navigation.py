@@ -4,7 +4,6 @@ from app.constants import NAV_HEIGHT, NAV_BG, ICON_NAV_SIZE
 
 
 def nav_button(module_name: str, icon_name: str) -> rx.Component:
-    """Creates an ultra-compact navigation button with inline icon and text."""
     is_active = PortfolioDashboardState.active_module == module_name
     return rx.el.button(
         rx.el.div(
@@ -17,18 +16,23 @@ def nav_button(module_name: str, icon_name: str) -> rx.Component:
                 module_name,
                 class_name=rx.cond(
                     is_active,
-                    "text-[9px] font-bold text-white tracking-tighter uppercase whitespace-nowrap",
-                    "text-[9px] font-medium text-gray-400 hover:text-gray-200 uppercase whitespace-nowrap",
+                    "text-[9px] font-bold text-white uppercase",
+                    "text-[9px] font-medium text-gray-400 hover:text-gray-200 uppercase",
                 ),
             ),
-            class_name="flex flex-row items-center gap-1.5",
+            rx.cond(
+                is_active,
+                rx.el.div(
+                    class_name="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 animate-pulse"
+                ),
+            ),
+            class_name="flex flex-row items-center gap-1.5 relative",
         ),
         on_click=PortfolioDashboardState.set_module(module_name),
-        title=module_name,
         class_name=rx.cond(
             is_active,
-            "px-2 h-full border-b-2 border-blue-500 bg-white/10 transition-colors duration-75 flex items-center",
-            "px-2 h-full border-b-2 border-transparent hover:bg-white/5 transition-colors duration-75 flex items-center",
+            "px-2 h-full border-b-2 border-blue-500 bg-white/10 relative",
+            "px-2 h-full border-b-2 border-transparent hover:bg-white/5",
         ),
     )
 
@@ -82,7 +86,7 @@ def top_navigation() -> rx.Component:
                     PortfolioDashboardState.module_icons.entries(),
                     lambda item: nav_button(item[0], item[1]),
                 ),
-                class_name="hidden md:flex items-center h-full overflow-x-auto no-scrollbar gap-0",
+                class_name="hidden md:flex items-center h-full overflow-x-auto no-scrollbar gap-0 ml-2",
             ),
             rx.el.div(
                 rx.el.button(

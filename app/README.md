@@ -27,7 +27,7 @@ A professional portfolio management web dashboard built with [Reflex](https://re
 ### Option 1: Using uv (Recommended - Fast & Simple)
 
 1. **Install uv** (if not already installed):
-   bash
+   ```bash
    # macOS/Linux
    curl -LsSf https://astral.sh/uv/install.sh | sh
    
@@ -36,10 +36,10 @@ A professional portfolio management web dashboard built with [Reflex](https://re
    
    # Windows
    powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-   
+   ```
 
 2. **Clone and setup**:
-   bash
+   ```bash
    git clone <repository-url>
    cd Portfolio-Management-Tool
    
@@ -48,48 +48,48 @@ A professional portfolio management web dashboard built with [Reflex](https://re
    
    # Install dependencies (much faster than pip!)
    uv pip install -r requirements.txt
-   
+   ```
 
 ### Option 2: Using standard pip
 
 1. **Ensure Python 3.13 is installed**:
-   bash
+   ```bash
    # macOS
    brew install python@3.13
    
    # Check version
    python3.13 --version
-   
+   ```
 
 2. **Clone the repository**:
-   bash
+   ```bash
    git clone <repository-url>
    cd Portfolio-Management-Tool
-   
+   ```
 
 3. **Create a virtual environment**:
-   bash
+   ```bash
    python3.13 -m venv .venv
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   
+   ```
 
 4. **Install dependencies**:
-   bash
+   ```bash
    pip install -r requirements.txt
-   
+   ```
 
    The `requirements.txt` includes:
-   
+   ```
    reflex==0.8.20
    yfinance
    PyGithub
-   
+   ```
 
 
 5. **Initialize the Reflex project** (first time only):
-   bash
+   ```bash
    reflex init
-   
+   ```
 
 ## Running the Application
 
@@ -143,36 +143,6 @@ config = rx.Config(
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `GITHUB_TOKEN` | GitHub API access (optional) | No |
-| `PMT_INTEGRATION_MODE` | Integration mode: `mock` (default), `real`, or `standalone` | No |
-| `PMT_CORE_PATH` | Path to the `pmt_core` package (only for `real` mode if not installed via pip) | No |
-
-### Running Modes
-
-This application supports different modes for development and production integration:
-
-**1. Mock Mode (Default)**
-Ideal for frontend development. Uses internal mock services to simulate the backend.
-bash
-# Default behavior, no env var needed
-reflex run
-
-
-**2. Real Integration Mode**
-Connects to the actual `pmt_core` business logic package. Requires `pmt_core` to be installed in the environment.
-bash
-# Install core package
-pip install -e ../path/to/pmt_core
-
-# Run with integration enabled
-export PMT_INTEGRATION_MODE=real
-reflex run
-
-
-**3. Standalone Mode**
-Uses the legacy internal implementation (e.g., direct yfinance calls) without the adapter layer.
-bash
-export PMT_INTEGRATION_MODE=standalone
-reflex run
 
 ## Key Routes
 
@@ -229,18 +199,18 @@ reflex run --frontend-port 3001 --backend-port 8001
 
 
 **Pydantic V1 compatibility warning (Python 3.14+)**:
-bash
+```bash
 # Recreate virtual environment with Python 3.13
 uv venv --python 3.13 .venv
 uv pip install -r requirements.txt
-
+```
 
 **Dependency conflicts**:
-bash
+```bash
 pip install --upgrade reflex
 # Or with uv:
 uv pip install --upgrade reflex
-
+```
 
 
 **Frontend not building**:

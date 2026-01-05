@@ -1,10 +1,7 @@
 import reflex as rx
 from typing import TypedDict, Optional
 import datetime
-import asyncio
-import logging
 from app.states.dashboard.dashboard_state import Holding
-from app.adapters.portfolio_adapter import PortfolioAdapter
 
 
 class Transaction(TypedDict):
@@ -38,135 +35,87 @@ class Portfolio(TypedDict):
 class PortfolioState(rx.State):
     portfolios: list[Portfolio] = [
         {
-            "id": "local_1",
-            "name": "Standard Trading",
-            "description": "Local Account",
+            "id": "1",
+            "name": "Main Investment Account",
+            "description": "Long-term growth strategy focused on tech and finance.",
             "holdings": [
                 {
                     "symbol": "AAPL",
                     "name": "Apple Inc.",
-                    "shares": 100.0,
-                    "avg_cost": 150.0,
-                    "current_price": 182.5,
-                    "daily_change_pct": 1.2,
-                    "asset_class": "Equity",
-                }
+                    "shares": 150,
+                    "avg_cost": 175.0,
+                    "current_price": 189.5,
+                    "daily_change_pct": 1.25,
+                    "asset_class": "Technology",
+                },
+                {
+                    "symbol": "MSFT",
+                    "name": "Microsoft Corp.",
+                    "shares": 100,
+                    "avg_cost": 350.0,
+                    "current_price": 402.1,
+                    "daily_change_pct": 0.85,
+                    "asset_class": "Technology",
+                },
+                {
+                    "symbol": "JPM",
+                    "name": "JPMorgan Chase",
+                    "shares": 200,
+                    "avg_cost": 140.0,
+                    "current_price": 175.3,
+                    "daily_change_pct": -0.45,
+                    "asset_class": "Finance",
+                },
             ],
-            "transactions": [],
-            "dividends": [],
-            "cash": 10000.0,
+            "transactions": [
+                {
+                    "id": "t1",
+                    "date": "2023-12-15",
+                    "symbol": "AAPL",
+                    "type": "Buy",
+                    "shares": 50,
+                    "price": 180.0,
+                    "amount": 9000.0,
+                },
+                {
+                    "id": "t2",
+                    "date": "2024-01-10",
+                    "symbol": "MSFT",
+                    "type": "Buy",
+                    "shares": 20,
+                    "price": 390.0,
+                    "amount": 7800.0,
+                },
+            ],
+            "dividends": [
+                {
+                    "id": "d1",
+                    "date": "2024-02-15",
+                    "symbol": "AAPL",
+                    "amount": 36.0,
+                    "yield_on_cost": 0.5,
+                },
+                {
+                    "id": "d2",
+                    "date": "2024-03-01",
+                    "symbol": "JPM",
+                    "amount": 210.0,
+                    "yield_on_cost": 3.0,
+                },
+            ],
+            "cash": 12500.0,
         }
     ]
     selected_portfolio_index: int = 0
     is_add_portfolio_open: bool = False
     is_add_transaction_open: bool = False
     transaction_type: str = "Buy"
-    is_loading: bool = False
-
-    @rx.event
-    async def load_portfolio_data(self):
-        """Fetches and adapts portfolio data from backend services via PortfolioAdapter."""
-        self.is_loading = True
-        yield
-        try:
-            from app.adapters.portfolio_adapter import PortfolioAdapter
-            from app.config import PMT_INTEGRATION_MODE
-
-            stock_pos = await PortfolioAdapter.get_stock_positions()
-            if stock_pos:
-                new_holdings: list[Holding] = []
-                for p in stock_pos:
-                    raw_notional = str(p.get("notional", "$0"))
-                    notional_clean = (
-                        raw_notional.replace("$", "")
-                        .replace(",", "")
-                        .replace("(", "-")
-                        .replace(")", "")
-                    )
-                    try:
-                        notional_val = float(notional_clean)
-                    except (ValueError, TypeError) as e:
-                        logging.exception(
-                            f"Error parsing notional value '{notional_clean}': {e}"
-                        )
-                        notional_val = 0.0
-                    base_price = 150.0
-                    shares = (
-                        round(abs(notional_val) / base_price, 2)
-                        if notional_val != 0
-                        else 100.0
-                    )
-                    holding: Holding = {
-                        "symbol": str(p.get("ticker", "")).upper(),
-                        "name": str(p.get("company_name", ""))
-                        or str(p.get("ticker", "")),
-                        "shares": float(shares),
-                        "avg_cost": float(base_price * 0.98),
-                        "current_price": float(base_price),
-                        "daily_change_pct": 0.0,
-                        "asset_class": str(p.get("sec_type", "Equity")),
-                    }
-                    new_holdings.append(holding)
-                updated_portfolios = self.portfolios.copy()
-                feed_id = "pmt_feed"
-                feed_index = -1
-                for i, p in enumerate(updated_portfolios):
-                    if p["id"] == feed_id:
-                        feed_index = i
-                        break
-                timestamp = datetime.datetime.now().strftime("%H:%M:%S")
-                feed_description = (
-                    f"Live institutional feed via {PMT_INTEGRATION_MODE} at {timestamp}"
-                )
-                if feed_index != -1:
-                    updated_portfolios[feed_index]["holdings"] = new_holdings
-                    updated_portfolios[feed_index]["description"] = feed_description
-                else:
-                    updated_portfolios.insert(
-                        0,
-                        {
-                            "id": feed_id,
-                            "name": "Institutional Feed",
-                            "description": feed_description,
-                            "holdings": new_holdings,
-                            "transactions": [],
-                            "dividends": [],
-                            "cash": 0.0,
-                        },
-                    )
-                self.portfolios = updated_portfolios
-                if feed_index == -1:
-                    self.selected_portfolio_index = 0
-                yield rx.toast(
-                    f"Synced {len(new_holdings)} positions from {PMT_INTEGRATION_MODE}",
-                    position="bottom-right",
-                )
-            else:
-                yield rx.toast(
-                    "No remote positions returned from feed.", position="bottom-right"
-                )
-        except Exception as e:
-            logging.exception(f"Portfolio state integration error: {e}")
-            yield rx.toast(
-                f"Connection failed: Check {PMT_INTEGRATION_MODE} integration settings.",
-                position="bottom-right",
-            )
-        finally:
-            self.is_loading = False
 
     @rx.var
     def selected_portfolio(self) -> Portfolio:
         if 0 <= self.selected_portfolio_index < len(self.portfolios):
             return self.portfolios[self.selected_portfolio_index]
-        return {
-            "id": "0",
-            "name": "No Portfolio",
-            "description": "",
-            "holdings": [],
-            "transactions": [],
-            "dividends": [],
-            "cash": 0.0,
-        }
+        return self.portfolios[0]
 
     @rx.var
     def sector_breakdown(self) -> list[dict]:

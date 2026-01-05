@@ -1,6 +1,6 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import PortfolioDashboardState
-from app.states.dashboard.portfolio_dashboard_types import (
+from app.states.dashboard.portfolio_dashboard_state import (
+    PortfolioDashboardState,
     TickerDataItem,
     StockScreenerItem,
     SpecialTermItem,
@@ -16,19 +16,25 @@ def header_cell(text: str, align: str = "left") -> rx.Component:
     )
 
 
-def text_cell(val: str) -> rx.Component:
-    return rx.el.td(
-        val,
-        class_name="px-3 py-2 text-[10px] font-medium text-gray-700 border-b border-gray-200 align-middle whitespace-nowrap",
-    )
+def text_cell(
+    val: str, align: str = "left", bold: bool = False, clickable: bool = False
+) -> rx.Component:
+    base_class = f"px-3 py-2 text-[10px] text-gray-700 text-{align} border-b border-gray-200 align-middle whitespace-nowrap"
+    if clickable:
+        return rx.el.td(
+            rx.el.a(val, class_name="text-blue-600 hover:underline cursor-pointer"),
+            class_name=base_class,
+        )
+    weight = rx.cond(bold, "font-black", "font-medium")
+    return rx.el.td(val, class_name=f"{base_class} {weight}")
 
 
 def ticker_data_row(item: TickerDataItem) -> rx.Component:
     return rx.el.tr(
-        text_cell(item["ticker"]),
+        text_cell(item["ticker"], clickable=True),
         text_cell(item["currency"]),
         text_cell(item["fx_rate"]),
-        text_cell(item["sector"]),
+        text_cell(item["sector"], clickable=False),
         text_cell(item["company"]),
         text_cell(item["po_lead_manager"]),
         text_cell(item["fmat_cap"]),

@@ -1,6 +1,8 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import PortfolioDashboardState
-from app.states.dashboard.portfolio_dashboard_types import NotificationItem
+from app.states.dashboard.portfolio_dashboard_state import (
+    PortfolioDashboardState,
+    NotificationItem,
+)
 
 
 def get_paginated_alerts(

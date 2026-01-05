@@ -1,6 +1,6 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import PortfolioDashboardState
-from app.states.dashboard.portfolio_dashboard_types import (
+from app.states.dashboard.portfolio_dashboard_state import (
+    PortfolioDashboardState,
     PositionItem,
     StockPositionItem,
     WarrantPositionItem,
@@ -30,12 +30,17 @@ def value_cell(
     )
 
 
-def text_cell(val: str, align: str = "left", bold: bool = False) -> rx.Component:
+def text_cell(
+    val: str, align: str = "left", bold: bool = False, clickable: bool = False
+) -> rx.Component:
+    base_class = f"px-3 py-2 text-[10px] text-gray-700 text-{align} border-b border-gray-200 align-middle whitespace-nowrap"
+    if clickable:
+        return rx.el.td(
+            rx.el.a(val, class_name="text-blue-600 hover:underline cursor-pointer"),
+            class_name=base_class,
+        )
     weight = rx.cond(bold, "font-black", "font-medium")
-    return rx.el.td(
-        val,
-        class_name=f"px-3 py-2 text-[10px] {weight} text-gray-700 text-{align} border-b border-gray-200 align-middle",
-    )
+    return rx.el.td(val, class_name=f"{base_class} {weight}")
 
 
 def positions_row(p: PositionItem) -> rx.Component:

@@ -1,5 +1,3 @@
-pytest
+reflex==0.8.20
 yfinance
-reflex
 PyGithub
-pytest-asyncio
