@@ -26,11 +26,7 @@ def kpi_card(metric: KPIMetric) -> rx.Component:
         metric["is_positive"], f"text-[{POSITIVE_GREEN}]", f"text-[{NEGATIVE_RED}]"
     )
     sparkline_color = rx.cond(metric["is_positive"], POSITIVE_GREEN, NEGATIVE_RED)
-    value_display = rx.cond(
-        metric["is_positive"],
-        metric["value"],
-        f"$({metric['value'].split('$').join('')})",
-    )
+    value_display = metric["value"]
     return rx.el.div(
         rx.el.div(
             rx.el.div(

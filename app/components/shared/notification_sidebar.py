@@ -3,9 +3,6 @@ from app.states.dashboard.portfolio_dashboard_state import (
     PortfolioDashboardState,
     NotificationItem,
 )
-from app.states.notifications.notification_pagination_state import (
-    NotificationPaginationState,
-)
 
 
 def alert_card(notification: NotificationItem) -> rx.Component:
@@ -98,12 +95,12 @@ def pagination_footer() -> rx.Component:
                 rx.el.span("Prev", class_name="ml-1"),
                 class_name="flex items-center",
             ),
-            on_click=NotificationPaginationState.prev_page,
-            disabled=NotificationPaginationState.current_page == 1,
+            on_click=PortfolioDashboardState.prev_notification_page,
+            disabled=PortfolioDashboardState.notification_page == 1,
             class_name="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-[9px] font-black uppercase tracking-tighter",
         ),
         rx.el.span(
-            f"{NotificationPaginationState.current_page} / {NotificationPaginationState.total_pages}",
+            f"{PortfolioDashboardState.notification_page} / {PortfolioDashboardState.total_notification_pages}",
             class_name="text-[10px] font-black text-gray-600 tabular-nums",
         ),
         rx.el.button(
@@ -112,9 +109,9 @@ def pagination_footer() -> rx.Component:
                 rx.icon("chevron-right", size=12),
                 class_name="flex items-center",
             ),
-            on_click=NotificationPaginationState.next_page,
-            disabled=NotificationPaginationState.current_page
-            == NotificationPaginationState.total_pages,
+            on_click=PortfolioDashboardState.next_notification_page,
+            disabled=PortfolioDashboardState.notification_page
+            == PortfolioDashboardState.total_notification_pages,
             class_name="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-[9px] font-black uppercase tracking-tighter",
         ),
         class_name="flex items-center justify-between px-3 py-2 border-t border-gray-200 bg-white/80 backdrop-blur-sm sticky bottom-0",
@@ -156,16 +153,6 @@ def notification_sidebar() -> rx.Component:
                             rx.el.div(
                                 rx.el.button(
                                     rx.icon(
-                                        "rotate-ccw",
-                                        size=12,
-                                        class_name="text-gray-400",
-                                    ),
-                                    on_click=NotificationPaginationState.reset_pagination,
-                                    title="Reset Page",
-                                    class_name="hover:text-blue-600 transition-colors mr-2",
-                                ),
-                                rx.el.button(
-                                    rx.icon(
                                         "circle_plus",
                                         size=12,
                                         class_name="text-gray-400",
@@ -188,10 +175,10 @@ def notification_sidebar() -> rx.Component:
                     rx.scroll_area(
                         rx.el.div(
                             rx.cond(
-                                NotificationPaginationState.paginated_notifications.length()
+                                PortfolioDashboardState.paginated_notifications.length()
                                 > 0,
                                 rx.foreach(
-                                    NotificationPaginationState.paginated_notifications,
+                                    PortfolioDashboardState.paginated_notifications,
                                     alert_card,
                                 ),
                                 rx.el.div(

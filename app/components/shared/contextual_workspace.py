@@ -368,9 +368,32 @@ def workspace_controls() -> rx.Component:
                             on_click=PortfolioDashboardState.toggle_generate_menu,
                         ),
                         rx.el.div(
-                            generate_menu_item("Generate PnL Change"),
-                            generate_menu_item("Generate PnL Summary"),
-                            generate_menu_item("Generate PnL Currency"),
+                            rx.cond(
+                                PortfolioDashboardState.active_module == "Events",
+                                rx.fragment(
+                                    generate_menu_item("Upload Event"),
+                                    generate_menu_item("Filter Event"),
+                                ),
+                                rx.cond(
+                                    PortfolioDashboardState.active_module == "Operations",
+                                    rx.fragment(
+                                        generate_menu_item("Run Daily Check"),
+                                        generate_menu_item("Trigger Process"),
+                                    ),
+                                    rx.cond(
+                                        PortfolioDashboardState.active_module == "Orders",
+                                        rx.fragment(
+                                            generate_menu_item("New EMSA Order"),
+                                            generate_menu_item("Route Orders"),
+                                        ),
+                                        rx.fragment(
+                                            generate_menu_item("Generate PnL Change"),
+                                            generate_menu_item("Generate PnL Summary"),
+                                            generate_menu_item("Generate PnL Currency"),
+                                        ),
+                                    ),
+                                ),
+                            ),
                             class_name="absolute top-full left-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-100 py-1 z-50 animate-in fade-in slide-in-from-top-1 duration-100",
                         ),
                     ),
@@ -478,12 +501,13 @@ def workspace_controls() -> rx.Component:
                 class_name="flex items-center bg-white border border-gray-200 rounded px-2 h-6 flex-1 max-w-[200px] shadow-sm ml-2 transition-all focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-100",
             ),
             rx.el.div(
+                rx.icon("calendar", size=12, class_name="text-gray-500 mr-1.5"),
                 rx.el.input(
                     type="date",
                     on_change=PortfolioDashboardState.set_current_date,
-                    class_name="bg-white border border-gray-200 rounded px-2 h-6 text-[10px] font-bold text-gray-600 outline-none shadow-sm",
+                    class_name="bg-transparent text-[10px] font-bold text-gray-600 outline-none w-24 uppercase",
                 ),
-                class_name="flex items-center",
+                class_name="flex items-center bg-white border border-gray-200 rounded px-2 h-6 shadow-sm hover:border-blue-400 transition-colors cursor-pointer",
             ),
             class_name="flex items-center gap-2 flex-1",
         ),

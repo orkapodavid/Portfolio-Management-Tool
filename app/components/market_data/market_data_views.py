@@ -12,10 +12,33 @@ from app.states.dashboard.portfolio_dashboard_state import (
 )
 
 
-def header_cell(text: str, align: str = "left") -> rx.Component:
+def header_cell(text: str, align: str = "left", column_key: str = "") -> rx.Component:
+    align_class = rx.match(
+        align, ("right", "text-right"), ("center", "text-center"), "text-left"
+    )
+    sort_icon = rx.cond(
+        PortfolioDashboardState.sort_column == column_key,
+        rx.cond(
+            PortfolioDashboardState.sort_direction == "asc",
+            rx.icon("arrow-up", size=10, class_name="ml-1 text-blue-600"),
+            rx.icon("arrow-down", size=10, class_name="ml-1 text-blue-600"),
+        ),
+        rx.icon(
+            "arrow-up-down",
+            size=10,
+            class_name="ml-1 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity",
+        ),
+    )
     return rx.el.th(
-        text,
-        class_name=f"px-3 py-3 text-{align} text-[10px] font-bold text-gray-700 uppercase tracking-widest border-b-2 border-gray-400 bg-[#E5E7EB] sticky top-0 z-30 shadow-sm h-[44px] whitespace-nowrap",
+        rx.el.div(
+            text,
+            rx.cond(column_key != "", sort_icon, rx.fragment()),
+            class_name=f"flex items-center {rx.match(align, ('right', 'justify-end'), ('center', 'justify-center'), 'justify-start')}",
+        ),
+        on_click=lambda: rx.cond(
+            column_key, PortfolioDashboardState.toggle_sort(column_key), None
+        ),
+        class_name=f"px-3 py-3 {align_class} text-[10px] font-bold text-gray-700 uppercase tracking-widest border-b-2 border-gray-400 bg-[#E5E7EB] sticky top-0 z-30 shadow-sm h-[44px] whitespace-nowrap cursor-pointer hover:bg-gray-200 transition-colors group select-none",
     )
 
 
@@ -54,17 +77,17 @@ def market_data_table() -> rx.Component:
         rx.el.table(
             rx.el.thead(
                 rx.el.tr(
-                    header_cell("Ticker"),
-                    header_cell("Listed Shares (mm)"),
-                    header_cell("Last Volume"),
-                    header_cell("Last Price"),
-                    header_cell("vWAP Price"),
-                    header_cell("Bid"),
-                    header_cell("Ask"),
-                    header_cell("1D Change %"),
-                    header_cell("Implied Vol %"),
-                    header_cell("Market Status"),
-                    header_cell("Created by"),
+                    header_cell("Ticker", column_key="ticker"),
+                    header_cell("Listed Shares (mm)", column_key="listed_shares"),
+                    header_cell("Last Volume", column_key="last_volume"),
+                    header_cell("Last Price", column_key="last_price"),
+                    header_cell("vWAP Price", column_key="vwap_price"),
+                    header_cell("Bid", column_key="bid"),
+                    header_cell("Ask", column_key="ask"),
+                    header_cell("1D Change %", column_key="chg_1d_pct"),
+                    header_cell("Implied Vol %", column_key="implied_vol_pct"),
+                    header_cell("Market Status", column_key="market_status"),
+                    header_cell("Created by", column_key="created_by"),
                 )
             ),
             rx.el.tbody(

@@ -1764,15 +1764,40 @@ class PortfolioDashboardState(rx.State):
         reverse = self.sort_direction == "desc"
         return sorted(data, key=get_sort_key, reverse=reverse)
 
-    @rx.event
-    def set_notification_filter(self, filter_val: str):
-        self.notification_filter = filter_val
+
+    notification_page: int = 1
+    notification_page_size: int = 5
 
     @rx.var
     def filtered_notifications_list(self) -> list[NotificationItem]:
         if self.notification_filter == "all":
             return self.notifications
         return [n for n in self.notifications if n["type"] == self.notification_filter]
+
+    @rx.var
+    def total_notification_pages(self) -> int:
+        return (len(self.filtered_notifications_list) + self.notification_page_size - 1) // self.notification_page_size
+
+    @rx.var
+    def paginated_notifications(self) -> list[NotificationItem]:
+        start = (self.notification_page - 1) * self.notification_page_size
+        end = start + self.notification_page_size
+        return self.filtered_notifications_list[start:end]
+
+    @rx.event
+    def next_notification_page(self):
+        if self.notification_page < self.total_notification_pages:
+            self.notification_page += 1
+
+    @rx.event
+    def prev_notification_page(self):
+        if self.notification_page > 1:
+            self.notification_page -= 1
+
+    @rx.event
+    def set_notification_filter(self, filter_val: str):
+        self.notification_filter = filter_val
+        self.notification_page = 1
 
     @rx.event
     def mark_notification_read(self, notif_id: int):

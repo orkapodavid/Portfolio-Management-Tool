@@ -76,7 +76,7 @@ def top_navigation() -> rx.Component:
                 ),
                 rx.icon("activity", size=16, class_name="text-blue-400"),
                 rx.el.h1(
-                    "REFLEX",
+                    "PMT",
                     class_name="text-[10px] font-black text-white tracking-widest",
                 ),
                 class_name="flex items-center gap-2 mr-2 px-2 border-r border-gray-700 h-full shrink-0",
