@@ -1,5 +1,6 @@
 import reflex as rx
 from typing import TypedDict
+from app.services import UserService
 
 
 class LinkedAccount(TypedDict):
@@ -47,6 +48,26 @@ class ProfileState(rx.State):
             "logo": "bitcoin",
         },
     ]
+    is_loading: bool = False
+
+    async def on_load(self):
+        """Load profile when page loads."""
+        await self.load_profile()
+    
+    async def load_profile(self):
+        """Load profile from UserService."""
+        self.is_loading = True
+        try:
+            service = UserService()
+            profile = await service.get_user_profile()
+            if profile:
+                self.name = profile.get("full_name", self.name)
+                self.email = profile.get("email", self.email)
+        except Exception as e:
+            import logging
+            logging.exception(f"Error loading profile: {e}")
+        finally:
+            self.is_loading = False
 
     @rx.event
     def toggle_editing(self):
@@ -55,15 +76,31 @@ class ProfileState(rx.State):
             yield rx.toast("Profile updated successfully", position="bottom-right")
 
     @rx.event
-    def save_profile(self, form_data: dict):
-        self.name = form_data.get("name", self.name)
-        self.email = form_data.get("email", self.email)
-        self.phone = form_data.get("phone", self.phone)
-        self.bio = form_data.get("bio", self.bio)
-        self.risk_tolerance = form_data.get("risk_tolerance", self.risk_tolerance)
-        self.investment_goal = form_data.get("investment_goal", self.investment_goal)
-        self.is_editing = False
-        yield rx.toast("Profile saved successfully", position="bottom-right")
+    async def save_profile(self, form_data: dict):
+        """Save profile using UserService."""
+        try:
+            service = UserService()
+            await service.update_user_profile(
+                full_name=form_data.get("name"),
+                email=form_data.get("email"),
+                phone=form_data.get("phone"),
+                bio=form_data.get("bio"),
+                risk_tolerance=form_data.get("risk_tolerance"),
+                investment_goal=form_data.get("investment_goal")
+            )
+            
+            self.name = form_data.get("name", self.name)
+            self.email = form_data.get("email", self.email)
+            self.phone = form_data.get("phone", self.phone)
+            self.bio = form_data.get("bio", self.bio)
+            self.risk_tolerance = form_data.get("risk_tolerance", self.risk_tolerance)
+            self.investment_goal = form_data.get("investment_goal", self.investment_goal)
+            self.is_editing = False
+            yield rx.toast("Profile saved successfully", position="bottom-right")
+        except Exception as e:
+            import logging
+            logging.exception(f"Error saving profile: {e}")
+            yield rx.toast("Failed to save profile", position="bottom-right")
 
     @rx.event
     def upload_avatar(self):

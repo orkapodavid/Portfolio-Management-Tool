@@ -3,6 +3,7 @@ from typing import TypedDict, Optional
 import datetime
 import random
 import logging
+from app.services import UserService
 
 
 class Goal(TypedDict):
@@ -85,6 +86,24 @@ class GoalsState(rx.State):
         "Education",
         "Custom",
     ]
+    is_loading: bool = False
+
+    async def on_load(self):
+        """Load goals when page loads."""
+        await self.load_goals()
+    
+    async def load_goals(self):
+        """Load goals from UserService."""
+        self.is_loading = True
+        try:
+            service = UserService()
+            goals = await service.get_goals()
+            if goals:
+                self.goals = goals
+        except Exception as e:
+            logging.exception(f"Error loading goals: {e}")
+        finally:
+            self.is_loading = False
 
     @rx.var
     def total_goals_value(self) -> float:
@@ -154,7 +173,8 @@ class GoalsState(rx.State):
         self.is_modal_open = False
 
     @rx.event
-    def save_goal(self, form_data: dict):
+    async def save_goal(self, form_data: dict):
+        """Save goal using UserService."""
         icon, color = self._get_icon_color(form_data.get("category", "Custom"))
         new_goal: Goal = {
             "id": self.editing_goal_id
@@ -171,20 +191,37 @@ class GoalsState(rx.State):
             "icon": icon,
             "color": color,
         }
-        if self.editing_goal_id:
-            self.goals = [
-                g if g["id"] != self.editing_goal_id else new_goal for g in self.goals
-            ]
-            yield rx.toast("Goal updated successfully", position="bottom-right")
-        else:
-            self.goals.append(new_goal)
-            yield rx.toast("New goal created successfully", position="bottom-right")
-        self.is_modal_open = False
+        
+        try:
+            service = UserService()
+            saved_goal = await service.save_goal(new_goal)
+            
+            if self.editing_goal_id:
+                self.goals = [
+                    g if g["id"] != self.editing_goal_id else saved_goal for g in self.goals
+                ]
+                yield rx.toast("Goal updated successfully", position="bottom-right")
+            else:
+                self.goals.append(saved_goal)
+                yield rx.toast("New goal created successfully", position="bottom-right")
+        except Exception as e:
+            logging.exception(f"Error saving goal: {e}")
+            yield rx.toast("Failed to save goal", position="bottom-right")
+        finally:
+            self.is_modal_open = False
 
     @rx.event
-    def delete_goal(self, goal_id: str):
-        self.goals = [g for g in self.goals if g["id"] != goal_id]
-        yield rx.toast("Goal deleted", position="bottom-right")
+    async def delete_goal(self, goal_id: str):
+        """Delete goal using UserService."""
+        try:
+            service = UserService()
+            success = await service.delete_goal(goal_id)
+            if success:
+                self.goals = [g for g in self.goals if g["id"] != goal_id]
+                yield rx.toast("Goal deleted", position="bottom-right")
+        except Exception as e:
+            logging.exception(f"Error deleting goal: {e}")
+            yield rx.toast("Failed to delete goal", position="bottom-right")
 
     @rx.event
     def get_projection_data(self, goal: Goal) -> list[ProjectionPoint]:

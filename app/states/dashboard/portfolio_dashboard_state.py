@@ -3,6 +3,25 @@ from datetime import datetime
 from typing import TypedDict
 import reflex as rx
 
+# Service layer imports for future integration
+from app.services import (
+    PositionService,
+    PnLService,
+    RiskService,
+    MarketDataService,
+    EMSXService,
+    DatabaseService,
+)
+
+# NOTE: This file is partially integrated with services.
+# Many mock data generators remain and should be replaced with service calls:
+# - Position generators → PositionService
+# - P&L generators → PnLService  
+# - Risk generators → RiskService
+# - Market data generators → MarketDataService
+# - EMSX generators → EMSXService
+# - Compliance/Recon generators → DatabaseService
+
 
 class PositionItem(TypedDict):
     id: int

@@ -150,10 +150,11 @@ class ResearchState(rx.State):
     async def set_search_query(self, query: str):
         self.search_query = query
         if len(query) > 1:
-            from app.services import finance_service
+            from app.services import MarketDataService
 
             try:
-                data = finance_service.fetch_stock_data(query.upper())
+                market_data_service = MarketDataService()
+                data = await market_data_service.fetch_stock_data(query.upper())
                 if data and data.get("current_price", 0) > 0:
                     stock_data: StockData = {
                         "symbol": data["symbol"],
@@ -189,11 +190,12 @@ class ResearchState(rx.State):
     @rx.event
     async def generate_chart_data(self, symbol: str):
         """Generates chart data using real history."""
-        from app.services import finance_service
+        from app.services import MarketDataService
 
         if not symbol:
             return
-        history = finance_service.fetch_stock_history(symbol, period="1mo")
+        market_data_service = MarketDataService()
+        history = await market_data_service.fetch_stock_history(symbol, period="1mo")
         self.chart_data = history
 
     @rx.event

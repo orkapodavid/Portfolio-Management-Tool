@@ -189,9 +189,10 @@ class WatchlistState(rx.State):
         self.is_searching = bool(query)
         if len(query) > 1:
             try:
-                from app.services import finance_service
+                from app.services import MarketDataService
 
-                data = finance_service.fetch_stock_data(query.upper())
+                market_data_service = MarketDataService()
+                data = await market_data_service.fetch_stock_data(query.upper())
                 if data and data.get("current_price", 0) > 0:
                     stock_item: WatchedStock = {
                         "symbol": data["symbol"],
@@ -231,13 +232,14 @@ class WatchlistState(rx.State):
 
     @rx.event
     async def refresh_watchlist(self):
-        from app.services import finance_service
+        from app.services import MarketDataService
 
         if not self.watchlist:
             return
         yield rx.toast("Updating watchlist prices...", position="bottom-right")
         symbols = [s["symbol"] for s in self.watchlist]
-        results = finance_service.fetch_multiple_stocks(symbols)
+        market_data_service = MarketDataService()
+        results = await market_data_service.fetch_multiple_stocks(symbols)
         new_watchlist = []
         for stock in self.watchlist:
             symbol = stock["symbol"]

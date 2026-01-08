@@ -2,6 +2,7 @@ import reflex as rx
 from typing import TypedDict, Optional
 import datetime
 from app.states.dashboard.dashboard_state import Holding
+from app.services import PortfolioService
 
 
 class Transaction(TypedDict):
@@ -110,6 +111,25 @@ class PortfolioState(rx.State):
     is_add_portfolio_open: bool = False
     is_add_transaction_open: bool = False
     transaction_type: str = "Buy"
+    is_loading: bool = False
+
+    async def on_load(self):
+        """Load portfolios when page loads."""
+        await self.load_portfolios()
+    
+    async def load_portfolios(self):
+        """Load portfolios from PortfolioService."""
+        self.is_loading = True
+        try:
+            service = PortfolioService()
+            portfolios = await service.get_portfolios()
+            if portfolios:
+                self.portfolios = portfolios
+        except Exception as e:
+            import logging
+            logging.exception(f"Error loading portfolios: {e}")
+        finally:
+            self.is_loading = False
 
     @rx.var
     def selected_portfolio(self) -> Portfolio:

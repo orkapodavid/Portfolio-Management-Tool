@@ -7,6 +7,9 @@ dependencies = [
     "reflex==0.8.20",
     "yfinance",
     "PyGithub",
+    "pyodbc",
+    "python-dotenv",
+    "pandas",
 ]
 
 [build-system]

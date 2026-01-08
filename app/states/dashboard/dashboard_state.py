@@ -3,7 +3,7 @@ from typing import TypedDict
 import random
 import datetime
 import logging
-from app.services import finance_service
+from app.services import MarketDataService
 
 
 class Holding(TypedDict):
@@ -205,11 +205,16 @@ class DashboardState(rx.State):
 
     @rx.event
     async def refresh_prices(self):
+        """Refresh stock prices using MarketDataService."""
         self.is_loading = True
         yield
         try:
             symbols = [h["symbol"] for h in self.holdings]
-            stock_data = finance_service.fetch_multiple_stocks(symbols)
+            
+            # Use MarketDataService instead of finance_service module
+            market_data_service = MarketDataService()
+            stock_data = await market_data_service.fetch_multiple_stocks(symbols)
+            
             new_holdings = []
             for h in self.holdings:
                 symbol = h["symbol"]

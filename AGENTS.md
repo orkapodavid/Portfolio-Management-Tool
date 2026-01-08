@@ -37,3 +37,155 @@ The application uses a **Top Navigation Bar** with icons to switch between views
 3. Verify that the Dashboard and Top Navigation load.
 4. Click through the icons to ensure data tables render.
 5. Check the Notifications Sidebar for alerts.
+
+---
+
+## Reflex State Architecture Best Practices
+
+**Reference**: `.agents/skills/reflex-dev/references/reflex-state-structure.mdc`
+
+This project follows Reflex best practices for state management to ensure scalability, maintainability, and performance.
+
+### Core Principles
+
+1. **Flat State Structure**
+   - Keep most substates directly inheriting from `rx.State`
+   - Avoid deep inheritance hierarchies
+   - Each state should be independent and focused
+
+2. **Separation of Concerns**
+   - One state class per major feature or page
+   - Each state handles only its own data and logic
+   - Use `get_state()` to access other states when needed
+
+3. **Service Layer Integration**
+   - States should NOT contain business logic
+   - States delegate to service classes for data operations
+   - Pattern: State → Service → Database/API
+
+### State Organization Pattern
+
+```python
+# ✅ GOOD: Focused, independent states
+class PnLState(rx.State):
+    """Handles only P&L data."""
+    pnl_data: list[dict] = []
+    is_loading: bool = False
+    
+    async def load_data(self):
+        service = PnLService()
+        self.pnl_data = await service.get_pnl_data()
+
+class PositionsState(rx.State):
+    """Handles only positions data."""
+    positions: list[dict] = []
+    
+    async def load_data(self):
+        service = PositionService()
+        self.positions = await service.get_positions()
+```
+
+```python
+# ❌ BAD: Single mega-state with everything
+class DashboardState(rx.State):
+    """Handles EVERYTHING - anti-pattern!"""
+    pnl_data: list[dict] = []
+    positions: list[dict] = []
+    risk_data: list[dict] = []
+    compliance_data: list[dict] = []
+    # ... thousands of lines
+```
+
+### Performance Optimization
+
+**State Loading Behavior**:
+- When an event handler is called, Reflex loads:
+  1. The substate containing the event handler
+  2. All parent states (if inheriting)
+  3. All child substates of the parent
+
+**Optimization Rules**:
+1. **Use `on_load()`**: Load data only when view is accessed
+2. **Flat Structure**: Avoid inheritance; use `get_state()` instead
+3. **Computed Vars**: Place in leaf states, use `cache=True`
+4. **Separate Views**: Different features = different state classes
+
+### Accessing Other States
+
+```python
+class GreeterState(rx.State):
+    message: str = ""
+    
+    async def greet(self, name: str):
+        # Access another state's data
+        settings = await self.get_state(SettingsState)
+        self.message = f"{settings.salutation}, {name}!"
+```
+
+### Project Structure Example
+
+```
+app/states/
+├── dashboard/
+│   ├── types.py              # Shared TypedDict definitions
+│   ├── pnl_state.py          # P&L data and operations
+│   ├── positions_state.py    # Position data
+│   ├── risk_state.py         # Risk metrics
+│   └── compliance_state.py   # Compliance data
+├── portfolio/
+│   ├── portfolio_state.py
+│   ├── watchlist_state.py
+│   └── goals_state.py
+└── user/
+    ├── profile_state.py
+    └── settings_state.py
+```
+
+###  Service Layer Pattern
+
+Every state should use services for data access:
+
+```python
+import reflex as rx
+from app.services import PnLService
+
+class PnLState(rx.State):
+    data: list[dict] = []
+    is_loading: bool = False
+    
+    async def on_load(self):
+        """Load data when view first accessed."""
+        await self.load_data()
+    
+    async def load_data(self):
+        """Service integration pattern."""
+        self.is_loading = True
+        try:
+            service = PnLService()
+            self.data = await service.get_pnl_data()
+        except Exception as e:
+            logging.exception(f"Error loading: {e}")
+        finally:
+            self.is_loading = False
+```
+
+### Common Pitfalls to Avoid
+
+❌ **Don't**: Create mega-states with thousands of lines  
+✅ **Do**: Break into focused substates (~200-400 lines each)
+
+❌ **Don't**: Mix UI logic with business logic in states  
+✅ **Do**: Delegate business logic to service classes
+
+❌ **Don't**: Load all data on app startup  
+✅ **Do**: Use `on_load()` to load data when needed
+
+❌ **Don't**: Create deep inheritance hierarchies  
+✅ **Do**: Keep flat structure, use `get_state()` for cross-state access
+
+### References
+
+- **Reflex State Structure Guide**: `.agents/skills/reflex-dev/references/reflex-state-structure.mdc`
+- **Example Implementation**: `app/states/dashboard/pnl_state.py` (exemplar)
+- **Type Definitions**: `app/states/dashboard/types.py`
+- **Refactoring Plan**: `.gemini/antigravity/brain/.../portfolio_dashboard_refactoring_plan.md`
