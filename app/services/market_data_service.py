@@ -21,30 +21,30 @@ logger = logging.getLogger(__name__)
 class MarketDataService:
     """
     Service for fetching real-time and historical market data.
-    
+
     Currently uses Yahoo Finance for development/testing.
     Can be extended to integrate with:
     - Bloomberg Terminal (via PyQt bloomberg connector)
     - Database (for cached data)
     - Other market data providers
     """
-    
+
     def __init__(self, db_service: Optional[DatabaseService] = None):
         """
         Initialize market data service.
-        
+
         Args:
             db_service: Optional database service for cached data
         """
         self.db = db_service or DatabaseService()
-        
+
     async def fetch_stock_data(self, symbol: str) -> dict:
         """
         Fetch real-time data for a single stock using Yahoo Finance.
-        
+
         Args:
             symbol: Stock ticker symbol (e.g., 'AAPL')
-            
+
         Returns:
             Dictionary with stock data including price, volume, market cap, etc.
         """
@@ -55,25 +55,26 @@ class MarketDataService:
         except Exception as e:
             logger.exception(f"Error fetching data for {symbol}: {e}")
             return {}
-    
+
     async def fetch_multiple_stocks(self, symbols: list[str]) -> dict[str, dict]:
         """
         Fetch real-time data for multiple stocks using Yahoo Finance.
-        
+
         Args:
             symbols: List of stock ticker symbols
-            
+
         Returns:
             Dictionary mapping symbols to their stock data
         """
         if not symbols:
             return {}
-        
+
         valid_symbols = [s for s in symbols if s]
         if not valid_symbols:
             return {}
-        
+
         try:
+
             def _fetch():
                 tickers_obj = yf.Tickers(" ".join(valid_symbols))
                 results = {}
@@ -86,99 +87,103 @@ class MarketDataService:
                     except Exception as e:
                         logger.exception(f"Failed to fetch {symbol} in batch: {e}")
                 return results
-            
+
             return await asyncio.to_thread(_fetch)
         except Exception as e:
             logger.exception(f"Batch fetch error: {e}")
             return {}
-    
-    async def fetch_stock_history(
-        self, 
-        symbol: str, 
-        period: str = "1mo"
-    ) -> list[dict]:
+
+    async def fetch_stock_history(self, symbol: str, period: str = "1mo") -> list[dict]:
         """
         Fetch historical price data for a symbol using Yahoo Finance.
-        
+
         Args:
             symbol: Stock ticker symbol
             period: Time period ('1mo', '3mo', '6mo', 'ytd', '1y', '2y', etc.)
-            
+
         Returns:
             List of historical data points with date and price
         """
         try:
+
             def _fetch_history():
                 ticker = yf.Ticker(symbol)
                 hist = ticker.history(period=period)
                 data = []
                 for date, row in hist.iterrows():
-                    data.append({
-                        "date": date.strftime("%Y-%m-%d"),
-                        "price": round(row["Close"], 2)
-                    })
+                    data.append(
+                        {
+                            "date": date.strftime("%Y-%m-%d"),
+                            "price": round(row["Close"], 2),
+                        }
+                    )
                 return data
-            
+
             return await asyncio.to_thread(_fetch_history)
         except Exception as e:
             logger.exception(f"Error fetching history for {symbol}: {e}")
             return []
-    
+
     async def fetch_stock_news(self, symbol: str) -> list[dict]:
         """
         Fetch news for a symbol using Yahoo Finance.
-        
+
         Args:
             symbol: Stock ticker symbol
-            
+
         Returns:
             List of news items
         """
         try:
+
             def _fetch_news():
                 ticker = yf.Ticker(symbol)
                 news = ticker.news
                 formatted_news = []
                 for item in news[:5]:
-                    formatted_news.append({
-                        "id": item.get("uuid", ""),
-                        "headline": item.get("title", ""),
-                        "source": item.get("publisher", "Yahoo Finance"),
-                        "time_ago": "Today",
-                        "summary": "No summary available.",
-                        "url": item.get("link", "#"),
-                        "sentiment": "Neutral",
-                        "related_symbols": [symbol],
-                    })
+                    formatted_news.append(
+                        {
+                            "id": item.get("uuid", ""),
+                            "headline": item.get("title", ""),
+                            "source": item.get("publisher", "Yahoo Finance"),
+                            "time_ago": "Today",
+                            "summary": "No summary available.",
+                            "url": item.get("link", "#"),
+                            "sentiment": "Neutral",
+                            "related_symbols": [symbol],
+                        }
+                    )
                 return formatted_news
-            
+
             return await asyncio.to_thread(_fetch_news)
         except Exception as e:
             logger.exception(f"Error fetching news for {symbol}: {e}")
             return []
-    
+
     def _extract_stock_info(self, symbol: str, info: dict) -> dict:
         """
         Helper to extract relevant fields from yfinance info dict.
-        
+
         Args:
             symbol: Stock ticker symbol
             info: yfinance info dictionary
-            
+
         Returns:
             Normalized stock information dictionary
         """
-        current_price = info.get("currentPrice") or info.get("regularMarketPrice") or 0.0
+        current_price = (
+            info.get("currentPrice") or info.get("regularMarketPrice") or 0.0
+        )
         previous_close = (
             info.get("previousClose")
             or info.get("regularMarketPreviousClose")
             or current_price
         )
-        
+
         change_pct = 0.0
         if previous_close and previous_close > 0:
             change_pct = (current_price - previous_close) / previous_close * 100
-        
+
         return {
             "symbol": symbol,
             "name": info.get("shortName") or info.get("longName") or symbol,
@@ -194,7 +199,7 @@ class MarketDataService:
             "description": info.get("longBusinessSummary", "No description available."),
             "eps": info.get("trailingEps", 0.0),
         }
-    
+
     def _format_market_cap(self, value: float) -> str:
         """Formats market cap value to string (e.g. 2.5T, 500B)."""
         if not value:
@@ -207,7 +212,7 @@ class MarketDataService:
             return f"{value / 1000000:.2f}M"
         else:
             return f"{value:,.0f}"
-    
+
     def _format_volume(self, value: float) -> str:
         """Formats volume value to string."""
         if not value:
@@ -218,134 +223,400 @@ class MarketDataService:
             return f"{value / 1000:.1f}K"
         else:
             return f"{value}"
-    
+
     def _calculate_daily_change(self, current: float, previous: float) -> float:
         """Calculate daily percentage change."""
         if not previous:
             return 0.0
         return (current - previous) / previous * 100
-    
+
     # Legacy methods for backward compatibility with existing mock structure
     async def get_realtime_market_data(self, tickers: list[str]) -> list[dict]:
         """
         Fetch real-time market data for given tickers.
-        
+
         This is a wrapper around fetch_multiple_stocks for compatibility
         with the original method signature.
-        
+
         Args:
             tickers: List of ticker symbols
-            
+
         Returns:
             List of dictionaries with market data
         """
         stock_data = await self.fetch_multiple_stocks(tickers)
-        
+
         # Convert to list format
         result = []
         for ticker, data in stock_data.items():
-            result.append({
-                'id': hash(ticker),
-                'ticker': ticker,
-                'listed_shares': '1,000,000',  # Not available from yfinance
-                'last_volume': data.get('volume', '0'),
-                'last_price': str(data.get('current_price', 0.0)),
-                'vwap_price': str(data.get('current_price', 0.0)),
-                'bid': str(data.get('current_price', 0.0) * 0.9995),
-                'ask': str(data.get('current_price', 0.0) * 1.0005),
-                'chg_1d_pct': f"{data.get('daily_change_pct', 0.0):+.2f}%",
-                'implied_vol_pct': '25.0%',  # Not available from yfinance
-                'market_status': 'Open',
-                'created_by': 'system'
-            })
-        
+            result.append(
+                {
+                    "id": hash(ticker),
+                    "ticker": ticker,
+                    "listed_shares": "1,000,000",  # Not available from yfinance
+                    "last_volume": data.get("volume", "0"),
+                    "last_price": str(data.get("current_price", 0.0)),
+                    "vwap_price": str(data.get("current_price", 0.0)),
+                    "bid": str(data.get("current_price", 0.0) * 0.9995),
+                    "ask": str(data.get("current_price", 0.0) * 1.0005),
+                    "chg_1d_pct": f"{data.get('daily_change_pct', 0.0):+.2f}%",
+                    "implied_vol_pct": "25.0%",  # Not available from yfinance
+                    "market_status": "Open",
+                    "created_by": "system",
+                }
+            )
+
         return result
-    
+
     async def get_historical_data(
-        self, 
-        ticker: str, 
+        self,
+        ticker: str,
         start_date: str = None,
         end_date: str = None,
-        period: str = "1mo"
+        period: str = "1mo",
     ) -> list[dict]:
         """
         Fetch historical market data for a ticker.
-        
+
         Args:
             ticker: Ticker symbol
             start_date: Start date (YYYY-MM-DD) - not used with period
             end_date: End date (YYYY-MM-DD) - not used with period
             period: Period string for yfinance
-            
+
         Returns:
             List of historical data points
         """
         return await self.fetch_stock_history(ticker, period=period)
-    
+
     async def get_fx_rates(self, currency_pairs: list[str]) -> list[dict]:
         """
         Fetch FX rates for currency pairs.
-        
+
         Args:
             currency_pairs: List of currency pairs (e.g., ['EURUSD', 'GBPUSD'])
-            
+
         Returns:
             List of FX rate data
-            
+
         TODO: Implement using Bloomberg or database.
         """
         logger.warning("Using mock FX data. Implement real integration!")
-        
+
         mock_data = []
         for pair in currency_pairs:
-            mock_data.append({
-                'ticker': pair,
-                'last_price': '1.1000',
-                'bid': '1.0995',
-                'ask': '1.1005',
-                'created_by': 'system',
-                'created_time': datetime.now().isoformat()
-            })
-        
+            mock_data.append(
+                {
+                    "ticker": pair,
+                    "last_price": "1.1000",
+                    "bid": "1.0995",
+                    "ask": "1.1005",
+                    "created_by": "system",
+                    "created_time": datetime.now().isoformat(),
+                }
+            )
+
         return mock_data
-    
+
     async def subscribe_to_tickers(self, tickers: list[str]) -> bool:
         """
         Subscribe to real-time updates for tickers.
-        
+
         This would typically establish a Bloomberg subscription
         or websocket connection for live data.
-        
+
         Args:
             tickers: List of tickers to subscribe to
-            
+
         Returns:
             bool: True if subscription successful
-            
+
         TODO: Implement Bloomberg subscription logic.
         """
         logger.info(f"Mock subscription to tickers: {tickers}")
         return True
 
+    async def get_top_movers(self, category: str = "ops") -> list[dict]:
+        """
+        Get top movers data for dashboard.
+
+        Args:
+            category: Category of top movers ('ops', 'ytd', 'delta', 'price', 'volume')
+
+        Returns:
+            List of top mover dictionaries
+        """
+        logger.info(f"Returning mock top movers data for category: {category}")
+
+        movers_data = {
+            "ops": [
+                {
+                    "ticker": "NVDA",
+                    "name": "NVIDIA",
+                    "value": "+$2.4M",
+                    "change": "+12%",
+                    "is_positive": True,
+                },
+                {
+                    "ticker": "AAPL",
+                    "name": "Apple",
+                    "value": "+$1.8M",
+                    "change": "+5%",
+                    "is_positive": True,
+                },
+                {
+                    "ticker": "TSLA",
+                    "name": "Tesla",
+                    "value": "-$1.2M",
+                    "change": "-8%",
+                    "is_positive": False,
+                },
+                {
+                    "ticker": "META",
+                    "name": "Meta",
+                    "value": "+$950K",
+                    "change": "+3%",
+                    "is_positive": True,
+                },
+            ],
+            "ytd": [
+                {
+                    "ticker": "NVDA",
+                    "name": "NVIDIA",
+                    "value": "+$45M",
+                    "change": "+180%",
+                    "is_positive": True,
+                },
+                {
+                    "ticker": "META",
+                    "name": "Meta",
+                    "value": "+$28M",
+                    "change": "+120%",
+                    "is_positive": True,
+                },
+                {
+                    "ticker": "AAPL",
+                    "name": "Apple",
+                    "value": "+$15M",
+                    "change": "+45%",
+                    "is_positive": True,
+                },
+                {
+                    "ticker": "MSFT",
+                    "name": "Microsoft",
+                    "value": "+$12M",
+                    "change": "+35%",
+                    "is_positive": True,
+                },
+            ],
+            "delta": [
+                {
+                    "ticker": "TSLA",
+                    "name": "Tesla",
+                    "value": "+15K",
+                    "change": "+8%",
+                    "is_positive": True,
+                },
+                {
+                    "ticker": "GOOGL",
+                    "name": "Google",
+                    "value": "-12K",
+                    "change": "-5%",
+                    "is_positive": False,
+                },
+                {
+                    "ticker": "AMZN",
+                    "name": "Amazon",
+                    "value": "+8K",
+                    "change": "+3%",
+                    "is_positive": True,
+                },
+                {
+                    "ticker": "NFLX",
+                    "name": "Netflix",
+                    "value": "-5K",
+                    "change": "-2%",
+                    "is_positive": False,
+                },
+            ],
+            "price": [
+                {
+                    "ticker": "SMCI",
+                    "name": "Super Micro",
+                    "value": "$985.2",
+                    "change": "+25%",
+                    "is_positive": True,
+                },
+                {
+                    "ticker": "ARM",
+                    "name": "ARM Holdings",
+                    "value": "$142.5",
+                    "change": "+18%",
+                    "is_positive": True,
+                },
+                {
+                    "ticker": "SNOW",
+                    "name": "Snowflake",
+                    "value": "$160.1",
+                    "change": "-15%",
+                    "is_positive": False,
+                },
+                {
+                    "ticker": "PLTR",
+                    "name": "Palantir",
+                    "value": "$24.5",
+                    "change": "+2.1%",
+                    "is_positive": True,
+                },
+            ],
+            "volume": [
+                {
+                    "ticker": "TSLA",
+                    "name": "Tesla",
+                    "value": "98M",
+                    "change": "+15%",
+                    "is_positive": True,
+                },
+                {
+                    "ticker": "AAPL",
+                    "name": "Apple",
+                    "value": "54M",
+                    "change": "-5%",
+                    "is_positive": False,
+                },
+                {
+                    "ticker": "AMD",
+                    "name": "AMD",
+                    "value": "45M",
+                    "change": "+25%",
+                    "is_positive": True,
+                },
+                {
+                    "ticker": "F",
+                    "name": "Ford",
+                    "value": "32M",
+                    "change": "+2%",
+                    "is_positive": True,
+                },
+            ],
+        }
+        return movers_data.get(category, movers_data["ops"])
+
+    async def get_market_data(self) -> list[dict]:
+        """Get market data for dashboard. TODO: Replace with DB query."""
+        logger.info("Returning mock market data")
+        tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
+        return [
+            {
+                "id": i + 1,
+                "ticker": t,
+                "listed_shares": "1,000,000",
+                "last_volume": "54.2M",
+                "last_price": "182.50",
+                "vwap_price": "182.25",
+                "bid": "182.45",
+                "ask": "182.55",
+                "chg_1d_pct": "+0.5%",
+                "implied_vol_pct": "25.0%",
+                "market_status": "Open",
+                "created_by": "system",
+            }
+            for i, t in enumerate(tickers)
+        ]
+
+    async def get_fx_data(self) -> list[dict]:
+        """Get FX data for dashboard. TODO: Replace with DB query."""
+        logger.info("Returning mock FX data")
+        pairs = ["EURUSD", "GBPUSD", "USDJPY", "USDCNY", "AUDUSD"]
+        return [
+            {
+                "id": i + 1,
+                "ticker": p,
+                "last_price": "1.1000",
+                "bid": "1.0995",
+                "ask": "1.1005",
+                "created_by": "system",
+                "created_time": datetime.now().isoformat(),
+                "updated_by": "system",
+                "update": "",
+            }
+            for i, p in enumerate(pairs)
+        ]
+
+    async def get_trading_calendar(self) -> list[dict]:
+        """Get trading calendar for dashboard. TODO: Replace with DB query."""
+        logger.info("Returning mock trading calendar data")
+        return [
+            {
+                "id": 1,
+                "trade_date": "2026-01-11",
+                "day_of_week": "Saturday",
+                "usa": "Closed",
+                "hkg": "Closed",
+                "jpn": "Closed",
+                "aus": "Closed",
+                "nzl": "Closed",
+                "kor": "Closed",
+                "chn": "Closed",
+                "twn": "Closed",
+                "ind": "Closed",
+            },
+        ]
+
+    async def get_market_hours(self) -> list[dict]:
+        """Get market hours for dashboard. TODO: Replace with DB query."""
+        logger.info("Returning mock market hours data")
+        return [
+            {
+                "id": 1,
+                "market": "NYSE",
+                "ticker": "SPY",
+                "session": "Regular",
+                "local_time": "09:30-16:00",
+                "session_period": "Morning",
+                "is_open": "Yes",
+                "timezone": "EST",
+            },
+        ]
+
+    async def get_ticker_data(self) -> list[dict]:
+        """Get reference ticker data for dashboard. TODO: Replace with DB query."""
+        logger.info("Returning mock ticker data")
+        return [
+            {
+                "id": 1,
+                "ticker": "AAPL",
+                "currency": "USD",
+                "fx_rate": "1.00",
+                "sector": "Technology",
+                "company": "Apple Inc.",
+                "po_lead_manager": "GS",
+                "fmat_cap": "2.95T",
+                "smkt_cap": "2.95T",
+                "chg_1d_pct": "+0.5%",
+                "dtl": "0",
+            },
+        ]
+
 
 # Example usage
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    
+
     async def test_market_data():
         service = MarketDataService()
-        
+
         # Test single stock fetch
-        data = await service.fetch_stock_data('AAPL')
+        data = await service.fetch_stock_data("AAPL")
         print(f"Single stock data: {data}")
-        
+
         # Test multiple stocks
-        tickers = ['AAPL', 'MSFT', 'GOOGL']
+        tickers = ["AAPL", "MSFT", "GOOGL"]
         multi_data = await service.fetch_multiple_stocks(tickers)
         print(f"Multiple stocks: {multi_data}")
-        
+
         # Test historical data
-        history = await service.fetch_stock_history('AAPL', period='1mo')
+        history = await service.fetch_stock_history("AAPL", period="1mo")
         print(f"Historical data: {history[:3]}")
-    
+
     asyncio.run(test_market_data())

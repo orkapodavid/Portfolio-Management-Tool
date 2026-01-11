@@ -257,15 +257,15 @@ def _generate_pnl_change_data() -> list[PnLChangeItem]:
 | State File | Uses Services? | Service Used | Status |
 |------------|---------------|--------------|--------|
 | `notification_state.py` | ✅ Yes | `NotificationService` | ✅ GOOD |
-| `dashboard_state.py` | ⚠️ Partial | `finance_service` (module) | ⚠️ NEEDS REFACTOR |
-| `watchlist_state.py` | ⚠️ Partial | `finance_service` (module) | ⚠️ NEEDS REFACTOR |
-| `research_state.py` | ⚠️ Partial | `finance_service` (module) | ⚠️ NEEDS REFACTOR |
-| `reports_state.py` | ⚠️ Partial | `finance_service` (module) | ⚠️ NEEDS REFACTOR |
-| `portfolio_dashboard_state.py` | ❌ No | None | ❌ CRITICAL |
-| `portfolio_state.py` | ❌ No | None | ❌ NEEDS REFACTOR |
-| `goals_state.py` | ❌ No | None | ❌ NEEDS REFACTOR |
-| `profile_state.py` | ❌ No | None | ❌ NEEDS REFACTOR |
-| `settings_state.py` | ❌ No | None | ❌ NEEDS REFACTOR |
+| `dashboard_state.py` | ✅ Yes | `MarketDataService` | ✅ GOOD |
+| `watchlist_state.py` | ✅ Yes | `MarketDataService` | ✅ GOOD |
+| `research_state.py` | ✅ Yes | `MarketDataService` | ✅ GOOD |
+| `reports_state.py` | ✅ Yes | `MarketDataService` | ✅ GOOD |
+| `portfolio_dashboard_state.py` | 🟡 Mixin | Mixed | 🟡 REFACTORING |
+| `portfolio_state.py` | ✅ Yes | `PortfolioService` | ✅ GOOD |
+| `goals_state.py` | ✅ Yes | `UserService` | ✅ GOOD |
+| `profile_state.py` | ✅ Yes | `UserService` | ✅ GOOD |
+| `settings_state.py` | ✅ Yes | `UserService` | ✅ GOOD |
 | `notification_pagination_state.py` | N/A | N/A | ✅ UI Only |
 | `mobile_nav_state.py` | N/A | N/A | ✅ UI Only |
 
@@ -332,7 +332,7 @@ When replacing the server-side implementation:
 
 ### ❌ States Needing Major Refactoring
 
-3. **[portfolio_dashboard_state.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/states/dashboard/portfolio_dashboard_state.py)** - Complete rewrite needed (2,769 lines of mock data)
+3. **[portfolio_dashboard_state.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/states/dashboard/portfolio_dashboard_state.py)** - Refactoring in progress (~960 lines)
 
 4. **Other states** - Add service integration:
    - [portfolio_state.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/states/portfolio/portfolio_state.py)
@@ -360,3 +360,37 @@ When replacing the server-side implementation:
 - States should only manage UI state and call services
 
 Refer to the [onboarding.md](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/docs/onboarding.md) Section 7 "Using Services in Reflex States" for implementation patterns.
+
+---
+
+## 🎉 REFACTORING PROJECT STATUS
+
+**Last Updated**: 2026-01-11  
+**Current Status**: 🟡 **IN-PROGRESS (Dashboard Mixin Refactoring)**
+
+### 🚀 Current Progress: Dashboard Mixin Refactoring
+
+This phase focuses on refactoring the monolithic `PortfolioDashboardState` (~2,788 lines) into a modular, Mixin-based architecture matching Reflex best practices while ensuring backward compatibility.
+
+- **Modularization**: Successfully refactored the monolith into **12 domain-specific Mixins** with code reduction to **~960 lines** (-65%).
+- **Centralized Types**: Moved 35+ `TypedDict` definitions to `app/states/dashboard/types.py`.
+- **Ancillary States**: Successfully refactored `watchlist_state.py`, `research_state.py`, `reports_state.py`, `goals_state.py`, `profile_state.py`, and `settings_state.py` to use the service layer.
+
+### 🛠️ Current Technical Challenges
+- **Reflex Compilation Evaluation**: Resolving `VarTypeError` occurring during Reflex app compilation when boolean logic (like `not`) is used in event handlers inherited from Mixins. Currently stabilizing state variable locality and event binding patterns.
+- **Environment**: Identified and resolving missing `yfinance` dependency required by `MarketDataService`.
+
+### 📋 Remaining Tasks
+
+1.  **Resolve Event Handler logic**: Finalize the event binding pattern (parentheses vs reference) across dashboard components to ensure no-arg handlers don't trigger compilation errors.
+2.  **Complete Service integration**: Systematically replace all remaining hardcoded mock data in the dashboard mixins with actual `app.services` calls.
+3.  **Component Audit**: Update and verify the 14 dashboard components to ensure full compatibility with the refactored Mixin state.
+4.  **Final Verification**: Perform comprehensive end-to-end testing of all modules and sub-tabs.
+
+---
+
+### 📜 Historic Milestones
+- **Phase 1**: Architecture Strategy & `app/services` Layer Design - ✅ **COMPLETE**
+- **Phase 2**: Ancillary State Refactoring (Watchlist, Research, etc.) - ✅ **COMPLETE**
+- **Phase 3**: Initial Dashboard Substate Extraction - ✅ **COMPLETE** (Superseded by Mixin Phase)
+

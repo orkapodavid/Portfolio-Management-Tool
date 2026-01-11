@@ -55,7 +55,7 @@ def delta_change_table() -> rx.Component:
                 )
             ),
             rx.el.tbody(
-                rx.foreach(PortfolioDashboardState.filtered_delta_change, delta_row)
+                rx.foreach(PortfolioDashboardState.filtered_delta_changes, delta_row)
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),

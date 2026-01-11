@@ -1,30 +1,37 @@
 """
 Portfolio Dashboard States Module
 
-This module provides focused, independent state classes for the portfolio dashboard,
-following Reflex best practices for flat state architecture.
+This module provides the unified PortfolioDashboardState class and all focused
+Mixin classes for the portfolio dashboard.
 
-Each substate:
-- Handles a single responsibility (positions, P&L, risk, etc.)
-- Integrates with appropriate service classes
-- Loads data only when needed (via on_load())
-- Is independent and doesn't create deep inheritance hierarchies
+Architecture:
+- PortfolioDashboardState inherits from all Mixins (backward compatible)
+- Each Mixin handles a specific domain (positions, P&L, risk, etc.)
+- Components can import PortfolioDashboardState directly
 
 Reference: .agents/skills/reflex-dev/references/reflex-state-structure.mdc
-
-Substates:
-- PositionsState: Stock, warrant, and bond positions
-- PnLState: Profit & loss data and calculations
-- RiskState: Delta changes, risk measures, and risk inputs
-- MarketDataState: Real-time market data and FX rates
-- EMSXState: Bloomberg EMSX orders and routes
-- ComplianceState: Restricted lists, undertakings, beneficial ownership
-- ReconciliationState: PPS recon, settlement recon, failed trades
-
-Type Definitions:
-- types.py: Centralized TypedDict definitions for all substates
 """
 
+# Main unified state (backward compatible - most components should use this)
+from app.states.dashboard.portfolio_dashboard_state import PortfolioDashboardState
+
+# Individual mixins (for advanced use cases or direct access)
+from app.states.dashboard.mixins import (
+    PositionsMixin,
+    PnLMixin,
+    RiskMixin,
+    ComplianceMixin,
+    MarketDataMixin,
+    ReconciliationMixin,
+    OperationsMixin,
+    PortfolioToolsMixin,
+    InstrumentsMixin,
+    EventsMixin,
+    EMSXMixin,
+    UIMixin,
+)
+
+# Legacy substates (kept for compatibility but may be deprecated)
 from app.states.dashboard.positions_state import PositionsState
 from app.states.dashboard.pnl_state import PnLState
 from app.states.dashboard.risk_state import RiskState
@@ -33,10 +40,23 @@ from app.states.dashboard.emsx_state import EMSXState
 from app.states.dashboard.compliance_state import ComplianceState
 from app.states.dashboard.reconciliation_state import ReconciliationState
 
-# Keep original dashboard_state for backward compatibility if needed
-# from app.states.dashboard.dashboard_state import DashboardState
-
 __all__ = [
+    # Main state (backward compatible)
+    "PortfolioDashboardState",
+    # Mixins
+    "PositionsMixin",
+    "PnLMixin",
+    "RiskMixin",
+    "ComplianceMixin",
+    "MarketDataMixin",
+    "ReconciliationMixin",
+    "OperationsMixin",
+    "PortfolioToolsMixin",
+    "InstrumentsMixin",
+    "EventsMixin",
+    "EMSXMixin",
+    "UIMixin",
+    # Legacy substates
     "PositionsState",
     "PnLState",
     "RiskState",
@@ -44,5 +64,4 @@ __all__ = [
     "EMSXState",
     "ComplianceState",
     "ReconciliationState",
-    # "DashboardState",  # Legacy - use focused substates instead
 ]
