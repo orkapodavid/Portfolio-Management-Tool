@@ -183,6 +183,9 @@ class PnLState(rx.State):
 ❌ **Don't**: Create deep inheritance hierarchies  
 ✅ **Do**: Keep flat structure, use `get_state()` for cross-state access
 
+❌ **Don't**: Use Tailwind-style sizes (`"lg"`, `"md"`, `"sm"`) for Radix component props like `rx.heading(size=...)`  
+✅ **Do**: Use numeric string values `'1'` through `'9'` for Radix component size props (e.g., `rx.heading("Title", size="5")`)
+
 ### References
 
 - **Reflex State Structure Guide**: `.agents/skills/reflex-dev/references/reflex-state-structure.mdc`
