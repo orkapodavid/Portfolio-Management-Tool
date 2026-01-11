@@ -458,10 +458,11 @@ class PortfolioDashboardState(
         await self.load_compliance_data()
         await self.load_market_data()
         await self.load_reconciliation_data()
-        await self.load_emsx_data()
+        await self.load_emsa_data()
         await self.load_operations_data()
         await self.load_instruments_data()
         await self.load_portfolio_tools_data()
+        await self.load_events_data()
         # Load notifications and top movers from services
         await self._load_notifications()
         await self._load_top_movers()

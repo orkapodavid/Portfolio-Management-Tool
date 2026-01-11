@@ -270,7 +270,7 @@ class MarketDataService:
 
     async def get_historical_data(
         self,
-        ticker: str,
+        ticker: str = None,
         start_date: str = None,
         end_date: str = None,
         period: str = "1mo",
@@ -279,7 +279,7 @@ class MarketDataService:
         Fetch historical market data for a ticker.
 
         Args:
-            ticker: Ticker symbol
+            ticker: Ticker symbol (optional - returns mock data for multiple tickers if not provided)
             start_date: Start date (YYYY-MM-DD) - not used with period
             end_date: End date (YYYY-MM-DD) - not used with period
             period: Period string for yfinance
@@ -287,7 +287,36 @@ class MarketDataService:
         Returns:
             List of historical data points
         """
-        return await self.fetch_stock_history(ticker, period=period)
+        if ticker:
+            return await self.fetch_stock_history(ticker, period=period)
+
+        # Return mock historical data for multiple tickers when no ticker specified
+        logger.info("Returning mock historical data for multiple tickers")
+        tickers = ["AAPL", "MSFT", "GOOGL", "TSLA", "NVDA"]
+        from datetime import datetime, timedelta
+
+        base_date = datetime.now()
+
+        result = []
+        for i, tkr in enumerate(tickers):
+            for day in range(5):
+                trade_date = (base_date - timedelta(days=day)).strftime("%Y-%m-%d")
+                result.append(
+                    {
+                        "id": i * 5 + day + 1,
+                        "trade_date": trade_date,
+                        "ticker": tkr,
+                        "vwap_price": f"{150 + i * 50 + day:.2f}",
+                        "last_price": f"{151 + i * 50 + day:.2f}",
+                        "last_volume": f"{(i + 1) * 1000000:,}",
+                        "chg_1d_pct": f"{(-1 + i * 0.5):.2f}%",
+                        "created_by": "system",
+                        "created_time": datetime.now().isoformat(),
+                        "updated_by": "system",
+                        "update": "Active",
+                    }
+                )
+        return result
 
     async def get_fx_rates(self, currency_pairs: list[str]) -> list[dict]:
         """

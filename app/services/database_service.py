@@ -368,6 +368,266 @@ class DatabaseService:
             logger.error(f"Database connection test failed: {e}")
             return False
 
+    # ========================================
+    # Compliance Data Methods
+    # ========================================
+
+    async def get_restricted_list(self) -> list[dict]:
+        """Get restricted list data. TODO: Replace with DB query."""
+        logger.info("Returning mock restricted list data")
+        tickers = ["AAPL", "TSLA", "NVDA", "META", "GOOGL", "AMD"]
+        return [
+            {
+                "id": i + 1,
+                "ticker": tickers[i % len(tickers)],
+                "company_name": f"{tickers[i % len(tickers)]} Inc.",
+                "restriction_type": ["Hard", "Soft", "Watch"][i % 3],
+                "start_date": "2026-01-01",
+                "end_date": "2026-12-31",
+                "reason": ["MNPI", "Insider", "Regulatory"][i % 3],
+                "added_by": "Compliance Team",
+            }
+            for i in range(8)
+        ]
+
+    async def get_undertakings(self) -> list[dict]:
+        """Get undertakings data. TODO: Replace with DB query."""
+        logger.info("Returning mock undertakings data")
+        tickers = ["AAPL", "MSFT", "TSLA", "NVDA", "META"]
+        return [
+            {
+                "id": i + 1,
+                "deal_num": f"DEAL{i + 1:03d}",
+                "ticker": tickers[i % len(tickers)],
+                "company_name": f"{tickers[i % len(tickers)]} Inc.",
+                "undertaking_type": ["Lock-up", "Standstill", "Voting"][i % 3],
+                "start_date": "2025-06-01",
+                "end_date": "2026-06-01",
+                "restriction_pct": f"{20 + (i * 5)}%",
+                "status": ["Active", "Pending", "Expired"][i % 3],
+            }
+            for i in range(6)
+        ]
+
+    async def get_beneficial_ownership(self) -> list[dict]:
+        """Get beneficial ownership data. TODO: Replace with DB query."""
+        logger.info("Returning mock beneficial ownership data")
+        tickers = ["AAPL", "TSLA", "NVDA", "AMD", "META", "GOOGL"]
+        return [
+            {
+                "id": i + 1,
+                "ticker": tickers[i % len(tickers)],
+                "company_name": f"{tickers[i % len(tickers)]} Inc.",
+                "ownership_pct": f"{(i + 1) * 0.5:.2f}%",
+                "shares_owned": f"{(i + 1) * 100000:,}",
+                "threshold": "5.00%",
+                "filing_required": "Yes" if (i + 1) * 0.5 > 4.5 else "No",
+                "last_updated": "2026-01-11",
+            }
+            for i in range(10)
+        ]
+
+    async def get_monthly_exercise_limits(self) -> list[dict]:
+        """Get monthly exercise limits data. TODO: Replace with DB query."""
+        logger.info("Returning mock monthly exercise limits data")
+        tickers = ["AAPL", "TSLA", "NVDA", "META"]
+        return [
+            {
+                "id": i + 1,
+                "deal_num": f"DEAL{i + 1:03d}",
+                "ticker": tickers[i % len(tickers)],
+                "company_name": f"{tickers[i % len(tickers)]} Inc.",
+                "month": f"2026-{(i % 12) + 1:02d}",
+                "exercise_limit": f"{(i + 1) * 10000:,}",
+                "exercised_qty": f"{(i + 1) * 5000:,}",
+                "remaining_qty": f"{(i + 1) * 5000:,}",
+                "limit_type": ["Soft", "Hard"][i % 2],
+            }
+            for i in range(8)
+        ]
+
+    # ========================================
+    # Reconciliation Data Methods
+    # ========================================
+
+    async def get_pps_recon(self) -> list[dict]:
+        """Get PPS reconciliation data. TODO: Replace with DB query."""
+        logger.info("Returning mock PPS reconciliation data")
+        tickers = ["AAPL", "MSFT", "TSLA", "NVDA", "GOOGL"]
+        return [
+            {
+                "id": i + 1,
+                "value_date": f"2026-01-{11 + i}",
+                "trade_date": f"2026-01-{10 + i}",
+                "underlying": tickers[i % len(tickers)],
+                "ticker": tickers[i % len(tickers)],
+                "code": f"PPS{i + 1:03d}",
+                "company_name": f"{tickers[i % len(tickers)]} Inc.",
+                "sec_type": ["Equity", "Warrant", "Bond"][i % 3],
+                "pos_loc": ["US", "HK", "UK"][i % 3],
+                "account": f"ACC{(i % 3) + 1:03d}",
+            }
+            for i in range(10)
+        ]
+
+    async def get_settlement_recon(self) -> list[dict]:
+        """Get settlement reconciliation data. TODO: Replace with DB query."""
+        logger.info("Returning mock settlement reconciliation data")
+        tickers = ["AAPL", "MSFT", "TSLA", "NVDA", "GOOGL"]
+        return [
+            {
+                "id": i + 1,
+                "trade_date": f"2026-01-{10 + i}",
+                "ml_report_date": f"2026-01-{11 + i}",
+                "underlying": tickers[i % len(tickers)],
+                "ticker": tickers[i % len(tickers)],
+                "company_name": f"{tickers[i % len(tickers)]} Inc.",
+                "pos_loc": ["US", "HK", "UK"][i % 3],
+                "currency": ["USD", "HKD", "GBP"][i % 3],
+                "sec_type": ["Equity", "Warrant", "Bond"][i % 3],
+                "position_settled": f"{(i + 1) * 1000:,}",
+                "ml_inventory": f"{(i + 1) * 1000:,}",
+            }
+            for i in range(8)
+        ]
+
+    async def get_failed_trades(self) -> list[dict]:
+        """Get failed trades data. TODO: Replace with DB query."""
+        logger.info("Returning mock failed trades data")
+        tickers = ["TSLA", "AMD", "NVDA"]
+        return [
+            {
+                "id": i + 1,
+                "report_date": f"2026-01-{11 + i}",
+                "trade_date": f"2026-01-{10 + i}",
+                "value_date": f"2026-01-{11 + i}",
+                "settlement_date": f"2026-01-{12 + i}",
+                "portfolio_code": f"PFOLIO{i + 1:02d}",
+                "instrument_ref": f"INST{i + 1:04d}",
+                "instrument_name": f"{tickers[i % len(tickers)]} Option",
+                "ticker": tickers[i % len(tickers)],
+                "company_name": f"{tickers[i % len(tickers)]} Inc.",
+                "isin": f"US{i + 1:010d}",
+                "sedol": f"B{i + 1:06d}",
+                "broker": ["GS", "MS", "JPM"][i % 3],
+                "glass_reference": f"GLASS{i + 1:05d}",
+                "trade_reference": f"TRADE{i + 1:05d}",
+                "deal_type": ["Buy", "Sell"][i % 2],
+                "q": f"{(i + 1) * 500}",
+            }
+            for i in range(5)
+        ]
+
+    async def get_pnl_recon(self) -> list[dict]:
+        """Get P&L reconciliation data. TODO: Replace with DB query."""
+        logger.info("Returning mock P&L reconciliation data")
+        tickers = ["AAPL", "MSFT", "TSLA", "NVDA"]
+        return [
+            {
+                "id": i + 1,
+                "trade_date": f"2026-01-{10 + i}",
+                "report_date": f"2026-01-{11 + i}",
+                "deal_num": f"DEAL{i + 1:03d}",
+                "row_index": f"{i + 1}",
+                "underlying": tickers[i % len(tickers)],
+                "pos_loc": ["US", "HK", "UK"][i % 3],
+                "stock_sec_id": f"STK{i + 1:04d}",
+                "warrant_sec_id": f"WRT{i + 1:04d}",
+                "bond_sec_id": f"BND{i + 1:04d}",
+                "stock_position": f"{(i + 1) * 1000:,}",
+            }
+            for i in range(8)
+        ]
+
+    async def get_risk_input_recon(self) -> list[dict]:
+        """Get risk input reconciliation data. TODO: Replace with DB query."""
+        logger.info("Returning mock risk input reconciliation data")
+        tickers = ["AAPL", "TSLA", "NVDA", "META", "AMD"]
+        return [
+            {
+                "id": i + 1,
+                "value_date": f"2026-01-{11 + i}",
+                "underlying": tickers[i % len(tickers)],
+                "ticker": tickers[i % len(tickers)],
+                "sec_type": ["Equity", "Warrant", "Bond"][i % 3],
+                "spot_mc": f"{150 + i * 5:.2f}",
+                "spot_ppd": f"{150 + i * 5 + 0.5:.2f}",
+                "position": f"{(i + 1) * 1000:,}",
+                "value_mc": f"${(i + 1) * 150000:,.2f}",
+                "value_ppd": f"${(i + 1) * 150000 + 500:,.2f}",
+            }
+            for i in range(10)
+        ]
+
+    # ========================================
+    # Events Data Methods
+    # ========================================
+
+    async def get_event_calendar(self) -> list[dict]:
+        """Get event calendar data. TODO: Replace with DB query."""
+        logger.info("Returning mock event calendar data")
+        tickers = ["AAPL", "MSFT", "TSLA", "NVDA", "GOOGL", "META"]
+        event_types = ["Earnings", "Dividend", "Split", "Conference", "Guidance"]
+        days = ["Mon", "Tue", "Wed", "Thu", "Fri"]
+        return [
+            {
+                "id": i + 1,
+                "underlying": tickers[i % len(tickers)],
+                "ticker": tickers[i % len(tickers)],
+                "company": f"{tickers[i % len(tickers)]} Inc.",
+                "event_date": f"2026-01-{15 + i}",
+                "day_of_week": days[i % len(days)],
+                "event_type": event_types[i % len(event_types)],
+                "time": f"{9 + (i % 4):02d}:00 AM",
+            }
+            for i in range(10)
+        ]
+
+    async def get_event_stream(self) -> list[dict]:
+        """Get event stream data. TODO: Replace with DB query."""
+        logger.info("Returning mock event stream data")
+        tickers = ["AAPL", "TSLA", "NVDA", "META", "AMD"]
+        event_types = ["Price Alert", "Volume Spike", "News", "Filing", "Announcement"]
+        days = ["Mon", "Tue", "Wed", "Thu", "Fri"]
+        return [
+            {
+                "id": i + 1,
+                "symbol": tickers[i % len(tickers)],
+                "record_date": f"2026-01-{10 + i}",
+                "event_date": f"2026-01-{11 + i}",
+                "day_of_week": days[i % len(days)],
+                "event_type": event_types[i % len(event_types)],
+                "subject": f"{event_types[i % len(event_types)]} for {tickers[i % len(tickers)]}",
+                "notes": f"Alert triggered on {tickers[i % len(tickers)]}",
+                "alerted": ["Yes", "No"][i % 2],
+                "recur": ["Daily", "Weekly", "Once"][i % 3],
+                "created_by": "System",
+                "created_time": f"2026-01-{10 + i} 09:00:00",
+                "updated_by": "System",
+                "updated_time": f"2026-01-{10 + i} 09:30:00",
+            }
+            for i in range(8)
+        ]
+
+    async def get_reverse_inquiry(self) -> list[dict]:
+        """Get reverse inquiry data. TODO: Replace with DB query."""
+        logger.info("Returning mock reverse inquiry data")
+        tickers = ["AAPL", "MSFT", "TSLA", "NVDA"]
+        agents = ["Goldman Sachs", "Morgan Stanley", "JP Morgan", "Citibank"]
+        return [
+            {
+                "id": i + 1,
+                "ticker": tickers[i % len(tickers)],
+                "company": f"{tickers[i % len(tickers)]} Inc.",
+                "inquiry_date": f"2026-01-{5 + i}",
+                "expiry_date": f"2026-02-{5 + i}",
+                "deal_point": f"{(i + 1) * 50} bps",
+                "agent": agents[i % len(agents)],
+                "notes": f"Inquiry for {tickers[i % len(tickers)]} position",
+            }
+            for i in range(6)
+        ]
+
 
 # Example usage (for testing):
 if __name__ == "__main__":

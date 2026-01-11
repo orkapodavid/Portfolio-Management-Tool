@@ -41,9 +41,11 @@ class PositionsMixin(rx.State, mixin=True):
         """Load all position data from PositionService."""
         try:
             service = PositionService()
+            self.positions = await service.get_positions()
             self.stock_positions = await service.get_stock_positions()
             self.warrant_positions = await service.get_warrant_positions()
             self.bond_positions = await service.get_bond_positions()
+            self.trade_summaries = await service.get_trade_summary()
         except Exception as e:
             import logging
 

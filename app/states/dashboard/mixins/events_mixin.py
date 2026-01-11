@@ -9,6 +9,7 @@ Pattern: State Mixin for code reuse
 """
 
 import reflex as rx
+from app.services import DatabaseService
 from app.states.dashboard.types import (
     EventCalendarItem,
     EventStreamItem,
@@ -32,10 +33,12 @@ class EventsMixin(rx.State, mixin=True):
     reverse_inquiry: list[ReverseInquiryItem] = []
 
     async def load_events_data(self):
-        """Load all events data."""
+        """Load all events data from DatabaseService."""
         try:
-            # TODO: Integrate with appropriate service when available
-            pass
+            service = DatabaseService()
+            self.event_calendar = await service.get_event_calendar()
+            self.event_stream = await service.get_event_stream()
+            self.reverse_inquiry = await service.get_reverse_inquiry()
         except Exception as e:
             import logging
 

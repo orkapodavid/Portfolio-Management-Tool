@@ -17,11 +17,14 @@ def text_cell(
     val: str, align: str = "left", bold: bool = False, clickable: bool = False
 ) -> rx.Component:
     base_class = f"px-3 py-2 text-[10px] text-gray-700 text-{align} border-b border-gray-200 align-middle whitespace-nowrap"
+    if bold:
+        base_class += " font-bold"
     if clickable:
         return rx.el.td(
             rx.el.a(val, class_name="text-blue-600 hover:underline cursor-pointer"),
             class_name=base_class,
         )
+    return rx.el.td(val, class_name=base_class)
 
 
 def status_badge(status: str) -> rx.Component:

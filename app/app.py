@@ -3,6 +3,7 @@ from app.components.shared.top_navigation import top_navigation
 from app.components.shared.performance_header import performance_header
 from app.components.shared.contextual_workspace import contextual_workspace
 from app.components.shared.notification_sidebar import notification_sidebar
+from app.states.dashboard.portfolio_dashboard_state import PortfolioDashboardState
 from app.pages.portfolio.portfolio_page import portfolio_page
 from app.pages.portfolio.watchlist_page import watchlist_page
 from app.pages.research.research_page import research_page
@@ -33,7 +34,7 @@ app = rx.App(
         "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
     ],
 )
-app.add_page(index, route="/")
+app.add_page(index, route="/", on_load=PortfolioDashboardState.on_load)
 app.add_page(portfolio_page, route="/portfolios")
 app.add_page(watchlist_page, route="/watchlist")
 app.add_page(research_page, route="/research")
