@@ -71,9 +71,24 @@ class BondPositionItem(TypedDict):
     currency: str
     account_id: str
 
+    # P&L Types
 
-# P&L Types
+
 class PnLChangeItem(TypedDict):
+    id: int
+    trade_date: str
+    underlying: str
+    ticker: str
+    pnl_ytd: str
+    pnl_chg_1d: str
+    pnl_chg_1w: str
+    pnl_chg_1m: str
+    pnl_chg_pct_1d: str
+    pnl_chg_pct_1w: str
+    pnl_chg_pct_1m: str
+
+
+class PnLFullItem(TypedDict):
     id: int
     trade_date: str
     underlying: str

@@ -1,9 +1,11 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import (
-    PortfolioDashboardState,
+from app.states.dashboard.portfolio_dashboard_state import PortfolioDashboardState
+from app.states.pnl.pnl_state import PnLState
+from app.states.pnl.types import (
     PnLChangeItem,
     PnLSummaryItem,
     PnLCurrencyItem,
+    PnLFullItem,
 )
 from app.constants import POSITIVE_GREEN, NEGATIVE_RED, ROW_HIGHLIGHT
 
@@ -26,9 +28,7 @@ def pnl_full_table() -> rx.Component:
                     header_cell("PnL Chg% 1M"),
                 )
             ),
-            rx.el.tbody(
-                rx.foreach(PortfolioDashboardState.filtered_pnl_change, pnl_change_row)
-            ),
+            rx.el.tbody(rx.foreach(PnLState.filtered_pnl_full, pnl_full_row)),
             class_name="w-full min-w-[1400px] table-auto border-separate border-spacing-0",
         ),
         type="hover",
@@ -155,6 +155,10 @@ def pnl_change_row(item: PnLChangeItem) -> rx.Component:
     )
 
 
+def pnl_full_row(item: PnLFullItem) -> rx.Component:
+    return pnl_change_row(item)
+
+
 def pnl_change_table() -> rx.Component:
     return rx.scroll_area(
         rx.el.table(
@@ -172,9 +176,7 @@ def pnl_change_table() -> rx.Component:
                     header_cell("PnL Chg% 1M", column_key="pnl_chg_pct_1m"),
                 )
             ),
-            rx.el.tbody(
-                rx.foreach(PortfolioDashboardState.filtered_pnl_change, pnl_change_row)
-            ),
+            rx.el.tbody(rx.foreach(PnLState.filtered_pnl_change, pnl_change_row)),
             class_name="w-full min-w-[1400px] table-auto border-separate border-spacing-0",
         ),
         type="hover",
@@ -220,11 +222,7 @@ def pnl_summary_table() -> rx.Component:
                     header_cell("ADV 3M", tooltip="Average Daily Volume (3 Month)"),
                 )
             ),
-            rx.el.tbody(
-                rx.foreach(
-                    PortfolioDashboardState.filtered_pnl_summary, pnl_summary_row
-                )
-            ),
+            rx.el.tbody(rx.foreach(PnLState.filtered_pnl_summary, pnl_summary_row)),
             class_name="w-full min-w-[1200px] table-auto border-separate border-spacing-0",
         ),
         type="hover",
@@ -270,11 +268,7 @@ def pnl_currency_table() -> rx.Component:
                     header_cell("POS C (truncated)"),
                 )
             ),
-            rx.el.tbody(
-                rx.foreach(
-                    PortfolioDashboardState.filtered_pnl_currency, pnl_currency_row
-                )
-            ),
+            rx.el.tbody(rx.foreach(PnLState.filtered_pnl_currency, pnl_currency_row)),
             class_name="w-full min-w-[1200px] table-auto border-separate border-spacing-0",
         ),
         type="hover",

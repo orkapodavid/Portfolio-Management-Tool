@@ -223,6 +223,53 @@ class PnLService:
         """Alias for get_pnl_by_currency for mixin compatibility."""
         return await self.get_pnl_by_currency()
 
+    async def get_pnl_full(self, trade_date: Optional[str] = None) -> list[dict]:
+        """
+        Get full P&L detailed view.
+
+        Args:
+            trade_date: Trade date
+
+        Returns:
+            List of full P&L records
+        """
+        logger.warning("Using mock P&L Full data.")
+
+        if not trade_date:
+            trade_date = datetime.now().strftime("%Y-%m-%d")
+
+        tickers = [
+            "AAPL",
+            "MSFT",
+            "GOOGL",
+            "AMZN",
+            "TSLA",
+            "NVDA",
+            "META",
+            "JPM",
+            "BAC",
+            "WFC",
+        ]
+
+        return [
+            {
+                "id": i,
+                "ticker": ticker,
+                "description": f"{ticker} US Equity",
+                "asset_class": "Equity",
+                "qty": f"{random.randint(1000, 50000):,}",
+                "price": f"${random.uniform(50, 500):.2f}",
+                "mkt_value": f"${random.uniform(50000, 25000000):,.2f}",
+                "daily_pnl": f"${random.uniform(-10000, 50000):,.2f}",
+                "pnl_pct": f"{random.uniform(-2, 5):.2f}%",
+                "ytd_pnl": f"${random.uniform(-100000, 500000):,.2f}",
+                "currency": "USD",
+                "sector": "Technology" if i < 7 else "Financials",
+                "strategy": "Long Bias",
+            }
+            for i, ticker in enumerate(tickers * 5)
+        ]
+
 
 # Example usage
 if __name__ == "__main__":

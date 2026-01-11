@@ -14,6 +14,7 @@ from app.states.dashboard.types import (
     PnLChangeItem,
     PnLSummaryItem,
     PnLCurrencyItem,
+    PnLFullItem,
 )
 
 
@@ -31,6 +32,7 @@ class PnLMixin(rx.State, mixin=True):
     pnl_change_list: list[PnLChangeItem] = []
     pnl_summary_list: list[PnLSummaryItem] = []
     pnl_currency_list: list[PnLCurrencyItem] = []
+    pnl_full_list: list[PnLFullItem] = []
 
     async def load_pnl_data(self):
         """Load all P&L data from PnLService."""
@@ -39,6 +41,7 @@ class PnLMixin(rx.State, mixin=True):
             self.pnl_change_list = await service.get_pnl_changes()
             self.pnl_summary_list = await service.get_pnl_summary()
             self.pnl_currency_list = await service.get_currency_pnl()
+            self.pnl_full_list = await service.get_pnl_full()
         except Exception as e:
             import logging
 

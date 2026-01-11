@@ -1,6 +1,7 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import (
-    PortfolioDashboardState,
+from app.states.dashboard.portfolio_dashboard_state import PortfolioDashboardState
+from app.states.positions.positions_state import PositionsState
+from app.states.positions.types import (
     PositionItem,
     StockPositionItem,
     WarrantPositionItem,
@@ -103,9 +104,7 @@ def positions_table() -> rx.Component:
                     )
                 ),
                 rx.el.tbody(
-                    rx.foreach(
-                        PortfolioDashboardState.filtered_positions, positions_row
-                    )
+                    rx.foreach(PositionsState.filtered_positions, positions_row)
                 ),
                 class_name="w-full table-auto border-separate border-spacing-0",
             ),
@@ -159,9 +158,7 @@ def stock_position_table() -> rx.Component:
                 )
             ),
             rx.el.tbody(
-                rx.foreach(
-                    PortfolioDashboardState.filtered_stock_positions, stock_position_row
-                )
+                rx.foreach(PositionsState.filtered_stock_positions, stock_position_row)
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
@@ -252,9 +249,7 @@ def bond_position_table() -> rx.Component:
                 )
             ),
             rx.el.tbody(
-                rx.foreach(
-                    PortfolioDashboardState.filtered_bond_positions, bond_position_row
-                )
+                rx.foreach(PositionsState.filtered_bond_positions, bond_position_row)
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
@@ -300,9 +295,7 @@ def trade_summary_table() -> rx.Component:
                 )
             ),
             rx.el.tbody(
-                rx.foreach(
-                    PortfolioDashboardState.filtered_trade_summaries, trade_summary_row
-                )
+                rx.foreach(PositionsState.filtered_trade_summaries, trade_summary_row)
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),

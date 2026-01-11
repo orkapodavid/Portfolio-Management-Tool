@@ -44,6 +44,7 @@ from app.states.dashboard.types import (
     PnLChangeItem,
     PnLSummaryItem,
     PnLCurrencyItem,
+    PnLFullItem,
     DeltaChangeItem,
     RiskMeasureItem,
     RiskInputItem,
@@ -733,6 +734,10 @@ class PortfolioDashboardState(
         return self._filter_pnl_by_ticker(
             self.pnl_summary_list, self.current_search_query
         )
+
+    @rx.var(cache=True)
+    def filtered_pnl_full(self) -> list[PnLFullItem]:
+        return self._filter_pnl_by_ticker(self.pnl_full_list, self.current_search_query)
 
     @rx.var(cache=True)
     def filtered_pnl_currency(self) -> list[PnLCurrencyItem]:

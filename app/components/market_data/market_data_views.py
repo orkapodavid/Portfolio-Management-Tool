@@ -1,14 +1,17 @@
 import reflex as rx
 from app.states.dashboard.portfolio_dashboard_state import (
     PortfolioDashboardState,
+    EventCalendarItem,
+    EventStreamItem,
+    ReverseInquiryItem,
+)
+from app.states.market_data.market_data_state import MarketDataState
+from app.states.market_data.types import (
     MarketDataItem,
     FXDataItem,
     HistoricalDataItem,
     TradingCalendarItem,
     MarketHoursItem,
-    EventCalendarItem,
-    EventStreamItem,
-    ReverseInquiryItem,
 )
 
 
@@ -91,9 +94,7 @@ def market_data_table() -> rx.Component:
                 )
             ),
             rx.el.tbody(
-                rx.foreach(
-                    PortfolioDashboardState.filtered_market_data, market_data_row
-                )
+                rx.foreach(MarketDataState.filtered_market_data, market_data_row)
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
@@ -130,9 +131,7 @@ def fx_data_table() -> rx.Component:
                     header_cell("Update"),
                 )
             ),
-            rx.el.tbody(
-                rx.foreach(PortfolioDashboardState.filtered_fx_data, fx_data_row)
-            ),
+            rx.el.tbody(rx.foreach(MarketDataState.filtered_fx_data, fx_data_row)),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
         class_name="flex-1 w-full bg-white",
@@ -173,9 +172,7 @@ def historical_data_table() -> rx.Component:
                 )
             ),
             rx.el.tbody(
-                rx.foreach(
-                    PortfolioDashboardState.filtered_historical_data, historical_row
-                )
+                rx.foreach(MarketDataState.filtered_historical_data, historical_row)
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
@@ -219,9 +216,7 @@ def trading_calendar_table() -> rx.Component:
                 )
             ),
             rx.el.tbody(
-                rx.foreach(
-                    PortfolioDashboardState.filtered_trading_calendar, calendar_row
-                )
+                rx.foreach(MarketDataState.trading_calendar, calendar_row)
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
@@ -256,9 +251,7 @@ def market_hours_table() -> rx.Component:
                     header_cell("Timezone"),
                 )
             ),
-            rx.el.tbody(
-                rx.foreach(PortfolioDashboardState.filtered_market_hours, hours_row)
-            ),
+            rx.el.tbody(rx.foreach(MarketDataState.market_hours, hours_row)),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
         class_name="flex-1 w-full bg-white",
