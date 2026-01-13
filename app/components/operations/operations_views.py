@@ -1,15 +1,38 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import (
-    PortfolioDashboardState,
+from app.states.operations.operations_state import OperationsState
+from app.states.operations.types import (
     DailyProcedureItem,
     OperationProcessItem,
 )
 
 
-def header_cell(text: str, align: str = "left") -> rx.Component:
+def header_cell(text: str, align: str = "left", column_key: str = "") -> rx.Component:
+    align_class = rx.match(
+        align, ("right", "text-right"), ("center", "text-center"), "text-left"
+    )
+    sort_icon = rx.cond(
+        OperationsState.sort_column == column_key,
+        rx.cond(
+            OperationsState.sort_direction == "asc",
+            rx.icon("arrow-up", size=10, class_name="ml-1 text-blue-600"),
+            rx.icon("arrow-down", size=10, class_name="ml-1 text-blue-600"),
+        ),
+        rx.icon(
+            "arrow-up-down",
+            size=10,
+            class_name="ml-1 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity",
+        ),
+    )
     return rx.el.th(
-        text,
-        class_name=f"px-3 py-3 text-{align} text-[10px] font-bold text-gray-700 uppercase tracking-widest border-b-2 border-gray-400 bg-[#E5E7EB] sticky top-0 z-30 shadow-sm h-[44px] whitespace-nowrap",
+        rx.el.div(
+            text,
+            rx.cond(column_key != "", sort_icon, rx.fragment()),
+            class_name=f"flex items-center {rx.match(align, ('right', 'justify-end'), ('center', 'justify-center'), 'justify-start')}",
+        ),
+        on_click=lambda: rx.cond(
+            column_key, OperationsState.toggle_sort(column_key), None
+        ),
+        class_name=f"px-3 py-3 {align_class} text-[10px] font-bold text-gray-700 uppercase tracking-widest border-b-2 border-gray-400 bg-[#E5E7EB] sticky top-0 z-30 shadow-sm h-[44px] whitespace-nowrap cursor-pointer hover:bg-gray-200 transition-colors group select-none",
     )
 
 
@@ -86,8 +109,8 @@ def daily_procedure_check_table() -> rx.Component:
                     header_cell("Check Date"),
                     header_cell("Host Run Date"),
                     header_cell("Scheduled Time"),
-                    header_cell("Procedure Name"),
-                    header_cell("Status"),
+                    header_cell("Procedure Name", column_key="procedure_name"),
+                    header_cell("Status", column_key="status"),
                     header_cell("Error Message"),
                     header_cell("Frequency"),
                     header_cell("Scheduled Day"),
@@ -96,9 +119,7 @@ def daily_procedure_check_table() -> rx.Component:
                 )
             ),
             rx.el.tbody(
-                rx.foreach(
-                    PortfolioDashboardState.filtered_daily_procedures, daily_proc_row
-                )
+                rx.foreach(OperationsState.filtered_daily_procedures, daily_proc_row)
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
@@ -131,15 +152,13 @@ def operation_process_table() -> rx.Component:
         rx.el.table(
             rx.el.thead(
                 rx.el.tr(
-                    header_cell("Process"),
-                    header_cell("Status"),
+                    header_cell("Process", column_key="process"),
+                    header_cell("Status", column_key="status"),
                     header_cell("Last Run Time"),
                 )
             ),
             rx.el.tbody(
-                rx.foreach(
-                    PortfolioDashboardState.filtered_operation_processes, ops_proc_row
-                )
+                rx.foreach(OperationsState.filtered_operation_processes, ops_proc_row)
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),

@@ -1,6 +1,6 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import (
-    PortfolioDashboardState,
+from app.states.ui.ui_state import (
+    UIState,
     NotificationItem,
 )
 
@@ -25,7 +25,7 @@ class NotificationPaginationState(rx.State):
 
     @rx.var
     async def total_pages(self) -> int:
-        dashboard = await self.get_state(PortfolioDashboardState)
+        dashboard = await self.get_state(UIState)
         total_items = len(dashboard.notifications)
         if total_items == 0:
             return 1
@@ -33,9 +33,9 @@ class NotificationPaginationState(rx.State):
 
     @rx.var
     async def paginated_notifications(self) -> list[NotificationItem]:
-        dashboard = await self.get_state(PortfolioDashboardState)
+        dashboard = await self.get_state(UIState)
         sliced_data, _, _ = get_paginated_alerts(
-            dashboard.filtered_notifications_list,
+            dashboard.filtered_notifications,
             self.current_page,
             self.items_per_page,
         )

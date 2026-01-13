@@ -1,6 +1,6 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import (
-    PortfolioDashboardState,
+from app.states.reconciliation.reconciliation_state import ReconciliationState
+from app.states.reconciliation.types import (
     PPSReconItem,
     SettlementReconItem,
     FailedTradeItem,
@@ -9,10 +9,33 @@ from app.states.dashboard.portfolio_dashboard_state import (
 )
 
 
-def header_cell(text: str, align: str = "left") -> rx.Component:
+def header_cell(text: str, align: str = "left", column_key: str = "") -> rx.Component:
+    align_class = rx.match(
+        align, ("right", "text-right"), ("center", "text-center"), "text-left"
+    )
+    sort_icon = rx.cond(
+        ReconciliationState.sort_column == column_key,
+        rx.cond(
+            ReconciliationState.sort_direction == "asc",
+            rx.icon("arrow-up", size=10, class_name="ml-1 text-blue-600"),
+            rx.icon("arrow-down", size=10, class_name="ml-1 text-blue-600"),
+        ),
+        rx.icon(
+            "arrow-up-down",
+            size=10,
+            class_name="ml-1 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity",
+        ),
+    )
     return rx.el.th(
-        text,
-        class_name=f"px-3 py-3 text-{align} text-[10px] font-bold text-gray-700 uppercase tracking-widest border-b-2 border-gray-400 bg-[#E5E7EB] sticky top-0 z-30 shadow-sm h-[44px] whitespace-nowrap",
+        rx.el.div(
+            text,
+            rx.cond(column_key != "", sort_icon, rx.fragment()),
+            class_name=f"flex items-center {rx.match(align, ('right', 'justify-end'), ('center', 'justify-center'), 'justify-start')}",
+        ),
+        on_click=lambda: rx.cond(
+            column_key, ReconciliationState.toggle_sort(column_key), None
+        ),
+        class_name=f"px-3 py-3 {align_class} text-[10px] font-bold text-gray-700 uppercase tracking-widest border-b-2 border-gray-400 bg-[#E5E7EB] sticky top-0 z-30 shadow-sm h-[44px] whitespace-nowrap cursor-pointer hover:bg-gray-200 transition-colors group select-none",
     )
 
 
@@ -45,18 +68,16 @@ def pps_recon_table() -> rx.Component:
                 rx.el.tr(
                     header_cell("Value Date"),
                     header_cell("Trade Date"),
-                    header_cell("Underlying"),
-                    header_cell("Ticker"),
+                    header_cell("Underlying", column_key="underlying"),
+                    header_cell("Ticker", column_key="ticker"),
                     header_cell("Code"),
-                    header_cell("Company Name"),
+                    header_cell("Company Name", column_key="company_name"),
                     header_cell("Sec Type"),
                     header_cell("Pos Loc"),
                     header_cell("Account"),
                 )
             ),
-            rx.el.tbody(
-                rx.foreach(PortfolioDashboardState.filtered_pps_recon, pps_row)
-            ),
+            rx.el.tbody(rx.foreach(ReconciliationState.filtered_pps_recon, pps_row)),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
         class_name="flex-1 w-full bg-white",
@@ -87,8 +108,8 @@ def settlement_recon_table() -> rx.Component:
                     header_cell("Trade Date"),
                     header_cell("ML Report Date"),
                     header_cell("Underlying"),
-                    header_cell("Ticker"),
-                    header_cell("Company Name"),
+                    header_cell("Ticker", column_key="ticker"),
+                    header_cell("Company Name", column_key="company_name"),
                     header_cell("Pos Loc"),
                     header_cell("Currency"),
                     header_cell("Sec Type"),
@@ -97,9 +118,7 @@ def settlement_recon_table() -> rx.Component:
                 )
             ),
             rx.el.tbody(
-                rx.foreach(
-                    PortfolioDashboardState.filtered_settlement_recon, settle_row
-                )
+                rx.foreach(ReconciliationState.filtered_settlement_recon, settle_row)
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
@@ -141,11 +160,11 @@ def failed_trades_table() -> rx.Component:
                     header_cell("Portfolio Code"),
                     header_cell("Instrument Ref"),
                     header_cell("Instrument Name"),
-                    header_cell("Ticker"),
-                    header_cell("Company Name"),
+                    header_cell("Ticker", column_key="ticker"),
+                    header_cell("Company Name", column_key="company_name"),
                     header_cell("ISIN"),
                     header_cell("SEDOL"),
-                    header_cell("Broker"),
+                    header_cell("Broker", column_key="broker"),
                     header_cell("Glass Reference"),
                     header_cell("Trade Reference"),
                     header_cell("Deal Type"),
@@ -153,7 +172,7 @@ def failed_trades_table() -> rx.Component:
                 )
             ),
             rx.el.tbody(
-                rx.foreach(PortfolioDashboardState.filtered_failed_trades, failed_row)
+                rx.foreach(ReconciliationState.filtered_failed_trades, failed_row)
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
@@ -184,9 +203,9 @@ def pnl_recon_table() -> rx.Component:
                 rx.el.tr(
                     header_cell("Trade Date"),
                     header_cell("Report Date"),
-                    header_cell("Deal Num"),
+                    header_cell("Deal Num", column_key="deal_num"),
                     header_cell("Row Index"),
-                    header_cell("Underlying"),
+                    header_cell("Underlying", column_key="underlying"),
                     header_cell("Pos Loc"),
                     header_cell("Stock SecID"),
                     header_cell("Warrant SecID"),
@@ -195,7 +214,7 @@ def pnl_recon_table() -> rx.Component:
                 )
             ),
             rx.el.tbody(
-                rx.foreach(PortfolioDashboardState.filtered_pnl_recon, pnl_recon_row)
+                rx.foreach(ReconciliationState.filtered_pnl_recon, pnl_recon_row)
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
@@ -224,8 +243,8 @@ def risk_input_recon_table() -> rx.Component:
             rx.el.thead(
                 rx.el.tr(
                     header_cell("Value Date"),
-                    header_cell("Underlying"),
-                    header_cell("Ticker"),
+                    header_cell("Underlying", column_key="underlying"),
+                    header_cell("Ticker", column_key="ticker"),
                     header_cell("Sec Type"),
                     header_cell("Spot (MC)"),
                     header_cell("Spot (PPD)"),
@@ -236,7 +255,7 @@ def risk_input_recon_table() -> rx.Component:
             ),
             rx.el.tbody(
                 rx.foreach(
-                    PortfolioDashboardState.filtered_risk_input_recon, risk_recon_row
+                    ReconciliationState.filtered_risk_input_recon, risk_recon_row
                 )
             ),
             class_name="w-full table-auto border-separate border-spacing-0",

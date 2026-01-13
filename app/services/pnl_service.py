@@ -255,18 +255,16 @@ class PnLService:
         return [
             {
                 "id": i,
+                "trade_date": trade_date,
+                "underlying": f"{ticker} US Equity",
                 "ticker": ticker,
-                "description": f"{ticker} US Equity",
-                "asset_class": "Equity",
-                "qty": f"{random.randint(1000, 50000):,}",
-                "price": f"${random.uniform(50, 500):.2f}",
-                "mkt_value": f"${random.uniform(50000, 25000000):,.2f}",
-                "daily_pnl": f"${random.uniform(-10000, 50000):,.2f}",
-                "pnl_pct": f"{random.uniform(-2, 5):.2f}%",
-                "ytd_pnl": f"${random.uniform(-100000, 500000):,.2f}",
-                "currency": "USD",
-                "sector": "Technology" if i < 7 else "Financials",
-                "strategy": "Long Bias",
+                "pnl_ytd": f"${random.uniform(-100000, 500000):,.2f}",
+                "pnl_chg_1d": f"${random.uniform(-10000, 50000):,.2f}",
+                "pnl_chg_1w": f"${random.uniform(-25000, 75000):,.2f}",
+                "pnl_chg_1m": f"${random.uniform(-50000, 150000):,.2f}",
+                "pnl_chg_pct_1d": f"{random.uniform(-2, 5):.2f}%",
+                "pnl_chg_pct_1w": f"{random.uniform(-5, 10):.2f}%",
+                "pnl_chg_pct_1m": f"{random.uniform(-10, 20):.2f}%",
             }
             for i, ticker in enumerate(tickers * 5)
         ]

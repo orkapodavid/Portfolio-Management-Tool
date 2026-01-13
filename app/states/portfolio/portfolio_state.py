@@ -1,7 +1,7 @@
 import reflex as rx
 from typing import TypedDict, Optional
 import datetime
-from app.states.dashboard.dashboard_state import Holding
+from app.states.types import Holding
 from app.services import PortfolioService
 
 
@@ -116,7 +116,7 @@ class PortfolioState(rx.State):
     async def on_load(self):
         """Load portfolios when page loads."""
         await self.load_portfolios()
-    
+
     async def load_portfolios(self):
         """Load portfolios from PortfolioService."""
         self.is_loading = True
@@ -127,6 +127,7 @@ class PortfolioState(rx.State):
                 self.portfolios = portfolios
         except Exception as e:
             import logging
+
             logging.exception(f"Error loading portfolios: {e}")
         finally:
             self.is_loading = False
@@ -157,6 +158,65 @@ class PortfolioState(rx.State):
             )
             i += 1
         return result
+
+    @rx.var
+    def total_value(self) -> float:
+        return sum(
+            [
+                h["shares"] * h["current_price"]
+                for h in self.selected_portfolio["holdings"]
+            ]
+        )
+
+    @rx.var
+    def total_cost_basis(self) -> float:
+        return sum(
+            [h["shares"] * h["avg_cost"] for h in self.selected_portfolio["holdings"]]
+        )
+
+    @rx.var
+    def total_gain_loss(self) -> float:
+        return self.total_value - self.total_cost_basis
+
+    @rx.var
+    def total_gain_loss_pct(self) -> float:
+        if self.total_cost_basis == 0:
+            return 0.0
+        return self.total_gain_loss / self.total_cost_basis * 100
+
+    @rx.var
+    def daily_change_value(self) -> float:
+        change = sum(
+            [
+                h["shares"] * h["current_price"] * (h["daily_change_pct"] / 100)
+                for h in self.selected_portfolio["holdings"]
+            ]
+        )
+        return change
+
+    @rx.var
+    def top_performers(self) -> list[Holding]:
+        sorted_holdings = sorted(
+            self.selected_portfolio["holdings"],
+            key=lambda x: x["daily_change_pct"],
+            reverse=True,
+        )
+        return sorted_holdings[:3]
+
+    @rx.var
+    def bottom_performers(self) -> list[Holding]:
+        sorted_holdings = sorted(
+            self.selected_portfolio["holdings"], key=lambda x: x["daily_change_pct"]
+        )
+        return sorted_holdings[:3]
+
+    @rx.var
+    def asset_allocation_data(self) -> list[dict]:
+        return self.sector_breakdown
+
+    @rx.var
+    def holdings(self) -> list[Holding]:
+        return self.selected_portfolio["holdings"]
 
     @rx.event
     def set_portfolio_index(self, index: int):

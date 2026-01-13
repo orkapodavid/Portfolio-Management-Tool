@@ -4,9 +4,6 @@ from .market_data_views import (
     historical_data_table,
     trading_calendar_table,
     market_hours_table,
-    event_calendar_table,
-    event_stream_view,
-    reverse_inquiry_table,
 )
 
 __all__ = [
@@ -15,7 +12,4 @@ __all__ = [
     "historical_data_table",
     "trading_calendar_table",
     "market_hours_table",
-    "event_calendar_table",
-    "event_stream_view",
-    "reverse_inquiry_table",
 ]

@@ -1,6 +1,6 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import (
-    PortfolioDashboardState,
+from app.states.compliance.compliance_state import ComplianceState
+from app.states.compliance.types import (
     RestrictedListItem,
     UndertakingItem,
     BeneficialOwnershipItem,
@@ -54,9 +54,7 @@ def restricted_list_table() -> rx.Component:
                 )
             ),
             rx.el.tbody(
-                rx.foreach(
-                    PortfolioDashboardState.filtered_restricted_list, restricted_row
-                )
+                rx.foreach(ComplianceState.filtered_restricted_list, restricted_row)
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
@@ -92,9 +90,7 @@ def undertakings_table() -> rx.Component:
                 )
             ),
             rx.el.tbody(
-                rx.foreach(
-                    PortfolioDashboardState.filtered_undertakings, undertaking_row
-                )
+                rx.foreach(ComplianceState.filtered_undertakings, undertaking_row)
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
@@ -136,9 +132,7 @@ def beneficial_ownership_table() -> rx.Component:
                 )
             ),
             rx.el.tbody(
-                rx.foreach(
-                    PortfolioDashboardState.filtered_beneficial_ownership, ownership_row
-                )
+                rx.foreach(ComplianceState.filtered_beneficial_ownership, ownership_row)
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
@@ -178,9 +172,7 @@ def monthly_exercise_limit_table() -> rx.Component:
                 )
             ),
             rx.el.tbody(
-                rx.foreach(
-                    PortfolioDashboardState.filtered_monthly_exercise_limit, limit_row
-                )
+                rx.foreach(ComplianceState.filtered_monthly_exercise_limit, limit_row)
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),

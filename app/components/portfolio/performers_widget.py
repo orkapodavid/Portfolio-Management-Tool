@@ -1,2 +1,3 @@
 import reflex as rx
-from app.states.dashboard.dashboard_state import DashboardState, Holding
+from app.states.portfolio.portfolio_state import PortfolioState
+from app.states.types import Holding

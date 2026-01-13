@@ -8,6 +8,7 @@ This module provides services for:
 - P&L calculation
 - Risk metrics and Greeks calculation
 - Bloomberg EMSX order management
+- Compliance and regulatory data
 
 Each service can integrate with the existing PyQt business logic from source/.
 
@@ -23,19 +24,21 @@ from app.services.emsx_service import EMSXService
 from app.services.notification_service import NotificationService
 from app.services.user_service import UserService
 from app.services.portfolio_service import PortfolioService
+from app.services.compliance_service import ComplianceService
 
 # Deprecated: finance_service module - use MarketDataService instead
 from app.services import finance_service
 
 __all__ = [
-    'DatabaseService',
-    'MarketDataService',
-    'PositionService',
-    'PnLService',
-    'RiskService',
-    'EMSXService',
-    'NotificationService',
-    'UserService',
-    'PortfolioService',
-    'finance_service',  # Deprecated - for backward compatibility only
+    "DatabaseService",
+    "MarketDataService",
+    "PositionService",
+    "PnLService",
+    "RiskService",
+    "EMSXService",
+    "NotificationService",
+    "UserService",
+    "PortfolioService",
+    "ComplianceService",
+    "finance_service",  # Deprecated - for backward compatibility only
 ]

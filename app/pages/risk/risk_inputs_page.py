@@ -1,7 +1,7 @@
 import reflex as rx
 from app.components.shared.module_layout import module_layout
 from app.components.risk.risk_views import risk_inputs_table
-from app.states.dashboard.portfolio_dashboard_state import PortfolioDashboardState
+from app.states.ui.ui_state import UIState
 
 
 def risk_inputs_page() -> rx.Component:
@@ -9,5 +9,5 @@ def risk_inputs_page() -> rx.Component:
         risk_inputs_table(),
         "Risk",
         "Risk Inputs",
-        PortfolioDashboardState.MODULE_SUBTABS["Risk"],
+        UIState.MODULE_SUBTABS["Risk"],
     )

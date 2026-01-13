@@ -1,8 +1,6 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import (
-    PortfolioDashboardState,
-    NotificationItem,
-)
+from app.states.ui.ui_state import UIState
+from app.states.types import NotificationItem
 
 
 def alert_card(notification: NotificationItem) -> rx.Component:
@@ -42,9 +40,7 @@ def alert_card(notification: NotificationItem) -> rx.Component:
             ),
             rx.el.button(
                 rx.icon("circle-x", size=14),
-                on_click=PortfolioDashboardState.dismiss_notification(
-                    notification["id"]
-                ),
+                on_click=UIState.dismiss_notification(notification["id"]),
                 class_name="text-gray-900/60 hover:text-black transition-colors",
             ),
             class_name="flex justify-between items-start mb-2",
@@ -67,17 +63,13 @@ def alert_card(notification: NotificationItem) -> rx.Component:
         rx.el.div(
             rx.el.button(
                 rx.icon("check", size=12),
-                on_click=PortfolioDashboardState.mark_notification_read(
-                    notification["id"]
-                ),
+                on_click=UIState.mark_notification_read(notification["id"]),
                 title="Mark as read",
                 class_name="p-1 rounded hover:bg-white/60 text-gray-700 transition-colors",
             ),
             rx.el.button(
                 rx.icon("arrow-right", size=12),
-                on_click=lambda: PortfolioDashboardState.navigate_to_notification(
-                    notification["id"]
-                ),
+                on_click=lambda: UIState.navigate_to_notification(notification["id"]),
                 title="Go to details",
                 class_name="p-1 rounded hover:bg-white/60 text-gray-700 transition-colors",
             ),
@@ -95,12 +87,12 @@ def pagination_footer() -> rx.Component:
                 rx.el.span("Prev", class_name="ml-1"),
                 class_name="flex items-center",
             ),
-            on_click=PortfolioDashboardState.prev_notification_page,
-            disabled=PortfolioDashboardState.notification_page == 1,
+            on_click=UIState.prev_notification_page,
+            disabled=UIState.notification_page == 1,
             class_name="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-[9px] font-black uppercase tracking-tighter",
         ),
         rx.el.span(
-            f"{PortfolioDashboardState.notification_page} / {PortfolioDashboardState.total_notification_pages}",
+            f"{UIState.notification_page} / {UIState.total_notification_pages}",
             class_name="text-[10px] font-black text-gray-600 tabular-nums",
         ),
         rx.el.button(
@@ -109,9 +101,8 @@ def pagination_footer() -> rx.Component:
                 rx.icon("chevron-right", size=12),
                 class_name="flex items-center",
             ),
-            on_click=PortfolioDashboardState.next_notification_page,
-            disabled=PortfolioDashboardState.notification_page
-            == PortfolioDashboardState.total_notification_pages,
+            on_click=UIState.next_notification_page,
+            disabled=UIState.notification_page == UIState.total_notification_pages,
             class_name="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-[9px] font-black uppercase tracking-tighter",
         ),
         class_name="flex items-center justify-between px-3 py-2 border-t border-gray-200 bg-white/80 backdrop-blur-sm sticky bottom-0",
@@ -119,10 +110,10 @@ def pagination_footer() -> rx.Component:
 
 
 def filter_tab(label: str, filter_val: str) -> rx.Component:
-    is_active = PortfolioDashboardState.notification_filter == filter_val
+    is_active = UIState.notification_filter == filter_val
     return rx.el.button(
         label,
-        on_click=lambda: PortfolioDashboardState.set_notification_filter(filter_val),
+        on_click=lambda: UIState.set_notification_filter(filter_val),
         class_name=rx.cond(
             is_active,
             "px-2 py-1 bg-blue-600 text-white rounded text-[8px] font-black uppercase shadow-sm",
@@ -145,7 +136,7 @@ def notification_sidebar() -> rx.Component:
                                     class_name="text-[10px] font-black text-gray-500 tracking-widest",
                                 ),
                                 rx.el.span(
-                                    PortfolioDashboardState.unread_count.to_string(),
+                                    UIState.unread_count.to_string(),
                                     class_name="ml-2 bg-blue-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full",
                                 ),
                                 class_name="flex items-center",
@@ -157,7 +148,7 @@ def notification_sidebar() -> rx.Component:
                                         size=12,
                                         class_name="text-gray-400",
                                     ),
-                                    on_click=PortfolioDashboardState.add_simulated_notification,
+                                    on_click=UIState.add_simulated_notification,
                                     title="Simulate Live Alert",
                                     class_name="hover:text-indigo-600 transition-colors",
                                 ),
@@ -175,10 +166,9 @@ def notification_sidebar() -> rx.Component:
                     rx.scroll_area(
                         rx.el.div(
                             rx.cond(
-                                PortfolioDashboardState.paginated_notifications.length()
-                                > 0,
+                                UIState.paginated_notifications.length() > 0,
                                 rx.foreach(
-                                    PortfolioDashboardState.paginated_notifications,
+                                    UIState.paginated_notifications,
                                     alert_card,
                                 ),
                                 rx.el.div(
@@ -207,7 +197,7 @@ def notification_sidebar() -> rx.Component:
                 class_name="h-full w-full overflow-hidden",
             ),
             class_name=rx.cond(
-                PortfolioDashboardState.is_sidebar_open,
+                UIState.is_sidebar_open,
                 "fixed inset-y-0 right-0 w-80 max-w-full shadow-2xl md:shadow-none md:static md:w-[220px] opacity-100 border-l border-gray-200",
                 "w-0 opacity-0 border-l-0 pointer-events-none fixed inset-y-0 right-0 md:static",
             )

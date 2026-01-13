@@ -1,6 +1,5 @@
-import asyncio
-
 import reflex as rx
+from app.services import PnLService
 from app.states.pnl.types import PnLFullItem
 
 
@@ -18,17 +17,12 @@ class PnLFullMixin(rx.State, mixin=True):
     pnl_full_search: str = ""
 
     async def load_pnl_full_data(self):
-        """Load P&L Full data.
-        TODO: Implement service method for this.
-        """
+        """Load P&L Full data from PnLService."""
         self.is_loading_pnl_full = True
         self.pnl_full_error = ""
         try:
-            # Placeholder: Import service if/when available
-            # service = PnLService()
-            # self.pnl_full_list = await service.get_pnl_full()
-            await asyncio.sleep(0.5)  # Simulate load
-            self.pnl_full_list = []
+            service = PnLService()
+            self.pnl_full_list = await service.get_pnl_full()
         except Exception as e:
             self.pnl_full_error = str(e)
             import logging
@@ -45,6 +39,10 @@ class PnLFullMixin(rx.State, mixin=True):
         data = self.pnl_full_list
         if self.pnl_full_search:
             query = self.pnl_full_search.lower()
-            # Filter logic here
-            pass
+            data = [
+                item
+                for item in data
+                if query in item.get("ticker", "").lower()
+                or query in item.get("underlying", "").lower()
+            ]
         return data

@@ -1,5 +1,5 @@
 import reflex as rx
-from app.states.dashboard.dashboard_state import DashboardState
+from app.states.portfolio.portfolio_state import PortfolioState
 
 
 def legend_item(item: dict) -> rx.Component:

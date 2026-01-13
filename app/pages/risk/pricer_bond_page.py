@@ -1,7 +1,7 @@
 import reflex as rx
 from app.components.shared.module_layout import module_layout
 from app.components.risk.risk_views import pricer_bond_view
-from app.states.dashboard.portfolio_dashboard_state import PortfolioDashboardState
+from app.states.ui.ui_state import UIState
 
 
 def pricer_bond_page() -> rx.Component:
@@ -9,5 +9,5 @@ def pricer_bond_page() -> rx.Component:
         pricer_bond_view(),
         "Risk",
         "Pricer Bond",
-        PortfolioDashboardState.MODULE_SUBTABS["Risk"],
+        UIState.MODULE_SUBTABS["Risk"],
     )

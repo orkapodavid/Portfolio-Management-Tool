@@ -1,6 +1,6 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import (
-    PortfolioDashboardState,
+from app.states.instruments.instrument_state import InstrumentState
+from app.states.instruments.types import (
     TickerDataItem,
     StockScreenerItem,
     SpecialTermItem,
@@ -9,10 +9,33 @@ from app.states.dashboard.portfolio_dashboard_state import (
 )
 
 
-def header_cell(text: str, align: str = "left") -> rx.Component:
+def header_cell(text: str, align: str = "left", column_key: str = "") -> rx.Component:
+    align_class = rx.match(
+        align, ("right", "text-right"), ("center", "text-center"), "text-left"
+    )
+    sort_icon = rx.cond(
+        InstrumentState.sort_column == column_key,
+        rx.cond(
+            InstrumentState.sort_direction == "asc",
+            rx.icon("arrow-up", size=10, class_name="ml-1 text-blue-600"),
+            rx.icon("arrow-down", size=10, class_name="ml-1 text-blue-600"),
+        ),
+        rx.icon(
+            "arrow-up-down",
+            size=10,
+            class_name="ml-1 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity",
+        ),
+    )
     return rx.el.th(
-        text,
-        class_name=f"px-3 py-3 text-{align} text-[10px] font-bold text-gray-700 uppercase tracking-widest border-b-2 border-gray-400 bg-[#E5E7EB] sticky top-0 z-30 shadow-sm h-[44px] whitespace-nowrap",
+        rx.el.div(
+            text,
+            rx.cond(column_key != "", sort_icon, rx.fragment()),
+            class_name=f"flex items-center {rx.match(align, ('right', 'justify-end'), ('center', 'justify-center'), 'justify-start')}",
+        ),
+        on_click=lambda: rx.cond(
+            column_key, InstrumentState.toggle_sort(column_key), None
+        ),
+        class_name=f"px-3 py-3 {align_class} text-[10px] font-bold text-gray-700 uppercase tracking-widest border-b-2 border-gray-400 bg-[#E5E7EB] sticky top-0 z-30 shadow-sm h-[44px] whitespace-nowrap cursor-pointer hover:bg-gray-200 transition-colors group select-none",
     )
 
 
@@ -63,9 +86,7 @@ def ticker_data_table() -> rx.Component:
                 )
             ),
             rx.el.tbody(
-                rx.foreach(
-                    PortfolioDashboardState.filtered_ticker_data, ticker_data_row
-                )
+                rx.foreach(InstrumentState.filtered_ticker_data, ticker_data_row)
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
@@ -139,9 +160,7 @@ def stock_screener_view() -> rx.Component:
                     )
                 ),
                 rx.el.tbody(
-                    rx.foreach(
-                        PortfolioDashboardState.filtered_stock_screener, screener_row
-                    )
+                    rx.foreach(InstrumentState.filtered_stock_screener, screener_row)
                 ),
                 class_name="w-full table-auto border-separate border-spacing-0",
             ),
@@ -181,9 +200,7 @@ def special_term_table() -> rx.Component:
                 )
             ),
             rx.el.tbody(
-                rx.foreach(
-                    PortfolioDashboardState.filtered_special_terms, special_term_row
-                )
+                rx.foreach(InstrumentState.filtered_special_terms, special_term_row)
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
@@ -224,7 +241,7 @@ def instrument_data_table() -> rx.Component:
             ),
             rx.el.tbody(
                 rx.foreach(
-                    PortfolioDashboardState.filtered_instrument_data,
+                    InstrumentState.filtered_instrument_data,
                     instrument_data_row,
                 )
             ),
@@ -267,7 +284,7 @@ def instrument_term_table() -> rx.Component:
             ),
             rx.el.tbody(
                 rx.foreach(
-                    PortfolioDashboardState.filtered_instrument_terms,
+                    InstrumentState.filtered_instrument_terms,
                     instrument_term_row,
                 )
             ),

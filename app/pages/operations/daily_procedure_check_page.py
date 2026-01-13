@@ -1,7 +1,7 @@
 import reflex as rx
 from app.components.shared.module_layout import module_layout
 from app.components.operations.operations_views import daily_procedure_check_table
-from app.states.dashboard.portfolio_dashboard_state import PortfolioDashboardState
+from app.states.ui.ui_state import UIState
 
 
 def daily_procedure_check_page() -> rx.Component:
@@ -9,5 +9,5 @@ def daily_procedure_check_page() -> rx.Component:
         daily_procedure_check_table(),
         "Operations",
         "Daily Procedure Check",
-        PortfolioDashboardState.MODULE_SUBTABS["Operations"],
+        UIState.MODULE_SUBTABS["Operations"],
     )

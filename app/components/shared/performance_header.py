@@ -1,9 +1,6 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import (
-    PortfolioDashboardState,
-    KPIMetric,
-    TopMover,
-)
+from app.states.ui.ui_state import UIState
+from app.states.types import KPIMetric, TopMover
 from app.components.portfolio.summary_cards import portfolio_summary
 from app.constants import (
     POSITIVE_GREEN,
@@ -99,7 +96,7 @@ def performance_header() -> rx.Component:
         rx.el.div(
             rx.el.div(
                 rx.el.div(
-                    rx.foreach(PortfolioDashboardState.kpi_metrics, kpi_card),
+                    rx.foreach(UIState.kpi_metrics, kpi_card),
                     class_name="flex flex-wrap md:flex-nowrap gap-0 overflow-visible flex-1",
                 ),
                 portfolio_summary(),
@@ -110,7 +107,7 @@ def performance_header() -> rx.Component:
                     rx.el.div(
                         rx.el.span(
                             rx.cond(
-                                PortfolioDashboardState.show_top_movers,
+                                UIState.show_top_movers,
                                 "Hide Top Movers",
                                 "Show Top Movers",
                             ),
@@ -118,7 +115,7 @@ def performance_header() -> rx.Component:
                         ),
                         rx.icon(
                             rx.cond(
-                                PortfolioDashboardState.show_top_movers,
+                                UIState.show_top_movers,
                                 "chevron-up",
                                 "chevron-down",
                             ),
@@ -126,29 +123,23 @@ def performance_header() -> rx.Component:
                         ),
                         class_name="flex items-center gap-1 text-gray-500",
                     ),
-                    on_click=PortfolioDashboardState.toggle_top_movers,
+                    on_click=UIState.toggle_top_movers,
                     class_name="w-full flex items-center justify-center py-0 bg-gray-100 border-y border-gray-200 hover:bg-gray-200 transition-colors h-[12px]",
                 ),
                 rx.cond(
-                    PortfolioDashboardState.show_top_movers,
+                    UIState.show_top_movers,
                     rx.el.div(
                         rx.el.div(
-                            mini_grid(
-                                "Ops PnL", PortfolioDashboardState.top_movers_ops
-                            ),
-                            mini_grid(
-                                "YTD PnL", PortfolioDashboardState.top_movers_ytd
-                            ),
+                            mini_grid("Ops PnL", UIState.top_movers_ops),
+                            mini_grid("YTD PnL", UIState.top_movers_ytd),
                             mini_grid(
                                 "Delta Leaders",
-                                PortfolioDashboardState.top_movers_delta,
+                                UIState.top_movers_delta,
                             ),
-                            mini_grid(
-                                "Price Movers", PortfolioDashboardState.top_movers_price
-                            ),
+                            mini_grid("Price Movers", UIState.top_movers_price),
                             mini_grid(
                                 "Volume Leaders",
-                                PortfolioDashboardState.top_movers_volume,
+                                UIState.top_movers_volume,
                             ),
                             class_name="flex flex-col md:flex-row gap-1 w-full p-1 bg-gray-100/30 overflow-x-auto",
                         ),

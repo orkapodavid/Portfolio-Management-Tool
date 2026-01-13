@@ -1,5 +1,5 @@
 import reflex as rx
-from app.states.dashboard.dashboard_state import DashboardState
+from app.states.portfolio.portfolio_state import PortfolioState
 
 
 def summary_card(
@@ -45,7 +45,7 @@ def portfolio_summary() -> rx.Component:
     return rx.el.div(
         summary_card(
             "Total Value",
-            f"${DashboardState.total_value:,.2f}",
+            f"${PortfolioState.total_value:,.2f}",
             "vs last mo",
             "+5.2%",
             True,
@@ -53,18 +53,18 @@ def portfolio_summary() -> rx.Component:
         ),
         summary_card(
             "Daily Change",
-            f"${DashboardState.daily_change_value:,.2f}",
+            f"${PortfolioState.daily_change_value:,.2f}",
             "vs yest",
-            f"{DashboardState.daily_change_value / DashboardState.total_value * 100:.2f}%",
-            rx.cond(DashboardState.daily_change_value >= 0, True, False),
+            f"{PortfolioState.daily_change_value / PortfolioState.total_value * 100:.2f}%",
+            rx.cond(PortfolioState.daily_change_value >= 0, True, False),
             "blue",
         ),
         summary_card(
             "Total G/L",
-            f"${DashboardState.total_gain_loss:,.2f}",
+            f"${PortfolioState.total_gain_loss:,.2f}",
             "all time",
-            f"{DashboardState.total_gain_loss_pct:.2f}%",
-            rx.cond(DashboardState.total_gain_loss >= 0, True, False),
+            f"{PortfolioState.total_gain_loss_pct:.2f}%",
+            rx.cond(PortfolioState.total_gain_loss >= 0, True, False),
             "emerald",
         ),
         class_name="flex items-center gap-2",

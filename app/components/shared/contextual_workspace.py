@@ -1,5 +1,5 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import PortfolioDashboardState
+from app.states.ui.ui_state import UIState
 from app.components.pnl import (
     pnl_change_table,
     pnl_full_table,
@@ -47,9 +47,11 @@ from app.components.market_data import (
     historical_data_table,
     trading_calendar_table,
     market_hours_table,
-    event_calendar_table,
+)
+from app.components.events import (
+    event_calendar_view,
     event_stream_view,
-    reverse_inquiry_table,
+    reverse_inquiry_view,
 )
 from app.components.instruments import (
     ticker_data_table,
@@ -65,7 +67,7 @@ from app.components.risk import (
     pricer_warrant_view,
     pricer_bond_view,
 )
-from app.components.emsa import emsa_order_table, emsa_route_table
+from app.components.emsx import emsa_order_table, emsa_route_table
 
 
 def table_header_cell(
@@ -76,9 +78,9 @@ def table_header_cell(
         align, ("right", "text-right"), ("center", "text-center"), "text-left"
     )
     sort_icon = rx.cond(
-        PortfolioDashboardState.sort_column == column_key,
+        UIState.sort_column == column_key,
         rx.cond(
-            PortfolioDashboardState.sort_direction == "asc",
+            UIState.sort_direction == "asc",
             rx.icon("arrow-up", size=10, class_name="ml-1 text-blue-600"),
             rx.icon("arrow-down", size=10, class_name="ml-1 text-blue-600"),
         ),
@@ -94,9 +96,7 @@ def table_header_cell(
             sort_icon,
             class_name=f"flex items-center {rx.match(align, ('right', 'justify-end'), ('center', 'justify-center'), 'justify-start')}",
         ),
-        on_click=lambda: rx.cond(
-            column_key, PortfolioDashboardState.toggle_sort(column_key), None
-        ),
+        on_click=lambda: rx.cond(column_key, UIState.toggle_sort(column_key), None),
         class_name=f"px-3 py-3 {align_class} text-[10px] font-bold text-gray-700 uppercase tracking-widest border-b-2 border-gray-400 align-middle whitespace-nowrap h-[44px] cursor-pointer hover:bg-gray-200 transition-colors group select-none",
     )
 
@@ -106,7 +106,7 @@ def table_row(item: dict) -> rx.Component:
     from app.constants import POSITIVE_GREEN, NEGATIVE_RED, ROW_HIGHLIGHT
 
     table_row_height = "40px"
-    is_selected = PortfolioDashboardState.selected_row_id == item["id"]
+    is_selected = UIState.selected_row_id == item["id"]
     pnl_color = rx.cond(
         item["is_positive"], f"text-[{POSITIVE_GREEN}]", f"text-[{NEGATIVE_RED}]"
     )
@@ -200,7 +200,7 @@ def table_row(item: dict) -> rx.Component:
             ),
             class_name="px-3 py-2 text-center border-b border-gray-200 align-middle",
         ),
-        on_click=lambda: PortfolioDashboardState.set_selected_row(item["id"]),
+        on_click=lambda: UIState.set_selected_row(item["id"]),
         class_name=rx.cond(
             is_selected,
             f"bg-[{ROW_HIGHLIGHT}]",
@@ -221,11 +221,11 @@ def pagination_controls() -> rx.Component:
             rx.el.div(
                 rx.el.select(
                     rx.foreach(
-                        PortfolioDashboardState.page_size_options,
+                        UIState.page_size_options,
                         lambda x: rx.el.option(x.to_string(), value=x.to_string()),
                     ),
-                    value=PortfolioDashboardState.page_size.to_string(),
-                    on_change=PortfolioDashboardState.set_page_size,
+                    value=UIState.page_size.to_string(),
+                    on_change=UIState.set_page_size,
                     class_name="text-[10px] font-bold border-gray-300 rounded px-1.5 py-0 h-6 bg-white appearance-none pr-6 outline-none focus:border-blue-500 shadow-sm transition-all",
                 ),
                 rx.icon(
@@ -238,21 +238,20 @@ def pagination_controls() -> rx.Component:
             class_name="flex items-center",
         ),
         rx.el.span(
-            f"Page {PortfolioDashboardState.current_page} of {PortfolioDashboardState.total_pages} ({PortfolioDashboardState.total_items} items)",
+            f"Page {UIState.current_page} of {UIState.total_pages} ({UIState.total_items} items)",
             class_name="text-[10px] text-gray-500 font-medium",
         ),
         rx.el.div(
             rx.el.button(
                 rx.icon("chevron-left", size=14),
-                on_click=PortfolioDashboardState.prev_page,
-                disabled=PortfolioDashboardState.current_page == 1,
+                on_click=UIState.prev_page,
+                disabled=UIState.current_page == 1,
                 class_name="p-1 rounded hover:bg-gray-200 disabled:opacity-30 disabled:hover:bg-transparent transition-colors",
             ),
             rx.el.button(
                 rx.icon("chevron-right", size=14),
-                on_click=PortfolioDashboardState.next_page,
-                disabled=PortfolioDashboardState.current_page
-                == PortfolioDashboardState.total_pages,
+                on_click=UIState.next_page,
+                disabled=UIState.current_page == UIState.total_pages,
                 class_name="p-1 rounded hover:bg-gray-200 disabled:opacity-30 disabled:hover:bg-transparent transition-colors",
             ),
             class_name="flex gap-1",
@@ -265,7 +264,7 @@ def mock_data_table() -> rx.Component:
     """An optimized data table with sticky headers, responsive scrolling and pagination."""
     return rx.el.div(
         rx.cond(
-            PortfolioDashboardState.is_loading,
+            UIState.is_loading,
             rx.el.div(
                 rx.el.div(
                     class_name="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
@@ -275,7 +274,7 @@ def mock_data_table() -> rx.Component:
         ),
         rx.scroll_area(
             rx.cond(
-                PortfolioDashboardState.paginated_table_data.length() > 0,
+                UIState.paginated_table_data.length() > 0,
                 rx.el.table(
                     rx.el.thead(
                         rx.el.tr(
@@ -295,11 +294,7 @@ def mock_data_table() -> rx.Component:
                             class_name="bg-[#E5E7EB] sticky top-0 z-30 shadow-[0_2px_4px_rgba(0,0,0,0.1)] h-[44px] min-h-[44px]",
                         )
                     ),
-                    rx.el.tbody(
-                        rx.foreach(
-                            PortfolioDashboardState.paginated_table_data, table_row
-                        )
-                    ),
+                    rx.el.tbody(rx.foreach(UIState.paginated_table_data, table_row)),
                     class_name="w-full min-w-[800px] table-auto border-separate border-spacing-0",
                 ),
                 rx.el.div(
@@ -310,7 +305,7 @@ def mock_data_table() -> rx.Component:
                     ),
                     rx.el.button(
                         "Clear Search",
-                        on_click=PortfolioDashboardState.clear_search,
+                        on_click=UIState.clear_search,
                         class_name="mt-4 text-xs font-bold text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-1.5 rounded transition-colors",
                     ),
                     class_name="flex flex-col items-center justify-center py-20 w-full",
@@ -326,10 +321,10 @@ def mock_data_table() -> rx.Component:
 
 
 def sub_tab(name: str) -> rx.Component:
-    is_active = PortfolioDashboardState.active_subtab == name
+    is_active = UIState.active_subtab == name
     return rx.el.button(
         name,
-        on_click=lambda: PortfolioDashboardState.set_subtab(name),
+        on_click=lambda: UIState.set_subtab(name),
         class_name=rx.cond(
             is_active,
             "px-3 h-full text-[9px] font-black text-blue-600 border-b-2 border-blue-600 uppercase tracking-tighter whitespace-nowrap",
@@ -341,7 +336,7 @@ def sub_tab(name: str) -> rx.Component:
 def generate_menu_item(label: str) -> rx.Component:
     return rx.el.button(
         label,
-        on_click=lambda: PortfolioDashboardState.handle_generate(label),
+        on_click=lambda: UIState.handle_generate(label),
         class_name="block w-full text-left px-4 py-2 text-[10px] font-bold text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors",
     )
 
@@ -357,31 +352,31 @@ def workspace_controls() -> rx.Component:
                         rx.icon("chevron-down", size=10, class_name="ml-1 opacity-70"),
                         class_name="flex items-center",
                     ),
-                    on_click=PortfolioDashboardState.toggle_generate_menu,
+                    on_click=UIState.toggle_generate_menu,
                     class_name="px-3 h-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded hover:shadow-md transition-all flex items-center shadow-sm",
                 ),
                 rx.cond(
-                    PortfolioDashboardState.is_generate_menu_open,
+                    UIState.is_generate_menu_open,
                     rx.el.div(
                         rx.el.div(
                             class_name="fixed inset-0 z-40",
-                            on_click=PortfolioDashboardState.toggle_generate_menu,
+                            on_click=UIState.toggle_generate_menu,
                         ),
                         rx.el.div(
                             rx.cond(
-                                PortfolioDashboardState.active_module == "Events",
+                                UIState.active_module == "Events",
                                 rx.fragment(
                                     generate_menu_item("Upload Event"),
                                     generate_menu_item("Filter Event"),
                                 ),
                                 rx.cond(
-                                    PortfolioDashboardState.active_module == "Operations",
+                                    UIState.active_module == "Operations",
                                     rx.fragment(
                                         generate_menu_item("Run Daily Check"),
                                         generate_menu_item("Trigger Process"),
                                     ),
                                     rx.cond(
-                                        PortfolioDashboardState.active_module == "Orders",
+                                        UIState.active_module == "Orders",
                                         rx.fragment(
                                             generate_menu_item("New EMSA Order"),
                                             generate_menu_item("Route Orders"),
@@ -404,7 +399,7 @@ def workspace_controls() -> rx.Component:
                 rx.el.button(
                     rx.el.div(
                         rx.cond(
-                            PortfolioDashboardState.is_exporting,
+                            UIState.is_exporting,
                             rx.icon("loader", size=12, class_name="animate-spin"),
                             rx.icon("download", size=12),
                         ),
@@ -412,16 +407,16 @@ def workspace_controls() -> rx.Component:
                         rx.icon("chevron-down", size=10, class_name="ml-1 opacity-70"),
                         class_name="flex items-center",
                     ),
-                    on_click=PortfolioDashboardState.toggle_export_dropdown,
-                    disabled=PortfolioDashboardState.is_exporting,
+                    on_click=UIState.toggle_export_dropdown,
+                    disabled=UIState.is_exporting,
                     class_name="px-3 h-6 bg-white border border-gray-200 text-gray-600 text-[10px] font-bold uppercase tracking-widest rounded hover:bg-gray-50 hover:text-blue-600 transition-colors shadow-sm flex items-center disabled:opacity-70 disabled:cursor-not-allowed",
                 ),
                 rx.cond(
-                    PortfolioDashboardState.export_dropdown_open,
+                    UIState.is_export_dropdown_open,
                     rx.el.div(
                         rx.el.div(
                             class_name="fixed inset-0 z-40",
-                            on_click=PortfolioDashboardState.toggle_export_dropdown,
+                            on_click=UIState.toggle_export_dropdown,
                         ),
                         rx.el.div(
                             rx.el.button(
@@ -434,7 +429,7 @@ def workspace_controls() -> rx.Component:
                                     "Export to CSV",
                                     class_name="flex items-center",
                                 ),
-                                on_click=PortfolioDashboardState.export_data("CSV"),
+                                on_click=UIState.export_data("CSV"),
                                 class_name="w-full text-left px-4 py-2 text-[10px] font-bold text-gray-700 hover:bg-gray-100 flex items-center",
                             ),
                             rx.el.button(
@@ -447,7 +442,7 @@ def workspace_controls() -> rx.Component:
                                     "Export to Excel",
                                     class_name="flex items-center",
                                 ),
-                                on_click=PortfolioDashboardState.export_data("XLSX"),
+                                on_click=UIState.export_data("XLSX"),
                                 class_name="w-full text-left px-4 py-2 text-[10px] font-bold text-gray-700 hover:bg-gray-100 flex items-center",
                             ),
                             rx.el.button(
@@ -460,7 +455,7 @@ def workspace_controls() -> rx.Component:
                                     "Export to PDF",
                                     class_name="flex items-center",
                                 ),
-                                on_click=PortfolioDashboardState.export_data("PDF"),
+                                on_click=UIState.export_data("PDF"),
                                 class_name="w-full text-left px-4 py-2 text-[10px] font-bold text-gray-700 hover:bg-gray-100 flex items-center border-t border-gray-100",
                             ),
                             class_name="absolute top-full left-0 mt-1 w-40 bg-white rounded-md shadow-lg border border-gray-100 py-1 z-50 animate-in fade-in slide-in-from-top-1 duration-100",
@@ -473,28 +468,26 @@ def workspace_controls() -> rx.Component:
                 rx.icon(
                     "refresh-cw",
                     size=12,
-                    class_name=rx.cond(
-                        PortfolioDashboardState.is_loading, "animate-spin", ""
-                    ),
+                    class_name=rx.cond(UIState.is_loading, "animate-spin", ""),
                 ),
-                on_click=PortfolioDashboardState.refresh_prices,
+                on_click=UIState.refresh_prices,
                 class_name="h-6 w-6 flex items-center justify-center bg-white border border-gray-200 text-gray-600 rounded hover:bg-gray-50 hover:text-blue-600 transition-colors shadow-sm",
             ),
             rx.el.div(
                 rx.icon("search", size=12, class_name="text-gray-400 mr-1.5 shrink-0"),
                 rx.el.input(
                     placeholder="Search data...",
-                    on_change=PortfolioDashboardState.set_current_search.debounce(300),
+                    on_change=UIState.set_current_search.debounce(300),
                     class_name="bg-transparent text-[10px] font-bold outline-none w-full text-gray-700 placeholder-gray-400",
-                    default_value=PortfolioDashboardState.current_search_query,
+                    default_value=UIState.current_search_query,
                 ),
                 rx.cond(
-                    PortfolioDashboardState.current_search_query != "",
+                    UIState.current_search_query != "",
                     rx.el.button(
                         rx.icon(
                             "x", size=10, class_name="text-gray-400 hover:text-gray-600"
                         ),
-                        on_click=PortfolioDashboardState.clear_search,
+                        on_click=UIState.clear_search,
                         class_name="p-0.5 rounded-full hover:bg-gray-100 ml-1 transition-colors",
                     ),
                 ),
@@ -504,7 +497,7 @@ def workspace_controls() -> rx.Component:
                 rx.icon("calendar", size=12, class_name="text-gray-500 mr-1.5"),
                 rx.el.input(
                     type="date",
-                    on_change=PortfolioDashboardState.set_current_date,
+                    on_change=UIState.set_current_date,
                     class_name="bg-transparent text-[10px] font-bold text-gray-600 outline-none w-24 uppercase",
                 ),
                 class_name="flex items-center bg-white border border-gray-200 rounded px-2 h-6 shadow-sm hover:border-blue-400 transition-colors cursor-pointer",
@@ -537,11 +530,11 @@ def table_skeleton() -> rx.Component:
 def contextual_workspace() -> rx.Component:
     """The main workspace area (Region 3) with maximized table height and loading state."""
     workspace_content = rx.match(
-        PortfolioDashboardState.active_module,
+        UIState.active_module,
         (
             "PnL",
             rx.match(
-                PortfolioDashboardState.active_subtab,
+                UIState.active_subtab,
                 ("PnL Change", pnl_change_table()),
                 ("PnL Full", pnl_full_table()),
                 ("PnL Summary", pnl_summary_table()),
@@ -552,7 +545,7 @@ def contextual_workspace() -> rx.Component:
         (
             "Positions",
             rx.match(
-                PortfolioDashboardState.active_subtab,
+                UIState.active_subtab,
                 ("Positions", positions_table()),
                 ("Stock Position", stock_position_table()),
                 ("Warrant Position", warrant_position_table()),
@@ -564,7 +557,7 @@ def contextual_workspace() -> rx.Component:
         (
             "Compliance",
             rx.match(
-                PortfolioDashboardState.active_subtab,
+                UIState.active_subtab,
                 ("Restricted List", restricted_list_table()),
                 ("Undertakings", undertakings_table()),
                 ("Beneficial Ownership", beneficial_ownership_table()),
@@ -575,7 +568,7 @@ def contextual_workspace() -> rx.Component:
         (
             "Portfolio Tools",
             rx.match(
-                PortfolioDashboardState.active_subtab,
+                UIState.active_subtab,
                 ("Pay-To-Hold", pay_to_hold_table()),
                 ("Short ECL", short_ecl_table()),
                 ("Stock Borrow", stock_borrow_table()),
@@ -591,7 +584,7 @@ def contextual_workspace() -> rx.Component:
         (
             "Recon",
             rx.match(
-                PortfolioDashboardState.active_subtab,
+                UIState.active_subtab,
                 ("PPS Recon", pps_recon_table()),
                 ("Settlement Recon", settlement_recon_table()),
                 ("Failed Trades", failed_trades_table()),
@@ -603,7 +596,7 @@ def contextual_workspace() -> rx.Component:
         (
             "Operations",
             rx.match(
-                PortfolioDashboardState.active_subtab,
+                UIState.active_subtab,
                 ("Daily Procedure Check", daily_procedure_check_table()),
                 ("Operation Process", operation_process_table()),
                 mock_data_table(),
@@ -612,7 +605,7 @@ def contextual_workspace() -> rx.Component:
         (
             "Market Data",
             rx.match(
-                PortfolioDashboardState.active_subtab,
+                UIState.active_subtab,
                 ("Market Data", market_data_table()),
                 ("FX Data", fx_data_table()),
                 ("Historical Data", historical_data_table()),
@@ -624,17 +617,17 @@ def contextual_workspace() -> rx.Component:
         (
             "Events",
             rx.match(
-                PortfolioDashboardState.active_subtab,
-                ("Event Calendar", event_calendar_table()),
+                UIState.active_subtab,
+                ("Event Calendar", event_calendar_view()),
                 ("Event Stream", event_stream_view()),
-                ("Reverse Inquiry", reverse_inquiry_table()),
+                ("Reverse Inquiry", reverse_inquiry_view()),
                 mock_data_table(),
             ),
         ),
         (
             "Instruments",
             rx.match(
-                PortfolioDashboardState.active_subtab,
+                UIState.active_subtab,
                 ("Ticker Data", ticker_data_table()),
                 ("Stock Screener", stock_screener_view()),
                 ("Special Term", special_term_table()),
@@ -646,7 +639,7 @@ def contextual_workspace() -> rx.Component:
         (
             "Risk",
             rx.match(
-                PortfolioDashboardState.active_subtab,
+                UIState.active_subtab,
                 ("Delta Change", delta_change_table()),
                 ("Risk Measures", risk_measures_table()),
                 ("Risk Inputs", risk_inputs_table()),
@@ -658,7 +651,7 @@ def contextual_workspace() -> rx.Component:
         (
             "Orders",
             rx.match(
-                PortfolioDashboardState.active_subtab,
+                UIState.active_subtab,
                 ("EMSX Order", emsa_order_table()),
                 ("EMSX Route", emsa_route_table()),
                 mock_data_table(),
@@ -668,14 +661,14 @@ def contextual_workspace() -> rx.Component:
     )
     return rx.el.div(
         rx.el.div(
-            rx.foreach(PortfolioDashboardState.current_subtabs, sub_tab),
+            rx.foreach(UIState.current_subtabs, sub_tab),
             class_name="flex flex-row items-center bg-white border-b border-gray-200 px-2 pt-0.5 overflow-hidden shrink-0 h-[28px] w-full max-w-full flex-nowrap",
         ),
         rx.el.div(
             workspace_controls(),
             rx.el.div(
                 rx.cond(
-                    PortfolioDashboardState.is_loading_data,
+                    UIState.is_loading_data,
                     table_skeleton(),
                     workspace_content,
                 ),

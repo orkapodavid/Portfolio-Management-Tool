@@ -1,5 +1,6 @@
 import reflex as rx
-from app.states.dashboard.dashboard_state import DashboardState, Holding
+from app.states.portfolio.portfolio_state import PortfolioState
+from app.states.types import Holding
 
 
 def status_badge(pct_change: float) -> rx.Component:
@@ -135,9 +136,9 @@ def holdings_table() -> rx.Component:
                     )
                 ),
                 rx.el.tbody(
-                    rx.foreach(DashboardState.holdings, holding_row),
+                    rx.foreach(PortfolioState.holdings, holding_row),
                     class_name=rx.cond(
-                        DashboardState.is_loading,
+                        PortfolioState.is_loading,
                         "bg-white opacity-50 transition-opacity duration-200",
                         "bg-white transition-opacity duration-200",
                     ),

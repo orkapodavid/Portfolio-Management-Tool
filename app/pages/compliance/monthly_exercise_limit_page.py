@@ -1,7 +1,7 @@
 import reflex as rx
 from app.components.shared.module_layout import module_layout
 from app.components.compliance.compliance_views import monthly_exercise_limit_table
-from app.states.dashboard.portfolio_dashboard_state import PortfolioDashboardState
+from app.states.ui.ui_state import UIState
 
 
 def monthly_exercise_limit_page() -> rx.Component:
@@ -9,5 +9,5 @@ def monthly_exercise_limit_page() -> rx.Component:
         monthly_exercise_limit_table(),
         "Compliance",
         "Monthly Exercise Limit",
-        PortfolioDashboardState.MODULE_SUBTABS["Compliance"],
+        UIState.MODULE_SUBTABS["Compliance"],
     )

@@ -1,14 +1,8 @@
 """
-Portfolio Dashboard Type Definitions
+Shared Type Definitions
 
-This module contains all TypedDict definitions used across the portfolio dashboard
-substates. Centralizing types here allows for code reuse and maintains consistency.
-
-Refactoring Note:
-This file was created as part of the portfolio_dashboard_state.py restructuring
-to follow Reflex best practices for flat state architecture.
-
-Reference: .agents/skills/reflex-dev/references/reflex-state-structure.mdc
+This module contains TypedDict definitions used across the application states.
+Centralizing types here allows for code reuse and maintains consistency.
 """
 
 from typing import TypedDict
@@ -697,3 +691,27 @@ class InstrumentTermItem(TypedDict):
     effective_date: str
     maturity_date: str
     first_reset_da: str
+
+
+class Holding(TypedDict):
+    symbol: str
+    name: str
+    shares: float
+    avg_cost: float
+    current_price: float
+    daily_change_pct: float
+    asset_class: str
+
+
+class GenericTableItem(TypedDict):
+    id: int
+    ticker: str
+    description: str
+    asset_class: str
+    qty: str
+    price: str
+    mkt_value: str
+    daily_pnl: str
+    status: str
+    is_reconciled: bool
+    is_positive: bool

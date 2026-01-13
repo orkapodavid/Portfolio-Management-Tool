@@ -1,6 +1,6 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import (
-    PortfolioDashboardState,
+from app.states.portfolio_tools.portfolio_tools_state import PortfolioToolsState
+from app.states.types import (
     PayToHoldItem,
     ShortECLItem,
     StockBorrowItem,
@@ -66,7 +66,7 @@ def pay_to_hold_table() -> rx.Component:
                     header_cell("EMSA ORDER FILLED"),
                 )
             ),
-            rx.el.tbody(rx.foreach(PortfolioDashboardState.filtered_pth, pth_row)),
+            rx.el.tbody(rx.foreach(PortfolioToolsState.filtered_pay_to_hold, pth_row)),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
         class_name="flex-1 w-full bg-white",
@@ -106,9 +106,7 @@ def short_ecl_table() -> rx.Component:
                     header_cell("ShortPos/(truncated)"),
                 )
             ),
-            rx.el.tbody(
-                rx.foreach(PortfolioDashboardState.filtered_short_ecl, ecl_row)
-            ),
+            rx.el.tbody(rx.foreach(PortfolioToolsState.filtered_short_ecl, ecl_row)),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
         class_name="flex-1 w-full bg-white",
@@ -145,7 +143,7 @@ def stock_borrow_table() -> rx.Component:
                 )
             ),
             rx.el.tbody(
-                rx.foreach(PortfolioDashboardState.filtered_stock_borrow, borrow_row)
+                rx.foreach(PortfolioToolsState.filtered_stock_borrow, borrow_row)
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
@@ -189,9 +187,7 @@ def po_settlement_table() -> rx.Component:
                 )
             ),
             rx.el.tbody(
-                rx.foreach(
-                    PortfolioDashboardState.filtered_po_settlement, settlement_row
-                )
+                rx.foreach(PortfolioToolsState.filtered_po_settlement, settlement_row)
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
@@ -235,7 +231,7 @@ def deal_indication_table() -> rx.Component:
                 )
             ),
             rx.el.tbody(
-                rx.foreach(PortfolioDashboardState.filtered_deal_indication, deal_row)
+                rx.foreach(PortfolioToolsState.filtered_deal_indication, deal_row)
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
@@ -279,7 +275,7 @@ def reset_dates_table() -> rx.Component:
                 )
             ),
             rx.el.tbody(
-                rx.foreach(PortfolioDashboardState.filtered_reset_dates, reset_row)
+                rx.foreach(PortfolioToolsState.filtered_reset_dates, reset_row)
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
@@ -319,7 +315,7 @@ def coming_resets_table() -> rx.Component:
                 )
             ),
             rx.el.tbody(
-                rx.foreach(PortfolioDashboardState.filtered_coming_resets, coming_row)
+                rx.foreach(PortfolioToolsState.filtered_coming_resets, coming_row)
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
@@ -363,7 +359,7 @@ def cb_installments_table() -> rx.Component:
                 )
             ),
             rx.el.tbody(
-                rx.foreach(PortfolioDashboardState.filtered_cb_installments, cb_row)
+                rx.foreach(PortfolioToolsState.filtered_cb_installments, cb_row)
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
@@ -403,7 +399,7 @@ def excess_amount_table() -> rx.Component:
                 )
             ),
             rx.el.tbody(
-                rx.foreach(PortfolioDashboardState.filtered_excess_amount, excess_row)
+                rx.foreach(PortfolioToolsState.filtered_excess_amount, excess_row)
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),

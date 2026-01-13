@@ -22,6 +22,25 @@ class MarketDataState(
 
     active_market_data_subtab: str = "Market Data"
 
+    # Sorting state
+    sort_column: str = ""
+    sort_direction: str = "asc"
+
+    # Selected row state
+    selected_row_id: int = -1
+
+    def toggle_sort(self, column: str):
+        """Toggle sort direction for a column."""
+        if self.sort_column == column:
+            self.sort_direction = "desc" if self.sort_direction == "asc" else "asc"
+        else:
+            self.sort_column = column
+            self.sort_direction = "asc"
+
+    def set_selected_row(self, row_id: int):
+        """Set selected row ID."""
+        self.selected_row_id = row_id
+
     async def load_market_data_module_data(self):
         """Load data for the active subtab."""
         if self.active_market_data_subtab == "Market Data":

@@ -1,6 +1,6 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import (
-    PortfolioDashboardState,
+from app.states.risk.risk_state import RiskState
+from app.states.risk.types import (
     DeltaChangeItem,
     RiskMeasureItem,
     RiskInputItem,
@@ -54,9 +54,7 @@ def delta_change_table() -> rx.Component:
                     header_cell("Pos G"),
                 )
             ),
-            rx.el.tbody(
-                rx.foreach(PortfolioDashboardState.filtered_delta_changes, delta_row)
-            ),
+            rx.el.tbody(rx.foreach(RiskState.filtered_delta_changes, delta_row)),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
         class_name="flex-1 w-full bg-white",
@@ -102,11 +100,7 @@ def risk_measures_table() -> rx.Component:
                     header_cell("Spot Price"),
                 )
             ),
-            rx.el.tbody(
-                rx.foreach(
-                    PortfolioDashboardState.filtered_risk_measures, risk_measure_row
-                )
-            ),
+            rx.el.tbody(rx.foreach(RiskState.filtered_risk_measures, risk_measure_row)),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
         class_name="flex-1 w-full bg-white",
@@ -133,11 +127,7 @@ def risk_inputs_table() -> rx.Component:
                     header_cell("Spot Price"),
                 )
             ),
-            rx.el.tbody(
-                rx.foreach(
-                    PortfolioDashboardState.filtered_risk_inputs, risk_measure_row
-                )
-            ),
+            rx.el.tbody(rx.foreach(RiskState.filtered_risk_inputs, risk_measure_row)),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
         class_name="flex-1 w-full bg-white",

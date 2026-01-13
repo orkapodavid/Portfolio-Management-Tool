@@ -1,7 +1,7 @@
 import reflex as rx
 from app.components.shared.module_layout import module_layout
 from app.components.instruments.instrument_views import instrument_data_table
-from app.states.dashboard.portfolio_dashboard_state import PortfolioDashboardState
+from app.states.ui.ui_state import UIState
 
 
 def instrument_data_page() -> rx.Component:
@@ -9,5 +9,5 @@ def instrument_data_page() -> rx.Component:
         instrument_data_table(),
         "Instruments",
         "Instrument Data",
-        PortfolioDashboardState.MODULE_SUBTABS["Instruments"],
+        UIState.MODULE_SUBTABS["Instruments"],
     )

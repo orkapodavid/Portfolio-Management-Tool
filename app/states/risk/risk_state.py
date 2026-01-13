@@ -1,23 +1,18 @@
 """
-Risk State - Portfolio Dashboard Substate
+Risk State - Module-specific state for Risk data
 
-Handles all risk-related data and calculations for the portfolio dashboard.
+Handles all risk-related data and calculations.
 
 This follows Reflex best practices for state architecture:
 - Focused responsibility (only risk metrics)
 - Service integration (uses RiskService)
 - Independent from other dashboard states
 - Efficient loading (only loads when needed)
-
-Reference: .agents/skills/reflex-dev/references/reflex-state-structure.mdc
-Pattern: Flat state structure with focused substates
-
-Created as part of portfolio_dashboard_state.py restructuring.
 """
 
 import reflex as rx
 from app.services import RiskService
-from app.states.dashboard.types import (
+from app.states.risk.types import (
     DeltaChangeItem,
     RiskMeasureItem,
     RiskInputItem,
@@ -33,12 +28,6 @@ class RiskState(rx.State):
     - Load risk measures (Greeks, sensitivities)
     - Load risk input parameters
     - Handle filtering and search for risk views
-
-    Best Practices Applied:
-    1. Single Responsibility: Only handles risk data
-    2. Service Integration: Uses RiskService for calculations
-    3. Independent State: Doesn't inherit from other states
-    4. Async Loading: Loads data asynchronously on demand
     """
 
     # Data storage
@@ -51,35 +40,23 @@ class RiskState(rx.State):
     current_search_query: str = ""
     current_tab: str = "delta"  # "delta", "measures", "inputs"
 
-    async def on_load(self):
-        """
-        Called when Risk view loads.
+    # Shared UI state for sorting
+    sort_column: str = ""
+    sort_direction: str = "asc"
+    selected_row: int = -1
 
-        Best Practice: Use on_load for initial data fetching.
-        """
+    async def on_load(self):
+        """Called when Risk view loads."""
         await self.load_risk_data()
 
     async def load_risk_data(self):
-        """
-        Load all risk data from RiskService.
-
-        Service Integration Pattern:
-        1. Set loading state
-        2. Instantiate service
-        3. Call service methods
-        4. Update state with results
-        5. Clear loading state
-        """
+        """Load all risk data from RiskService."""
         self.is_loading = True
         try:
             service = RiskService()
-
-            # Load all risk data types
-            # TODO: Replace with real service calls when RiskService is implemented
             self.delta_changes = await service.get_delta_changes()
             self.risk_measures = await service.get_risk_measures()
             self.risk_inputs = await service.get_risk_inputs()
-
         except Exception as e:
             import logging
 
@@ -87,15 +64,25 @@ class RiskState(rx.State):
         finally:
             self.is_loading = False
 
-    @rx.event
     def set_search_query(self, query: str):
         """Update search query for filtering."""
         self.current_search_query = query
 
-    @rx.event
     def set_current_tab(self, tab: str):
         """Switch between risk tabs."""
         self.current_tab = tab
+
+    def toggle_sort(self, column: str):
+        """Toggle sort direction for a column."""
+        if self.sort_column == column:
+            self.sort_direction = "desc" if self.sort_direction == "asc" else "asc"
+        else:
+            self.sort_column = column
+            self.sort_direction = "asc"
+
+    def set_selected_row(self, row_id: int):
+        """Set selected row ID."""
+        self.selected_row = row_id
 
     @rx.var(cache=True)
     def filtered_delta_changes(self) -> list[DeltaChangeItem]:
@@ -138,13 +125,3 @@ class RiskState(rx.State):
             if query in item.get("ticker", "").lower()
             or query in item.get("underlying", "").lower()
         ]
-
-    @rx.var
-    def total_delta(self) -> float:
-        """
-        Calculate total portfolio delta.
-
-        Note: Simplified example - real implementation would parse values properly.
-        """
-        # TODO: Implement proper delta aggregation
-        return 0.0

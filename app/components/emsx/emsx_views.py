@@ -1,14 +1,33 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import (
-    PortfolioDashboardState,
-    EMSAOrderItem,
-)
+from app.states.emsx.emsx_state import EMSXState
+from app.states.types import EMSAOrderItem
 
 
-def header_cell(text: str, align: str = "left") -> rx.Component:
+def header_cell(text: str, align: str = "left", column_key: str = "") -> rx.Component:
+    align_class = rx.match(
+        align, ("right", "text-right"), ("center", "text-center"), "text-left"
+    )
+    sort_icon = rx.cond(
+        EMSXState.sort_column == column_key,
+        rx.cond(
+            EMSXState.sort_direction == "asc",
+            rx.icon("arrow-up", size=10, class_name="ml-1 text-blue-600"),
+            rx.icon("arrow-down", size=10, class_name="ml-1 text-blue-600"),
+        ),
+        rx.icon(
+            "arrow-up-down",
+            size=10,
+            class_name="ml-1 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity",
+        ),
+    )
     return rx.el.th(
-        text,
-        class_name=f"px-3 py-3 text-{align} text-[10px] font-bold text-gray-700 uppercase tracking-widest border-b-2 border-gray-400 bg-[#E5E7EB] sticky top-0 z-30 shadow-sm h-[44px] whitespace-nowrap",
+        rx.el.div(
+            text,
+            rx.cond(column_key != "", sort_icon, rx.fragment()),
+            class_name=f"flex items-center {rx.match(align, ('right', 'justify-end'), ('center', 'justify-center'), 'justify-start')}",
+        ),
+        on_click=lambda: rx.cond(column_key, EMSXState.toggle_sort(column_key), None),
+        class_name=f"px-3 py-3 {align_class} text-[10px] font-bold text-gray-700 uppercase tracking-widest border-b-2 border-gray-400 bg-[#E5E7EB] sticky top-0 z-30 shadow-sm h-[44px] whitespace-nowrap cursor-pointer hover:bg-gray-200 transition-colors group select-none",
     )
 
 
@@ -43,8 +62,8 @@ def emsa_order_table() -> rx.Component:
                 rx.el.tr(
                     header_cell("Sequence"),
                     header_cell("Underlying"),
-                    header_cell("Ticker"),
-                    header_cell("Broker"),
+                    header_cell("Ticker", column_key="ticker"),
+                    header_cell("Broker", column_key="broker"),
                     header_cell("Pos Loc"),
                     header_cell("Side"),
                     header_cell("Status"),
@@ -54,9 +73,7 @@ def emsa_order_table() -> rx.Component:
                     header_cell("EMSA Filled"),
                 )
             ),
-            rx.el.tbody(
-                rx.foreach(PortfolioDashboardState.filtered_emsa_orders, emsa_row)
-            ),
+            rx.el.tbody(rx.foreach(EMSXState.filtered_emsa_orders, emsa_row)),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
         class_name="flex-1 w-full bg-white",
@@ -70,8 +87,8 @@ def emsa_route_table() -> rx.Component:
                 rx.el.tr(
                     header_cell("Sequence"),
                     header_cell("Underlying"),
-                    header_cell("Ticker"),
-                    header_cell("Broker"),
+                    header_cell("Ticker", column_key="ticker"),
+                    header_cell("Broker", column_key="broker"),
                     header_cell("Pos Loc"),
                     header_cell("Side"),
                     header_cell("Status"),
@@ -81,9 +98,7 @@ def emsa_route_table() -> rx.Component:
                     header_cell("EMSA Filled"),
                 )
             ),
-            rx.el.tbody(
-                rx.foreach(PortfolioDashboardState.filtered_emsa_routes, emsa_row)
-            ),
+            rx.el.tbody(rx.foreach(EMSXState.filtered_emsa_routes, emsa_row)),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
         class_name="flex-1 w-full bg-white",
