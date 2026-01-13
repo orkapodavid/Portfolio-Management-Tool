@@ -15,30 +15,30 @@ Each service can integrate with the existing PyQt business logic from source/.
 Note: finance_service.py module is deprecated. Use MarketDataService class instead.
 """
 
-from app.services.database_service import DatabaseService
-from app.services.market_data_service import MarketDataService
-from app.services.position_service import PositionService
-from app.services.pnl_service import PnLService
-from app.services.risk_service import RiskService
-from app.services.emsx_service import EMSXService
-from app.services.notification_service import NotificationService
-from app.services.user_service import UserService
-from app.services.portfolio_service import PortfolioService
-from app.services.compliance_service import ComplianceService
+"""Services layer - all domain services re-exported for convenience."""
 
-# Deprecated: finance_service module - use MarketDataService instead
-from app.services import finance_service
+from app.services.pnl.pnl_service import PnLService
+from app.services.positions.position_service import PositionService
+from app.services.risk.risk_service import RiskService
+from app.services.compliance.compliance_service import ComplianceService
+from app.services.portfolio.portfolio_service import PortfolioService
+from app.services.market_data.market_data_service import MarketDataService
+from app.services.emsx.emsx_service import EMSXService
+from app.services.notifications.notification_service import NotificationService
+from app.services.user.user_service import UserService
+from app.services.shared.database_service import DatabaseService
+from app.services.shared.finance_service import FinanceService
 
 __all__ = [
-    "DatabaseService",
-    "MarketDataService",
-    "PositionService",
     "PnLService",
+    "PositionService",
     "RiskService",
+    "ComplianceService",
+    "PortfolioService",
+    "MarketDataService",
     "EMSXService",
     "NotificationService",
     "UserService",
-    "PortfolioService",
-    "ComplianceService",
-    "finance_service",  # Deprecated - for backward compatibility only
+    "DatabaseService",
+    "FinanceService",
 ]
