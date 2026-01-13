@@ -32,6 +32,7 @@ class InstrumentsMixin(rx.State, mixin=True):
     """
 
     # Instruments data lists
+    ticker_data: list[TickerDataItem] = []
     stock_screener: list[StockScreenerItem] = []
     special_terms: list[SpecialTermItem] = []
     instrument_data: list[InstrumentDataItem] = []
@@ -41,6 +42,7 @@ class InstrumentsMixin(rx.State, mixin=True):
         """Load all instruments data from DatabaseService."""
         try:
             service = DatabaseService()
+            self.ticker_data = await service.get_ticker_data()
             self.stock_screener = await service.get_stock_screener()
             self.special_terms = await service.get_special_terms()
             self.instrument_data = await service.get_instrument_data()

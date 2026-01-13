@@ -567,25 +567,23 @@ class PortfolioDashboardState(
 
     @rx.event
     def toggle_mobile_menu(self):
-        self.is_mobile_menu_open = rx.cond(self.is_mobile_menu_open, False, True)
+        self.is_mobile_menu_open = not self.is_mobile_menu_open
 
     @rx.event
     def toggle_generate_menu(self):
-        self.is_generate_menu_open = rx.cond(self.is_generate_menu_open, False, True)
+        self.is_generate_menu_open = not self.is_generate_menu_open
 
     @rx.event
     def toggle_sidebar(self):
-        self.is_sidebar_open = rx.cond(self.is_sidebar_open, False, True)
+        self.is_sidebar_open = not self.is_sidebar_open
 
     @rx.event
     def toggle_top_movers(self):
-        self.show_top_movers = rx.cond(self.show_top_movers, False, True)
+        self.show_top_movers = not self.show_top_movers
 
     @rx.event
     def toggle_export_dropdown(self):
-        self.is_export_dropdown_open = rx.cond(
-            self.is_export_dropdown_open, False, True
-        )
+        self.is_export_dropdown_open = not self.is_export_dropdown_open
         self.export_dropdown_open = self.is_export_dropdown_open  # Keep in sync
 
     @rx.event

@@ -157,6 +157,7 @@ class PnLService:
                 "ccy_hedged_pnl": f"${random.uniform(-10000, 10000):,.2f}",
                 "pos_ccy_pnl": f"${random.uniform(-10000, 10000):,.2f}",
                 "net_ccy": f"${random.uniform(-50000, 50000):,.2f}",
+                "pos_c_truncated": f"${random.uniform(-10000, 10000):,.2f}",
             }
             for i, ccy in enumerate(currencies)
         ]

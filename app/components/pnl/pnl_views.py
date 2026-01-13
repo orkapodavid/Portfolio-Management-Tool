@@ -111,9 +111,9 @@ def value_cell(
             "bg-transparent",
         )
     else:
-        is_negative = value.to_string().startswith("-") | value.to_string().startswith(
-            "("
-        )
+        # Ensure value has a string representation with fallback for undefined
+        value_str = rx.cond(value.to_string() != "", value.to_string(), "0")
+        is_negative = value_str.startswith("-") | value_str.startswith("(")
         color_class = rx.cond(
             is_negative, f"text-[{NEGATIVE_RED}]", f"text-[{POSITIVE_GREEN}]"
         )

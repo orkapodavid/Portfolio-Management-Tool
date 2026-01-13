@@ -1,3 +1,5 @@
+import asyncio
+
 import reflex as rx
 from app.states.pnl.types import PnLFullItem
 
@@ -25,7 +27,7 @@ class PnLFullMixin(rx.State, mixin=True):
             # Placeholder: Import service if/when available
             # service = PnLService()
             # self.pnl_full_list = await service.get_pnl_full()
-            await rx.sleep(0.5)  # Simulate load
+            await asyncio.sleep(0.5)  # Simulate load
             self.pnl_full_list = []
         except Exception as e:
             self.pnl_full_error = str(e)

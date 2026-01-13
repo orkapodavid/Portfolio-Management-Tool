@@ -278,6 +278,42 @@ class DatabaseService:
             },
         ]
 
+    async def get_ticker_data(self) -> list[dict[str, Any]]:
+        """Get ticker data for instruments. TODO: Replace with DB query."""
+        logger.info("Returning mock ticker data")
+        tickers = ["AAPL", "MSFT", "TSLA", "NVDA", "GOOGL", "META", "AMZN", "AMD"]
+        sectors = [
+            "Technology",
+            "Technology",
+            "Automotive",
+            "Technology",
+            "Technology",
+            "Technology",
+            "Consumer",
+            "Technology",
+        ]
+        return [
+            {
+                "id": i + 1,
+                "ticker": tickers[i],
+                "currency": "USD",
+                "fx_rate": "1.0000",
+                "sector": sectors[i],
+                "company": f"{tickers[i]} Inc.",
+                "po_lead_manager": [
+                    "Goldman Sachs",
+                    "Morgan Stanley",
+                    "JP Morgan",
+                    "Citibank",
+                ][i % 4],
+                "fmat_cap": f"${(2.5 + i * 0.3):.2f}T",
+                "smkt_cap": f"${(2.5 + i * 0.3):.2f}T",
+                "chg_1d_pct": f"{(-1.5 + i * 0.5):.2f}%",
+                "dtl": f"{30 + i * 5}",
+            }
+            for i in range(len(tickers))
+        ]
+
     async def get_special_terms(self) -> list[dict[str, Any]]:
         """Get special terms data. TODO: Replace with DB query."""
         logger.info("Returning mock special terms data")

@@ -7,7 +7,6 @@ from app.states.dashboard.portfolio_dashboard_state import (
     InstrumentDataItem,
     InstrumentTermItem,
 )
-from app.states.market_data.market_data_state import MarketDataState
 
 
 def header_cell(text: str, align: str = "left") -> rx.Component:
@@ -64,7 +63,9 @@ def ticker_data_table() -> rx.Component:
                 )
             ),
             rx.el.tbody(
-                rx.foreach(MarketDataState.filtered_ticker_data, ticker_data_row)
+                rx.foreach(
+                    PortfolioDashboardState.filtered_ticker_data, ticker_data_row
+                )
             ),
             class_name="w-full table-auto border-separate border-spacing-0",
         ),
