@@ -13,7 +13,7 @@ from typing import Optional
 from datetime import datetime
 import yfinance as yf
 
-from app.services.database_service import DatabaseService
+from app.services.shared.database_service import DatabaseService
 
 logger = logging.getLogger(__name__)
 

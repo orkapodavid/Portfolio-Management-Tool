@@ -13,9 +13,9 @@ This module provides services for:
 Each service can integrate with the existing PyQt business logic from source/.
 
 Note: finance_service.py module is deprecated. Use MarketDataService class instead.
-"""
 
-"""Services layer - all domain services re-exported for convenience."""
+Services layer - all domain services re-exported for convenience.
+"""
 
 from app.services.pnl.pnl_service import PnLService
 from app.services.positions.position_service import PositionService
