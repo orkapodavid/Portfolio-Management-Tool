@@ -1,5 +1,4 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import PortfolioDashboardState
 from app.states.pnl.pnl_state import PnLState
 from app.states.pnl.types import (
     PnLChangeItem,
@@ -49,7 +48,7 @@ def header_cell(
     align_class = rx.match(
         align, ("left", "text-left"), ("center", "text-center"), "text-right"
     )
-    is_sorted = PortfolioDashboardState.sort_column == column_key
+    is_sorted = PnLState.sort_column == column_key
     return rx.el.th(
         rx.el.div(
             rx.el.div(
@@ -70,7 +69,7 @@ def header_cell(
                     is_sorted,
                     rx.icon(
                         rx.cond(
-                            PortfolioDashboardState.sort_direction == "asc",
+                            PnLState.sort_direction == "asc",
                             "arrow-up",
                             "arrow-down",
                         ),
@@ -86,9 +85,7 @@ def header_cell(
             ),
             class_name=f"flex items-center {rx.match(align, ('left', 'justify-start'), ('center', 'justify-center'), 'justify-end')}",
         ),
-        on_click=lambda: rx.cond(
-            sortable, PortfolioDashboardState.toggle_sort(column_key), None
-        ),
+        on_click=lambda: rx.cond(sortable, PnLState.toggle_sort(column_key), None),
         class_name=f"px-3 py-3 {align_class} text-[10px] font-bold text-gray-700 uppercase tracking-widest border-b-2 border-gray-400 align-middle whitespace-nowrap h-[44px] bg-[#E5E7EB] sticky top-0 z-30 shadow-[0_2px_4px_rgba(0,0,0,0.1)] cursor-pointer hover:bg-gray-200 transition-colors group select-none",
         width=width,
     )
@@ -150,7 +147,7 @@ def pnl_change_row(item: PnLChangeItem) -> rx.Component:
         value_cell(item["pnl_chg_pct_1d"]),
         value_cell(item["pnl_chg_pct_1w"]),
         value_cell(item["pnl_chg_pct_1m"]),
-        on_click=lambda: PortfolioDashboardState.set_selected_row(item["id"]),
+        on_click=lambda: PnLState.set_selected_row(item["id"]),
         class_name="odd:bg-white even:bg-gray-50 hover:bg-blue-50 hover:shadow-sm h-[40px] transition-all duration-150 cursor-pointer",
     )
 

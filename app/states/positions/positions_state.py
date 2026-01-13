@@ -21,6 +21,27 @@ class PositionsState(
 
     active_positions_subtab: str = "Positions"
 
+    # Shared UI state for Positions tables
+    sort_column: str = ""
+    sort_direction: str = "asc"
+    selected_row: int = -1
+
+    def toggle_sort(self, column: str):
+        """Toggle sort direction for a column."""
+        if self.sort_column == column:
+            self.sort_direction = "desc" if self.sort_direction == "asc" else "asc"
+        else:
+            self.sort_column = column
+            self.sort_direction = "asc"
+
+    def set_selected_row(self, row_id: int):
+        """Set selected row ID."""
+        self.selected_row = row_id
+
+    def handle_generate(self, action: str):
+        """Handle generate button actions."""
+        print(f"Positions: Handle generate action: {action}")
+
     async def load_positions_module_data(self):
         """Load data for the active subtab."""
         if self.active_positions_subtab == "Positions":

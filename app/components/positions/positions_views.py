@@ -1,5 +1,4 @@
 import reflex as rx
-from app.states.dashboard.portfolio_dashboard_state import PortfolioDashboardState
 from app.states.positions.positions_state import PositionsState
 from app.states.positions.types import (
     PositionItem,
@@ -17,7 +16,7 @@ def header_cell(
     align_class = rx.match(
         align, ("left", "text-left"), ("center", "text-center"), "text-right"
     )
-    is_sorted = PortfolioDashboardState.sort_column == column_key
+    is_sorted = PositionsState.sort_column == column_key
     return rx.el.th(
         rx.el.div(
             rx.el.span(text),
@@ -27,7 +26,7 @@ def header_cell(
                     is_sorted,
                     rx.icon(
                         rx.cond(
-                            PortfolioDashboardState.sort_direction == "asc",
+                            PositionsState.sort_direction == "asc",
                             "arrow-up",
                             "arrow-down",
                         ),
@@ -44,7 +43,7 @@ def header_cell(
             class_name=f"flex items-center {rx.match(align, ('left', 'justify-start'), ('center', 'justify-center'), 'justify-end')}",
         ),
         on_click=lambda: rx.cond(
-            sortable, PortfolioDashboardState.toggle_sort(column_key), None
+            sortable, PositionsState.toggle_sort(column_key), None
         ),
         class_name=f"px-3 py-3 {align_class} text-[10px] font-bold text-gray-700 uppercase tracking-widest border-b-2 border-gray-400 bg-[#E5E7EB] sticky top-0 z-30 shadow-[0_2px_4px_rgba(0,0,0,0.1)] h-[44px] cursor-pointer hover:bg-gray-200 transition-colors group select-none",
     )
@@ -114,7 +113,7 @@ def positions_table() -> rx.Component:
             rx.el.button(
                 "Generate Positions",
                 class_name="bg-blue-600 text-white text-xs font-bold py-2 px-4 rounded hover:bg-blue-700 transition-colors shadow-sm",
-                on_click=lambda: PortfolioDashboardState.handle_generate("Positions"),
+                on_click=lambda: PositionsState.handle_generate("Positions"),
             ),
             class_name="p-3 border-t border-gray-200 bg-gray-50 flex justify-center",
         ),
@@ -203,7 +202,7 @@ def warrant_position_table() -> rx.Component:
             ),
             rx.el.tbody(
                 rx.foreach(
-                    PortfolioDashboardState.filtered_warrant_positions,
+                    PositionsState.filtered_warrant_positions,
                     warrant_position_row,
                 )
             ),
