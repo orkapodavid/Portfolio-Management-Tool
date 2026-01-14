@@ -27,7 +27,7 @@ from app.services.emsx.emsx_service import EMSXService
 from app.services.notifications.notification_service import NotificationService
 from app.services.user.user_service import UserService
 from app.services.shared.database_service import DatabaseService
-from app.services.shared.finance_service import FinanceService
+from app.services.shared import finance_service
 
 __all__ = [
     "PnLService",
@@ -40,5 +40,5 @@ __all__ = [
     "NotificationService",
     "UserService",
     "DatabaseService",
-    "FinanceService",
+    "finance_service",
 ]
