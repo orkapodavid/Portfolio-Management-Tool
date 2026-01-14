@@ -188,7 +188,8 @@ class PnLState(rx.State):
 
 ### References
 
+- **Reflex Architecture Guide**: `docs/style_guides/reflex-architecture-guide.md` - Comprehensive patterns for layout, state, services, components, and styling
+- **Style Migration Prompts**: `docs/style_guides/reflex-style-migration-prompts.md` - Prompt templates for applying architecture patterns
 - **Reflex State Structure Guide**: `.agents/skills/reflex-dev/references/reflex-state-structure.mdc`
-- **Example Implementation**: `app/states/dashboard/pnl_state.py` (exemplar)
-- **Type Definitions**: `app/states/dashboard/types.py`
-- **Refactoring Plan**: `.gemini/antigravity/brain/.../portfolio_dashboard_refactoring_plan.md`
+- **Example Implementation**: `app/states/pnl/pnl_state.py` (exemplar with mixins)
+- **Type Definitions**: `app/states/types.py`
