@@ -4,8 +4,8 @@
     Run this on an ONLINE Windows machine.
 
 .DESCRIPTION
-    1. Downloads uv.exe (Windows x64).
-    2. Downloads WinSW (Windows Service Wrapper).
+    1. Gets uv.exe (from local cache C:\Apps\Software or download).
+    2. Gets WinSW (from local cache C:\Apps\Software or download).
     3. Generates requirements.txt from pyproject.toml using uv.
     4. Downloads all Python dependencies (wheels) for Windows Server 2019 (win_amd64).
     5. Exports the Reflex Frontend (Pre-built static assets).
@@ -37,31 +37,50 @@ if (Test-Path $DistDir) { Remove-Item -Recurse -Force $DistDir }
 New-Item -ItemType Directory -Force -Path $WheelsDir | Out-Null
 New-Item -ItemType Directory -Force -Path $DistDir | Out-Null
 
-# --- 1. Download uv.exe ---
-Write-Host "Downloading uv.exe (Windows x64)..." -ForegroundColor Cyan
-$uvUrl = "https://github.com/astral-sh/uv/releases/latest/download/uv-x86_64-pc-windows-msvc.zip"
-$uvZip = "$WorkDir\uv.zip"
-try {
-    Invoke-WebRequest -Uri $uvUrl -OutFile $uvZip
-}
-catch {
-    Write-Error "Failed to download uv.exe. Check internet connection."
-}
+$LocalSoftwareCache = "C:\Apps\Software"
 
-Expand-Archive -Path $uvZip -DestinationPath "$WorkDir\uv_bin"
+# --- 1. Get uv.exe (Local Cache or Download) ---
+Write-Host "Getting uv.exe..." -ForegroundColor Cyan
 $uvExe = "$WorkDir\uv.exe"
-Get-ChildItem -Path "$WorkDir\uv_bin" -Recurse -Filter "uv.exe" | Copy-Item -Destination $uvExe
-Remove-Item -Recurse -Force "$WorkDir\uv_bin"
-Remove-Item -Force $uvZip
+$LocalUv = Join-Path $LocalSoftwareCache "uv.exe"
 
-# --- 2. Download WinSW ---
-Write-Host "Downloading WinSW (Service Wrapper)..." -ForegroundColor Cyan
-$winswUrl = "https://github.com/winsw/winsw/releases/download/v2.12.0/WinSW-x64.exe"
-try {
-    Invoke-WebRequest -Uri $winswUrl -OutFile "$WorkDir\reflex_service.exe"
+if (Test-Path $LocalUv) {
+    Write-Host "Found uv.exe in $LocalSoftwareCache. Copying..." -ForegroundColor Green
+    Copy-Item $LocalUv $uvExe
+} else {
+    Write-Host "uv.exe not found locally. Downloading..."
+    $uvUrl = "https://github.com/astral-sh/uv/releases/latest/download/uv-x86_64-pc-windows-msvc.zip"
+    $uvZip = "$WorkDir\uv.zip"
+    try {
+        Invoke-WebRequest -Uri $uvUrl -OutFile $uvZip
+        Expand-Archive -Path $uvZip -DestinationPath "$WorkDir\uv_bin"
+        Get-ChildItem -Path "$WorkDir\uv_bin" -Recurse -Filter "uv.exe" | Copy-Item -Destination $uvExe
+        Remove-Item -Recurse -Force "$WorkDir\uv_bin"
+        Remove-Item -Force $uvZip
+    }
+    catch {
+        Write-Error "Failed to download uv.exe and not found locally. Check internet connection or C:\Apps\Software."
+    }
 }
-catch {
-    Write-Warning "Failed to download WinSW. Please download 'WinSW-x64.exe', rename to 'reflex_service.exe', and place in package root."
+
+# --- 2. Get WinSW (Local Cache or Download) ---
+Write-Host "Getting WinSW (Service Wrapper)..." -ForegroundColor Cyan
+$reflexServiceExe = "$WorkDir\reflex_service.exe"
+# Check for common names in local cache
+$LocalWinSW = Get-ChildItem "$LocalSoftwareCache\WinSW*.exe" | Select-Object -First 1
+
+if ($LocalWinSW) {
+    Write-Host "Found WinSW ($($LocalWinSW.Name)) in $LocalSoftwareCache. Copying..." -ForegroundColor Green
+    Copy-Item $LocalWinSW.FullName $reflexServiceExe
+} else {
+    Write-Host "WinSW not found locally. Downloading..."
+    $winswUrl = "https://github.com/winsw/winsw/releases/download/v2.12.0/WinSW-x64.exe"
+    try {
+        Invoke-WebRequest -Uri $winswUrl -OutFile $reflexServiceExe
+    }
+    catch {
+        Write-Warning "Failed to download WinSW. Please download 'WinSW-x64.exe', rename to 'reflex_service.exe', and place in package root."
+    }
 }
 
 # --- 3. Generate requirements.txt ---
