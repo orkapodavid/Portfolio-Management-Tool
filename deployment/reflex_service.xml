@@ -1,0 +1,21 @@
+<service>
+  <id>reflex_service</id>
+  <name>ReflexPMT Backend</name>
+  <description>Runs the Reflex Python Backend (FastAPI).</description>
+  <executable>%BASE%\.venv\Scripts\python.exe</executable>
+  <argument>-m</argument>
+  <argument>reflex</argument>
+  <argument>run</argument>
+  <argument>--env</argument>
+  <argument>prod</argument>
+  <argument>--backend-only</argument>
+  <argument>--backend-port</argument>
+  <argument>8000</argument>
+
+  <env name="API_URL" value="https://hcma.ds.susq.com/pmt"/>
+  <env name="CI" value="1"/>
+  <env name="PMT_INTEGRATION_MODE" value="real"/>
+
+  <logmode>rotate</logmode>
+  <onfailure action="restart" delay="10 sec"/>
+</service>
