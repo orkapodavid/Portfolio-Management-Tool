@@ -10,6 +10,7 @@ dependencies = [
     "pyodbc",
     "python-dotenv",
     "pandas",
+    "pmt-core",
 ]
 
 [build-system]
@@ -19,9 +20,21 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 packages = ["app"]
 
+[tool.uv.sources]
+pmt-core = { path = "./pmt_core", editable = true }
 
 [dependency-groups]
-dev = []
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "pytest-mock>=3.14",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "pmt_core/tests_core"]
+python_files = ["test_*.py"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.reflex]
 app_name = "app"

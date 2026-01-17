@@ -7,7 +7,9 @@ This is a Portfolio Management Tool built with **Reflex** (Python web framework)
 
 ## Project Structure
 - `app/`: Source code for the Reflex application.
-- `docs/`: specific requirements and design documents.
+- `pmt_core/`: Shared business logic package (models, services, utilities).
+- `tests/`: Application-level tests.
+- `docs/`: Specific requirements and design documents.
 - `pyproject.toml`: Dependency management using `uv`.
 - `rxconfig.py`: Reflex configuration.
 - `.agents/`: Contains skills and other agent-specific resources.
@@ -17,6 +19,80 @@ This is a Portfolio Management Tool built with **Reflex** (Python web framework)
 - **Run Command**: `uv run reflex run`
 - **Frontend**: http://localhost:3001
 - **Backend**: http://0.0.0.0:8001
+
+## pmt_core Package
+
+The `pmt_core` package contains shared business logic that can be used by both the Reflex web app and future PyQt integration.
+
+### Installation
+```powershell
+# Install pmt_core in editable mode
+uv pip install -e ./pmt_core
+
+# Verify installation
+python -c "from pmt_core import __version__; print(__version__)"
+```
+
+### Package Structure
+```
+pmt_core/
+├── pmt_core/
+│   ├── models/       # TypedDicts, enums, data structures
+│   ├── services/     # Business logic (pending)
+│   ├── repositories/ # Data access (pending)
+│   ├── resources/    # Configuration templates (pending)
+│   └── utilities/    # Logging, config helpers
+└── tests/            # Package-level tests
+```
+
+### Usage
+```python
+from pmt_core import (
+    PositionRecord, PnLRecord, MarketDataRecord,
+    InstrumentType, DashboardSection, OrderStatus
+)
+
+# Use types for type hints
+def process_position(pos: PositionRecord) -> None:
+    if pos["sec_type"] == InstrumentType.STOCK:
+        pass
+```
+
+## Testing
+
+### Run All Tests
+```powershell
+# Install test dependencies
+uv sync --group dev
+
+# Run all tests
+uv run pytest tests/ pmt_core/tests/ -v
+```
+
+### Test Structure
+```
+tests/
+├── conftest.py          # Shared fixtures
+└── services/            # Service tests
+
+pmt_core/tests/
+├── conftest.py          # pmt_core fixtures
+├── test_models.py       # Type and enum tests
+└── test_init.py         # Package init tests
+```
+
+## Current Blockers
+
+The following external resources are **not yet available** and block certain integration tasks:
+
+| Resource | Status | Blocks |
+|----------|--------|--------|
+| PyQt Source Code (`source/`) | Unavailable | Service adapters, ReportClass integration |
+| Database Access (MS SQL Server) | Unavailable | Database connectivity |
+| Configuration Files (`resources/config/`) | Unavailable | Config migration |
+| Bloomberg Terminal | Unavailable | EMSX integration |
+
+See `docs/milestone-1-pre-integration-checklist.md` for full details.
 
 ## Key Features & Navigation
 The application uses a **Top Navigation Bar** with icons to switch between views:
@@ -186,10 +262,34 @@ class PnLState(rx.State):
 ❌ **Don't**: Use Tailwind-style sizes (`"lg"`, `"md"`, `"sm"`) for Radix component props like `rx.heading(size=...)`  
 ✅ **Do**: Use numeric string values `'1'` through `'9'` for Radix component size props (e.g., `rx.heading("Title", size="5")`)
 
+### Error Handling
+
+Use the custom exception hierarchy defined in `app/exceptions.py`:
+
+```python
+from app.exceptions import (
+    PMTError,
+    DatabaseConnectionError,
+    DataExtractionError,
+    ServiceUnavailableError,
+)
+
+try:
+    data = await service.fetch_data()
+except DatabaseConnectionError as e:
+    logger.error(f"Database error: {e}")
+except PMTError as e:
+    logger.error(f"Application error: {e}")
+```
+
 ### References
 
+- **pmt_core Package**: `pmt_core/README.md` - Shared package documentation
+- **Milestone 1 Checklist**: `docs/milestone-1-pre-integration-checklist.md` - Pre-integration tasks
 - **Reflex Architecture Guide**: `docs/style_guides/reflex-architecture-guide.md` - Comprehensive patterns for layout, state, services, components, and styling
 - **Style Migration Prompts**: `docs/style_guides/reflex-style-migration-prompts.md` - Prompt templates for applying architecture patterns
 - **Reflex State Structure Guide**: `.agents/skills/reflex-dev/references/reflex-state-structure.mdc`
 - **Example Implementation**: `app/states/pnl/pnl_state.py` (exemplar with mixins)
-- **Type Definitions**: `app/states/types.py`
+- **Type Definitions**: `app/states/types.py`, `pmt_core/pmt_core/models/types.py`
+- **Custom Exceptions**: `app/exceptions.py`
+
