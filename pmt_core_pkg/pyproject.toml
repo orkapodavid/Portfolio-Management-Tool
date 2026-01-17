@@ -13,5 +13,6 @@ dependencies = [
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-packages = ["pmt_core"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pmt_core*"]

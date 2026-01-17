@@ -662,7 +662,7 @@ wheels = [
 [[package]]
 name = "pmt-core"
 version = "0.1.0"
-source = { editable = "pmt_core" }
+source = { editable = "pmt_core_pkg" }
 dependencies = [
     { name = "pandas" },
     { name = "pyodbc" },
@@ -700,7 +700,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "pandas" },
-    { name = "pmt-core", editable = "pmt_core" },
+    { name = "pmt-core", editable = "pmt_core_pkg" },
     { name = "pygithub" },
     { name = "pyodbc" },
     { name = "python-dotenv" },

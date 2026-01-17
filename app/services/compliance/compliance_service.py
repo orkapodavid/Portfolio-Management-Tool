@@ -1,14 +1,15 @@
 """
 Compliance Service - Handles compliance and regulatory data.
 
-This service provides mock data for compliance views.
+Uses pmt_core.ComplianceRecord and ComplianceType for type-safe data contracts.
 TODO: Replace with real database queries for production.
 """
 
 import logging
 import random
-from typing import Optional
 from datetime import datetime, timedelta
+
+from pmt_core import ComplianceRecord, ComplianceType
 
 logger = logging.getLogger(__name__)
 
@@ -16,38 +17,41 @@ logger = logging.getLogger(__name__)
 class ComplianceService:
     """Service for compliance and regulatory data retrieval."""
 
-    async def get_restricted_list(self) -> list[dict]:
+    async def get_restricted_list(self) -> list[ComplianceRecord]:
         """Get restricted securities list."""
         logger.warning("Using mock restricted list data.")
 
         tickers = ["AAPL", "TSLA", "NVDA", "META", "GOOGL", "AMZN", "MSFT"]
-        compliance_types = ["NDA", "MNPI", "Trading Restriction", "Quiet Period"]
 
         return [
-            {
-                "id": i,
-                "ticker": ticker,
-                "company_name": f"{ticker} Inc.",
-                "in_emdx": "Yes" if random.random() > 0.3 else "No",
-                "compliance_type": random.choice(compliance_types),
-                "firm_block": "Yes" if random.random() > 0.7 else "No",
-                "compliance_start": (
+            ComplianceRecord(
+                id=i,
+                ticker=ticker,
+                company_name=f"{ticker} Inc.",
+                compliance_type=ComplianceType.RESTRICTED.value,
+                in_emsx="Yes" if random.random() > 0.3 else "No",
+                firm_block="Yes" if random.random() > 0.7 else "No",
+                compliance_start=(
                     datetime.now() - timedelta(days=random.randint(1, 90))
                 ).strftime("%Y-%m-%d"),
-                "nda_end": (
+                nda_end=(
                     datetime.now() + timedelta(days=random.randint(30, 180))
                 ).strftime("%Y-%m-%d"),
-                "mnpi_end": (
+                mnpi_end=(
                     datetime.now() + timedelta(days=random.randint(30, 180))
                 ).strftime("%Y-%m-%d"),
-                "wc_end": (
+                wc_end=(
                     datetime.now() + timedelta(days=random.randint(30, 180))
                 ).strftime("%Y-%m-%d"),
-            }
+                undertaking_expiry=None,
+                account=None,
+                undertaking_type=None,
+                undertaking_details=None,
+            )
             for i, ticker in enumerate(tickers * 2)
         ]
 
-    async def get_undertakings(self) -> list[dict]:
+    async def get_undertakings(self) -> list[ComplianceRecord]:
         """Get undertakings data."""
         logger.warning("Using mock undertakings data.")
 
@@ -55,41 +59,52 @@ class ComplianceService:
         undertaking_types = ["Lock-up", "Standstill", "Non-compete", "ROFR"]
 
         return [
-            {
-                "id": i,
-                "deal_num": f"D{random.randint(1000, 9999)}",
-                "ticker": ticker,
-                "company_name": f"{ticker} Inc.",
-                "account": f"ACC{random.randint(100, 999)}",
-                "undertaking_expiry": (
+            ComplianceRecord(
+                id=i,
+                ticker=ticker,
+                company_name=f"{ticker} Inc.",
+                compliance_type=ComplianceType.UNDERTAKING.value,
+                in_emsx=None,
+                firm_block=None,
+                compliance_start=None,
+                nda_end=None,
+                mnpi_end=None,
+                wc_end=None,
+                undertaking_expiry=(
                     datetime.now() + timedelta(days=random.randint(30, 365))
                 ).strftime("%Y-%m-%d"),
-                "undertaking_type": random.choice(undertaking_types),
-                "undertaking_details": f"Standard {random.choice(undertaking_types)} agreement",
-            }
+                account=f"ACC{random.randint(100, 999)}",
+                undertaking_type=random.choice(undertaking_types),
+                undertaking_details=f"Standard {random.choice(undertaking_types)} agreement",
+            )
             for i, ticker in enumerate(tickers * 2)
         ]
 
-    async def get_beneficial_ownership(self) -> list[dict]:
+    async def get_beneficial_ownership(self) -> list[ComplianceRecord]:
         """Get beneficial ownership data."""
         logger.warning("Using mock beneficial ownership data.")
 
         tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
 
         return [
-            {
-                "id": i,
-                "trade_date": (datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d"),
-                "ticker": ticker,
-                "company_name": f"{ticker} Inc.",
-                "nosh_reported": f"{random.randint(100, 999):,}M",
-                "nosh_bbg": f"{random.randint(100, 999):,}M",
-                "nosh_proforma": f"{random.randint(100, 999):,}M",
-                "stock_shares": f"{random.randint(10, 50):,}M",
-                "warrant_shares": f"{random.randint(1, 10):,}M",
-                "bond_shares": f"{random.randint(1, 5):,}M",
-                "total_shares": f"{random.randint(15, 65):,}M",
-            }
+            ComplianceRecord(
+                id=i,
+                ticker=ticker,
+                company_name=f"{ticker} Inc.",
+                compliance_type=ComplianceType.BENEFICIAL_OWNERSHIP.value,
+                in_emsx=None,
+                firm_block=None,
+                compliance_start=(datetime.now() - timedelta(days=i)).strftime(
+                    "%Y-%m-%d"
+                ),
+                nda_end=None,
+                mnpi_end=None,
+                wc_end=None,
+                undertaking_expiry=None,
+                account=None,
+                undertaking_type=None,
+                undertaking_details=None,
+            )
             for i, ticker in enumerate(tickers * 2)
         ]
 

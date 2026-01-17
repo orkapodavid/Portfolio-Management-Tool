@@ -50,13 +50,14 @@ Portfolio-Management-Tool/
 │   ├── services/           # Service layer (data access)
 │   ├── states/             # Reflex state classes
 │   ├── utils/              # Utilities (logging, etc.)
-│   └── exceptions.py       # Custom exceptions
-├── pmt_core/               # Shared business logic package
+│   └── exceptions.py       # Custom exceptions (re-exports from pmt_core)
+├── pmt_core_pkg/           # Shared business logic package
 │   └── pmt_core/
 │       ├── models/         # TypedDicts and Enums
-│       ├── services/       # Business logic (pending)
+│       ├── services/       # Business logic (PricingService, ReportService)
 │       ├── repositories/   # Data access (pending)
-│       └── utilities/      # Logging helpers
+│       ├── utilities/      # Logging helpers
+│       └── exceptions.py   # Shared exception hierarchy
 ├── tests/                  # Application tests
 ├── docs/                   # Documentation
 └── pyproject.toml          # Project configuration

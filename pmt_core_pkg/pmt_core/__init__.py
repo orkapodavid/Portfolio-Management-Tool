@@ -22,6 +22,21 @@ from pmt_core.models import (
     ComplianceType,
 )
 
+from pmt_core.exceptions import (
+    PMTError,
+    DatabaseConnectionError,
+    ConfigurationError,
+    DataExtractionError,
+    DataValidationError,
+    ServiceUnavailableError,
+    AuthenticationError,
+)
+
+from pmt_core.services import (
+    PricingService,
+    ReportService,
+)
+
 __all__ = [
     "__version__",
     # Types
@@ -36,4 +51,15 @@ __all__ = [
     "DashboardSection",
     "OrderStatus",
     "ComplianceType",
+    # Exceptions
+    "PMTError",
+    "DatabaseConnectionError",
+    "ConfigurationError",
+    "DataExtractionError",
+    "DataValidationError",
+    "ServiceUnavailableError",
+    "AuthenticationError",
+    # Services
+    "PricingService",
+    "ReportService",
 ]

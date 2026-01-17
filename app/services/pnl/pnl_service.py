@@ -2,6 +2,7 @@
 P&L (Profit & Loss) Service for Portfolio Management Tool.
 
 This service handles P&L calculation and data fetching.
+Uses pmt_core.PnLRecord for type-safe data contracts.
 
 TODO: Implement using source/reports/pnl_tab/ business logic.
 """
@@ -13,6 +14,8 @@ from datetime import datetime
 import random
 
 from app.services.shared.database_service import DatabaseService
+from pmt_core import PnLRecord
+from pmt_core.models.enums import Currency
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +56,13 @@ class PnLService:
 
         # Mock data
         tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
-        currencies = ["USD", "EUR", "GBP", "JPY", "HKD"]
+        currencies = [
+            Currency.USD.value,
+            Currency.EUR.value,
+            Currency.GBP.value,
+            Currency.JPY.value,
+            Currency.HKD.value,
+        ]
 
         return [
             {
@@ -76,7 +85,7 @@ class PnLService:
 
     async def get_pnl_changes(
         self, trade_date: Optional[str] = None, period: str = "1d"
-    ) -> list[dict]:
+    ) -> list[PnLRecord]:
         """
         Get P&L changes over different time periods.
 
@@ -85,7 +94,7 @@ class PnLService:
             period: Period for P&L change ('1d', '1w', '1m')
 
         Returns:
-            List of P&L change records
+            List of PnLRecord dictionaries
 
         TODO: Implement P&L change calculation logic.
         """
@@ -97,19 +106,27 @@ class PnLService:
         tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "NVDA", "META"]
 
         return [
-            {
-                "id": i,
-                "trade_date": trade_date,
-                "underlying": f"{ticker} US Equity",
-                "ticker": ticker,
-                "pnl_ytd": f"${random.uniform(-50000, 150000):,.2f}",
-                "pnl_chg_1d": f"${random.uniform(-5000, 5000):,.2f}",
-                "pnl_chg_1w": f"${random.uniform(-15000, 15000):,.2f}",
-                "pnl_chg_1m": f"${random.uniform(-50000, 50000):,.2f}",
-                "pnl_chg_pct_1d": f"{random.uniform(-3, 3):.2f}%",
-                "pnl_chg_pct_1w": f"{random.uniform(-8, 8):.2f}%",
-                "pnl_chg_pct_1m": f"{random.uniform(-15, 15):.2f}%",
-            }
+            PnLRecord(
+                id=i,
+                trade_date=trade_date,
+                underlying=f"{ticker} US Equity",
+                ticker=ticker,
+                currency=Currency.USD.value,
+                pnl_ytd=f"${random.uniform(-50000, 150000):,.2f}",
+                pnl_mtd=f"${random.uniform(-10000, 30000):,.2f}",
+                pnl_wtd=f"${random.uniform(-5000, 15000):,.2f}",
+                pnl_dtd=f"${random.uniform(-2000, 5000):,.2f}",
+                pnl_chg_1d=f"${random.uniform(-5000, 5000):,.2f}",
+                pnl_chg_1w=f"${random.uniform(-15000, 15000):,.2f}",
+                pnl_chg_1m=f"${random.uniform(-50000, 50000):,.2f}",
+                pnl_chg_pct_1d=f"{random.uniform(-3, 3):.2f}%",
+                pnl_chg_pct_1w=f"{random.uniform(-8, 8):.2f}%",
+                pnl_chg_pct_1m=f"{random.uniform(-15, 15):.2f}%",
+                price=f"{random.uniform(100, 500):.2f}",
+                price_t_1=f"{random.uniform(100, 500):.2f}",
+                price_change=f"{random.uniform(-10, 10):.2f}",
+                fx_rate="1.0000",
+            )
             for i, ticker in enumerate(tickers)
         ]
 
@@ -131,16 +148,16 @@ class PnLService:
             trade_date = datetime.now().strftime("%Y-%m-%d")
 
         currencies = [
-            "USD",
-            "EUR",
-            "GBP",
-            "JPY",
-            "CAD",
-            "AUD",
-            "CHF",
-            "HKD",
-            "SGD",
-            "CNY",
+            Currency.USD.value,
+            Currency.EUR.value,
+            Currency.GBP.value,
+            Currency.JPY.value,
+            Currency.CAD.value,
+            Currency.AUD.value,
+            Currency.CHF.value,
+            Currency.HKD.value,
+            Currency.SGD.value,
+            Currency.CNY.value,
         ]
 
         return [
@@ -224,7 +241,7 @@ class PnLService:
         """Alias for get_pnl_by_currency for mixin compatibility."""
         return await self.get_pnl_by_currency()
 
-    async def get_pnl_full(self, trade_date: Optional[str] = None) -> list[dict]:
+    async def get_pnl_full(self, trade_date: Optional[str] = None) -> list[PnLRecord]:
         """
         Get full P&L detailed view.
 
@@ -232,7 +249,7 @@ class PnLService:
             trade_date: Trade date
 
         Returns:
-            List of full P&L records
+            List of PnLRecord dictionaries
         """
         logger.warning("Using mock P&L Full data.")
 
@@ -253,19 +270,27 @@ class PnLService:
         ]
 
         return [
-            {
-                "id": i,
-                "trade_date": trade_date,
-                "underlying": f"{ticker} US Equity",
-                "ticker": ticker,
-                "pnl_ytd": f"${random.uniform(-100000, 500000):,.2f}",
-                "pnl_chg_1d": f"${random.uniform(-10000, 50000):,.2f}",
-                "pnl_chg_1w": f"${random.uniform(-25000, 75000):,.2f}",
-                "pnl_chg_1m": f"${random.uniform(-50000, 150000):,.2f}",
-                "pnl_chg_pct_1d": f"{random.uniform(-2, 5):.2f}%",
-                "pnl_chg_pct_1w": f"{random.uniform(-5, 10):.2f}%",
-                "pnl_chg_pct_1m": f"{random.uniform(-10, 20):.2f}%",
-            }
+            PnLRecord(
+                id=i,
+                trade_date=trade_date,
+                underlying=f"{ticker} US Equity",
+                ticker=ticker,
+                currency=Currency.USD.value,
+                pnl_ytd=f"${random.uniform(-100000, 500000):,.2f}",
+                pnl_mtd=f"${random.uniform(-20000, 100000):,.2f}",
+                pnl_wtd=f"${random.uniform(-10000, 50000):,.2f}",
+                pnl_dtd=f"${random.uniform(-5000, 25000):,.2f}",
+                pnl_chg_1d=f"${random.uniform(-10000, 50000):,.2f}",
+                pnl_chg_1w=f"${random.uniform(-25000, 75000):,.2f}",
+                pnl_chg_1m=f"${random.uniform(-50000, 150000):,.2f}",
+                pnl_chg_pct_1d=f"{random.uniform(-2, 5):.2f}%",
+                pnl_chg_pct_1w=f"{random.uniform(-5, 10):.2f}%",
+                pnl_chg_pct_1m=f"{random.uniform(-10, 20):.2f}%",
+                price=f"{random.uniform(100, 500):.2f}",
+                price_t_1=f"{random.uniform(100, 500):.2f}",
+                price_change=f"{random.uniform(-10, 10):.2f}",
+                fx_rate="1.0000",
+            )
             for i, ticker in enumerate(tickers * 5)
         ]
 

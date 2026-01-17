@@ -21,7 +21,7 @@ build-backend = "setuptools.build_meta"
 packages = ["app"]
 
 [tool.uv.sources]
-pmt-core = { path = "./pmt_core", editable = true }
+pmt-core = { path = "./pmt_core_pkg", editable = true }
 
 [dependency-groups]
 dev = [
@@ -31,7 +31,7 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-testpaths = ["tests", "pmt_core/tests_core"]
+testpaths = ["tests", "pmt_core_pkg/tests_core"]
 python_files = ["test_*.py"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"

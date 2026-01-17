@@ -2,6 +2,7 @@
 Risk Service for Portfolio Management Tool.
 
 This service handles risk metrics calculation including Greeks (Delta, Gamma, etc.)
+Uses pmt_core.RiskRecord and InstrumentType for type-safe data contracts.
 
 TODO: Implement using source/pricers/ and source/reports/analytics_tab/ logic.
 """
@@ -13,6 +14,8 @@ from datetime import datetime
 import random
 
 from app.services.shared.database_service import DatabaseService
+from pmt_core import RiskRecord, InstrumentType
+from pmt_core.models.enums import Currency
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +38,9 @@ class RiskService:
         """
         self.db = db_service or DatabaseService()
 
-    async def get_delta_changes(self, trade_date: Optional[str] = None) -> list[dict]:
+    async def get_delta_changes(
+        self, trade_date: Optional[str] = None
+    ) -> list[RiskRecord]:
         """
         Get position delta changes.
 
@@ -43,15 +48,7 @@ class RiskService:
             trade_date: Trade date for risk calculation
 
         Returns:
-            List of delta change records with position Greeks
-
-        TODO: Implement using PyQt pricer logic or database query.
-        Example:
-
-        from source.pricers.pricing_engine import calculate_greeks
-
-        greeks = await asyncio.to_thread(calculate_greeks, positions, market_data)
-        return greeks
+            List of RiskRecord dictionaries with position Greeks
         """
         logger.warning("Using mock delta change data.")
 
@@ -59,28 +56,43 @@ class RiskService:
             trade_date = datetime.now().strftime("%Y-%m-%d")
 
         tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
-        structures = ["Stock", "Warrant", "Convertible Bond"]
+        structures = [
+            InstrumentType.STOCK.value,
+            InstrumentType.WARRANT.value,
+            InstrumentType.CONVERTIBLE.value,
+        ]
 
         return [
-            {
-                "id": i,
-                "ticker": ticker,
-                "company_name": f"{ticker} Inc",
-                "structure": structures[i % len(structures)],
-                "currency": "USD",
-                "fx_rate": f"{random.uniform(0.9, 1.1):.4f}",
-                "current_price": f"{random.uniform(100, 500):.2f}",
-                "valuation_price": f"{random.uniform(100, 500):.2f}",
-                "pos_delta": f"{random.randint(-10000, 10000):,}",
-                "pos_delta_small": f"{random.randint(-1000, 1000):,}",
-                "pos_g": f"{random.randint(-500, 500):,}",
-            }
+            RiskRecord(
+                id=i,
+                underlying=f"{ticker} US Equity",
+                ticker=ticker,
+                company_name=f"{ticker} Inc",
+                sec_type=structures[i % len(structures)],
+                currency=Currency.USD.value,
+                fx_rate=f"{random.uniform(0.9, 1.1):.4f}",
+                spot_price=f"{random.uniform(100, 500):.2f}",
+                valuation_price=f"{random.uniform(100, 500):.2f}",
+                delta=f"{random.uniform(-1, 1):.4f}",
+                gamma=f"{random.uniform(-0.1, 0.1):.4f}",
+                vega=f"{random.uniform(-0.5, 0.5):.4f}",
+                theta=f"{random.uniform(-0.05, 0):.4f}",
+                pos_delta=f"{random.randint(-10000, 10000):,}",
+                pos_gamma=f"{random.randint(-500, 500):,}",
+                seed=None,
+                simulation_num=None,
+                trial_num=None,
+                notional=f"{random.uniform(1000000, 10000000):,.0f}",
+                notional_used=f"{random.uniform(1000000, 10000000):,.0f}",
+                notional_current=f"{random.uniform(1000000, 10000000):,.0f}",
+                is_private="N",
+            )
             for i, ticker in enumerate(tickers * 2)  # 10 records
         ]
 
     async def get_risk_measures(
         self, trade_date: Optional[str] = None, simulation_num: Optional[int] = None
-    ) -> list[dict]:
+    ) -> list[RiskRecord]:
         """
         Get comprehensive risk measures (VaR, Greeks, etc.)
 
@@ -89,9 +101,7 @@ class RiskService:
             simulation_num: Monte Carlo simulation number (optional)
 
         Returns:
-            List of risk measure records
-
-        TODO: Implement risk measure calculation.
+            List of RiskRecord dictionaries
         """
         logger.warning("Using mock risk measure data.")
 
@@ -99,22 +109,30 @@ class RiskService:
             trade_date = datetime.now().strftime("%Y-%m-%d")
 
         return [
-            {
-                "id": i,
-                "seed": random.randint(1000, 9999),
-                "simulation_num": simulation_num or 1000,
-                "trial_num": i,
-                "underlying": f"TKR{i} US Equity",
-                "ticker": f"TKR{i}",
-                "sec_type": "STOCK",
-                "is_private": "N",
-                "national": f"{random.uniform(1000000, 10000000):,.0f}",
-                "national_used": f"{random.uniform(1000000, 10000000):,.0f}",
-                "national_current": f"{random.uniform(1000000, 10000000):,.0f}",
-                "currency": "USD",
-                "fx_rate": f"{random.uniform(0.9, 1.1):.4f}",
-                "spot_price": f"{random.uniform(100, 500):.2f}",
-            }
+            RiskRecord(
+                id=i,
+                underlying=f"TKR{i} US Equity",
+                ticker=f"TKR{i}",
+                company_name=f"Company {i} Inc",
+                sec_type=InstrumentType.STOCK.value,
+                currency=Currency.USD.value,
+                fx_rate=f"{random.uniform(0.9, 1.1):.4f}",
+                spot_price=f"{random.uniform(100, 500):.2f}",
+                valuation_price=f"{random.uniform(100, 500):.2f}",
+                delta=f"{random.uniform(-1, 1):.4f}",
+                gamma=f"{random.uniform(-0.1, 0.1):.4f}",
+                vega=f"{random.uniform(-0.5, 0.5):.4f}",
+                theta=f"{random.uniform(-0.05, 0):.4f}",
+                pos_delta=f"{random.randint(-10000, 10000):,}",
+                pos_gamma=f"{random.randint(-500, 500):,}",
+                seed=str(random.randint(1000, 9999)),
+                simulation_num=str(simulation_num or 1000),
+                trial_num=str(i),
+                notional=f"{random.uniform(1000000, 10000000):,.0f}",
+                notional_used=f"{random.uniform(1000000, 10000000):,.0f}",
+                notional_current=f"{random.uniform(1000000, 10000000):,.0f}",
+                is_private="N",
+            )
             for i in range(10)
         ]
 
@@ -178,32 +196,52 @@ class RiskService:
 
         return []
 
-    async def get_risk_inputs(self, trade_date: Optional[str] = None) -> list[dict]:
+    async def get_risk_inputs(
+        self, trade_date: Optional[str] = None
+    ) -> list[RiskRecord]:
         """
         Get risk inputs/parameters for positions.
 
-        TODO: Replace with DB query.
+        Returns:
+            List of RiskRecord dictionaries
         """
         logger.info("Returning mock risk inputs data")
         if not trade_date:
             trade_date = datetime.now().strftime("%Y-%m-%d")
 
         tickers = ["AAPL", "MSFT", "GOOGL", "TSLA", "NVDA", "META", "AMD", "AMZN"]
+        sec_types = [
+            InstrumentType.STOCK.value,
+            InstrumentType.WARRANT.value,
+            InstrumentType.BOND.value,
+        ]
+        currencies = [Currency.USD.value, Currency.EUR.value, Currency.GBP.value]
+
         return [
-            {
-                "id": i + 1,
-                "trade_date": trade_date,
-                "ticker": tickers[i % len(tickers)],
-                "underlying": f"{tickers[i % len(tickers)]} US Equity",
-                "company_name": f"{tickers[i % len(tickers)]} Inc.",
-                "sec_type": ["Stock", "Warrant", "Bond"][i % 3],
-                "currency": ["USD", "EUR", "GBP"][i % 3],
-                "volatility": f"{random.uniform(20, 60):.2f}%",
-                "interest_rate": f"{random.uniform(3, 6):.2f}%",
-                "dividend_yield": f"{random.uniform(0, 3):.2f}%",
-                "credit_spread": f"{random.uniform(50, 300):.0f}bps",
-                "spot_price": f"{random.uniform(100, 500):.2f}",
-            }
+            RiskRecord(
+                id=i + 1,
+                underlying=f"{tickers[i % len(tickers)]} US Equity",
+                ticker=tickers[i % len(tickers)],
+                company_name=f"{tickers[i % len(tickers)]} Inc.",
+                sec_type=sec_types[i % len(sec_types)],
+                currency=currencies[i % len(currencies)],
+                fx_rate="1.0000",
+                spot_price=f"{random.uniform(100, 500):.2f}",
+                valuation_price=f"{random.uniform(100, 500):.2f}",
+                delta=f"{random.uniform(-1, 1):.4f}",
+                gamma=f"{random.uniform(-0.1, 0.1):.4f}",
+                vega=f"{random.uniform(-0.5, 0.5):.4f}",
+                theta=f"{random.uniform(-0.05, 0):.4f}",
+                pos_delta=None,
+                pos_gamma=None,
+                seed=None,
+                simulation_num=None,
+                trial_num=None,
+                notional=f"{random.uniform(100000, 1000000):,.0f}",
+                notional_used=None,
+                notional_current=None,
+                is_private="N",
+            )
             for i in range(12)
         ]
 
