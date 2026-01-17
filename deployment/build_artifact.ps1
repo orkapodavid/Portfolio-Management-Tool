@@ -47,7 +47,8 @@ $LocalUv = Join-Path $LocalSoftwareCache "uv.exe"
 if (Test-Path $LocalUv) {
     Write-Host "Found uv.exe in $LocalSoftwareCache. Copying..." -ForegroundColor Green
     Copy-Item $LocalUv $uvExe
-} else {
+}
+else {
     Write-Host "uv.exe not found locally. Downloading..."
     $uvUrl = "https://github.com/astral-sh/uv/releases/latest/download/uv-x86_64-pc-windows-msvc.zip"
     $uvZip = "$WorkDir\uv.zip"
@@ -72,7 +73,8 @@ $LocalWinSW = Get-ChildItem "$LocalSoftwareCache\WinSW*.exe" | Select-Object -Fi
 if ($LocalWinSW) {
     Write-Host "Found WinSW ($($LocalWinSW.Name)) in $LocalSoftwareCache. Copying..." -ForegroundColor Green
     Copy-Item $LocalWinSW.FullName $reflexServiceExe
-} else {
+}
+else {
     Write-Host "WinSW not found locally. Downloading..."
     $winswUrl = "https://github.com/winsw/winsw/releases/download/v2.12.0/WinSW-x64.exe"
     try {
@@ -94,12 +96,12 @@ if (-not (Test-Path "$WorkDir\requirements.txt")) {
 # --- 4. Download Wheels ---
 Write-Host "Downloading Python Wheels (Target: $TargetPlatform, Python $TargetPythonVersion)..." -ForegroundColor Cyan
 try {
+    # Note: Removed --no-deps to ensure transitive dependencies are included
     python -m pip download -r "$WorkDir\requirements.txt" `
         --dest $WheelsDir `
         --platform $TargetPlatform `
         --python-version $TargetPythonVersion `
-        --only-binary=:all: `
-        --no-deps
+        --only-binary=:all:
 }
 catch {
     Write-Error "Pip download failed. Ensure Python is installed and added to PATH."
@@ -144,20 +146,23 @@ try {
     # Re-run without no-zip to be safe or check output.
     # Let's stick to 'reflex export --frontend-only' which creates frontend.zip
 
-    Pop-Location
-
     if (Test-Path "$RepoRoot\frontend.zip") {
         Write-Host "Frontend exported successfully."
         # Extract to deployment package
         Expand-Archive -Path "$RepoRoot\frontend.zip" -DestinationPath "$WorkDir\frontend_static"
         Remove-Item "$RepoRoot\frontend.zip"
-    } else {
+    }
+    else {
         # Fallback: Check if .web/_static exists?
         Write-Warning "frontend.zip not found. Please ensure 'reflex export' ran correctly. You might need to install reflex on the build machine."
     }
 }
 catch {
     Write-Warning "Reflex export failed. Ensure 'reflex' is installed and Node.js is available on the build machine."
+}
+finally {
+    # Always return to original directory, even on error
+    Pop-Location
 }
 
 # --- 6. Package Artifacts ---

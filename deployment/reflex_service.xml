@@ -16,6 +16,23 @@
   <env name="CI" value="1"/>
   <env name="PMT_INTEGRATION_MODE" value="real"/>
 
-  <logmode>rotate</logmode>
+  <!-- Log configuration with proper nested format -->
+  <log mode="rotate">
+    <logpath>%BASE%\logs</logpath>
+    <sizeThreshold>10240</sizeThreshold>
+    <keepFiles>5</keepFiles>
+  </log>
+  
+  <!-- Service recovery options -->
   <onfailure action="restart" delay="10 sec"/>
+  <onfailure action="restart" delay="20 sec"/>
+  <onfailure action="restart" delay="60 sec"/>
+  <resetfailure>1 hour</resetfailure>
+  
+  <!-- Dependencies - ensure network is available -->
+  <depend>Tcpip</depend>
+  
+  <!-- Startup configuration -->
+  <startmode>Automatic</startmode>
+  <delayedAutoStart>true</delayedAutoStart>
 </service>
