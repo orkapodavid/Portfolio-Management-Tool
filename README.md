@@ -44,23 +44,30 @@ The app will be available at:
 
 ```
 Portfolio-Management-Tool/
-├── app/                    # Reflex web application
-│   ├── components/         # Reusable UI components
-│   ├── pages/              # Route pages
-│   ├── services/           # Service layer (data access)
-│   ├── states/             # Reflex state classes
-│   ├── utils/              # Utilities (logging, etc.)
-│   └── exceptions.py       # Custom exceptions (re-exports from pmt_core)
-├── pmt_core_pkg/           # Shared business logic package
+├── app/                        # Reflex web application
+│   ├── components/             # UI components
+│   │   ├── shared/             # Shared layout like module_layout.py
+│   │   └── [module]/           # Module-specific components (e.g., positions/, pnl/)
+│   ├── pages/                  # Route pages
+│   │   └── [module]/           # Module entry pages
+│   ├── services/               # Service layer (grouped by module)
+│   │   └── [module]/           # e.g., services/positions/, services/compliance/
+│   ├── states/                 # Reflex state classes (grouped by module)
+│   │   └── [module]/           # e.g., states/risk/, states/portfolio/
+│   ├── utils/                  # Utilities
+│   └── exceptions.py           # Custom exceptions
+├── pmt_core_pkg/               # Shared business logic package
 │   └── pmt_core/
-│       ├── models/         # TypedDicts and Enums
-│       ├── services/       # Business logic (PricingService, ReportService)
-│       ├── repositories/   # Data access (pending)
-│       ├── utilities/      # Logging helpers
-│       └── exceptions.py   # Shared exception hierarchy
-├── tests/                  # Application tests
-├── docs/                   # Documentation
-└── pyproject.toml          # Project configuration
+│       ├── models/             # Data models
+│       │   └── [module]/       # Module-specific models (proposed)
+│       ├── services/           # Business logic
+│       │   └── [module]/       # e.g., services/pricing/, services/reports/
+│       ├── repositories/       # Data access
+│       │   └── [module]/       # Module-specific repositories
+│       └── utilities/          # Helpers
+├── tests/                      # Application tests
+├── docs/                       # Documentation
+└── pyproject.toml              # Project configuration
 ```
 
 ---
@@ -199,8 +206,8 @@ uv run pytest pmt_core/tests_core/ -v
 ## Documentation
 
 - **[AGENTS.md](AGENTS.md)** - Guide for AI agents working with this codebase
-- **[pmt_core/README.md](pmt_core/README.md)** - Detailed pmt_core package documentation
-- **[docs/milestone-1-pre-integration-checklist.md](docs/milestone-1-pre-integration-checklist.md)** - Integration status
+- **[pmt_core_pkg/README.md](pmt_core_pkg/README.md)** - Detailed pmt_core package documentation
+- **[docs/milestone-1-pre-integration-checklist.md](docs/milestone-1-pre-integration-checklist.md)** - Integration as
 
 ---
 

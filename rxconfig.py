@@ -10,7 +10,7 @@ import os
 
 # API_URL is critical for reverse proxy setups (e.g. IIS /pmt)
 # It tells the frontend where to connect for websockets and API calls.
-api_url = os.getenv("API_URL", "http://localhost:8000")
+api_url = os.getenv("API_URL", "http://localhost:8001")
 
 config = rx.Config(
     app_name="app",

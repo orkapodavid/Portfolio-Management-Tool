@@ -1,14 +1,13 @@
-"""
-pmt_core.services - Business Logic Services
-
-This module provides shared business logic services that can be used
-by both the Reflex web app and PyQt desktop application.
-"""
-
-from pmt_core.services.pricing_service import PricingService
-from pmt_core.services.report_service import ReportService
+from .pricing.pricing_service import PricingService
+from .reports.report_service import ReportService
+from .position_service import PositionService
+from .pnl_service import PnLService
+from .compliance_service import ComplianceService
 
 __all__ = [
     "PricingService",
     "ReportService",
+    "PositionService",
+    "PnLService",
+    "ComplianceService",
 ]

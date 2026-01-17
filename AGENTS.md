@@ -7,12 +7,45 @@ This is a Portfolio Management Tool built with **Reflex** (Python web framework)
 
 ## Project Structure
 - `app/`: Source code for the Reflex application.
-- `pmt_core/`: Shared business logic package (models, services, utilities).
+- `pmt_core_pkg/`: Shared business logic package (installed as `pmt_core`).
 - `tests/`: Application-level tests.
 - `docs/`: Specific requirements and design documents.
 - `pyproject.toml`: Dependency management using `uv`.
 - `rxconfig.py`: Reflex configuration.
 - `.agents/`: Contains skills and other agent-specific resources.
+ 
+ ## Page/Tab Folder Architecture
+ 
+ To ensure scalability and maintainability, **all Python scripts must be layered by folder based on the pages/tab implementation.** taking inspiration from `docs/style_guides/reflex-module-layout-tabs-prompt.md`.
+ 
+ ### Rule
+ Every functional layer (`pages`, `states`, `services`, `components`) in `app/` and equivalent layers in `pmt_core/` (`models`, `services`, `repositories`) must be organized into **module-specific subdirectories**.
+ 
+ ### Structure Pattern
+ 
+ ```
+ [root]
+ ├── app/
+ │   ├── pages/[module]/         # Entry points for the module
+ │   ├── states/[module]/        # State management for the module
+ │   ├── services/[module]/      # Business logic wrappers / API calls
+ │   └── components/[module]/    # Module-specific UI components
+ └── pmt_core_pkg/
+    └── pmt_core/
+        ├── models/[module]/        # Domain models for the module
+        ├── services/[module]/      # Core business logic
+        └── repositories/[module]/  # Data access layer
+ ```
+ 
+ **Modules** correspond to the main tabs in the application (e.g., `positions`, `pnl`, `risk`, `compliance`, `market_data`).
+ 
+ ### Example: Compliance Module
+ - `app/pages/compliance/`
+ - `app/states/compliance/`
+ - `app/services/compliance/`
+ - `pmt_core_pkg/pmt_core/models/compliance/`
+ - `pmt_core_pkg/pmt_core/services/compliance/`
+ - `pmt_core_pkg/pmt_core/repositories/compliance/`
 
 ## Development
 - **Package Manager**: `uv`
@@ -27,21 +60,18 @@ The `pmt_core` package contains shared business logic that can be used by both t
 ### Installation
 ```powershell
 # Install pmt_core in editable mode
-uv pip install -e ./pmt_core
-
-# Verify installation
-python -c "from pmt_core import __version__; print(__version__)"
+uv pip install -e ./pmt_core_pkg
 ```
 
 ### Package Structure
 ```
-pmt_core/
-├── pmt_core/
-│   ├── models/       # TypedDicts, enums, data structures
-│   ├── services/     # Business logic (pending)
-│   ├── repositories/ # Data access (pending)
-│   ├── resources/    # Configuration templates (pending)
-│   └── utilities/    # Logging, config helpers
+pmt_core_pkg/
+└── pmt_core/
+    ├── models/       # TypedDicts, enums, data structures
+    ├── services/     # Business logic (pending)
+    ├── repositories/ # Data access (pending)
+    ├── resources/    # Configuration templates (pending)
+    └── utilities/    # Logging, config helpers
 └── tests/            # Package-level tests
 ```
 
