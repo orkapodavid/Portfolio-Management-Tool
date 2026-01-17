@@ -2,22 +2,28 @@
 pmt_core.models - Data Models and Type Definitions
 
 This module exports all model types and enums for use throughout the application.
+Import from module-specific paths for new code, or use these re-exports for
+backward compatibility.
 """
 
-from pmt_core.models.types import (
-    PositionRecord,
-    PnLRecord,
-    MarketDataRecord,
-    OrderRecord,
-    ComplianceRecord,
-    RiskRecord,
-)
+# Module-specific type imports (new structure)
+from pmt_core.models.positions import PositionRecord
+from pmt_core.models.pnl import PnLRecord
+from pmt_core.models.market_data import MarketDataRecord
+from pmt_core.models.orders import OrderRecord
+from pmt_core.models.compliance import ComplianceRecord
+from pmt_core.models.risk import RiskRecord
 
-from pmt_core.models.enums import (
+# Common enum imports (new structure)
+from pmt_core.models.common import (
     InstrumentType,
     DashboardSection,
     OrderStatus,
+    OrderSide,
     ComplianceType,
+    MarketStatus,
+    Currency,
+    ReconciliationStatus,
 )
 
 __all__ = [
@@ -32,5 +38,9 @@ __all__ = [
     "InstrumentType",
     "DashboardSection",
     "OrderStatus",
+    "OrderSide",
     "ComplianceType",
+    "MarketStatus",
+    "Currency",
+    "ReconciliationStatus",
 ]

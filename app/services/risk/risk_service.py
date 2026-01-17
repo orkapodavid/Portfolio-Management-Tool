@@ -15,7 +15,7 @@ import random
 
 from app.services.shared.database_service import DatabaseService
 from pmt_core import RiskRecord, InstrumentType
-from pmt_core.models.enums import Currency
+from pmt_core.models.common import Currency
 
 logger = logging.getLogger(__name__)
 

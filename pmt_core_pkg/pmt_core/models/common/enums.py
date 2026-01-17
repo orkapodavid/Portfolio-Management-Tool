@@ -1,5 +1,5 @@
 """
-pmt_core.models.enums - Enumeration Types
+pmt_core.models.common.enums - Shared Enumeration Types
 
 Placeholder enums based on PMT documentation (docs/pmt.md).
 These will be refined once PyQt source code is available.

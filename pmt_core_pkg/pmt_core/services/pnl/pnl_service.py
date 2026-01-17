@@ -1,6 +1,6 @@
 from typing import List, Optional, Dict, Any
-from ..repositories.pnl_repository import PnLRepository
-from ..models import PnLRecord
+from pmt_core.repositories.pnl import PnLRepository
+from pmt_core.models import PnLRecord
 import logging
 
 logger = logging.getLogger(__name__)

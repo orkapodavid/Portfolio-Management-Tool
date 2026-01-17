@@ -1,6 +1,6 @@
 from typing import Any, List, Optional
-from .database_base import DatabaseRepository
-from ..models import PnLRecord
+from pmt_core.repositories.common import DatabaseRepository
+from pmt_core.models import PnLRecord
 import logging
 import random
 from datetime import datetime

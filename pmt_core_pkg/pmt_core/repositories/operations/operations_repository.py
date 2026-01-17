@@ -1,5 +1,5 @@
 from typing import Any, List
-from .database_base import DatabaseRepository
+from pmt_core.repositories.common import DatabaseRepository
 import logging
 
 logger = logging.getLogger(__name__)

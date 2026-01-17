@@ -1,6 +1,7 @@
 from typing import Any, List
-from .database_base import DatabaseRepository
-from ..models import ComplianceRecord, ComplianceType
+from pmt_core.repositories.common import DatabaseRepository
+from pmt_core.models import ComplianceRecord
+from pmt_core.models.common import ComplianceType
 import logging
 import random
 from datetime import datetime, timedelta

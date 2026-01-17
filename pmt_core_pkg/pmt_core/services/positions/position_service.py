@@ -1,6 +1,6 @@
 from typing import List, Optional
-from ..repositories.position_repository import PositionRepository
-from ..models import PositionRecord
+from pmt_core.repositories.positions import PositionRepository
+from pmt_core.models import PositionRecord
 import logging
 
 logger = logging.getLogger(__name__)

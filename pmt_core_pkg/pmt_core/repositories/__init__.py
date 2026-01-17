@@ -1,10 +1,21 @@
-from .database_base import DatabaseRepository
-from .position_repository import PositionRepository
-from .pnl_repository import PnLRepository
-from .compliance_repository import ComplianceRepository
-from .recon_repository import ReconRepository
-from .operations_repository import OperationsRepository
-from .event_repository import EventRepository
+"""
+pmt_core.repositories - Data Access Layer
+
+This module exports all repository classes for use throughout the application.
+Import from module-specific paths for new code, or use these re-exports for
+backward compatibility.
+"""
+
+# Common base class
+from pmt_core.repositories.common import DatabaseRepository
+
+# Module-specific repository imports (new structure)
+from pmt_core.repositories.positions import PositionRepository
+from pmt_core.repositories.pnl import PnLRepository
+from pmt_core.repositories.compliance import ComplianceRepository
+from pmt_core.repositories.recon import ReconRepository
+from pmt_core.repositories.operations import OperationsRepository
+from pmt_core.repositories.events import EventRepository
 
 __all__ = [
     "DatabaseRepository",

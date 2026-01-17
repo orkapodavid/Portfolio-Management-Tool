@@ -1,6 +1,6 @@
 from typing import List, Optional
-from ..repositories.compliance_repository import ComplianceRepository
-from ..models import ComplianceRecord
+from pmt_core.repositories.compliance import ComplianceRepository
+from pmt_core.models import ComplianceRecord
 import logging
 
 logger = logging.getLogger(__name__)

@@ -40,6 +40,20 @@ Refactor the codebase (specifically `pmt_core_pkg/pmt_core`) to ensure that all 
 6. **Verify**
    - Run `uv run pytest` to ensure no import errors or broken logic.
    - Run `uv run reflex run` to confirm the app starts.
+   - **Visual Verification** (see `docs/web/pages.md` for complete list):
+     - **Market Data**: `/market-data`, `/market-data/fx-data`, `/market-data/reference-data`, `/market-data/historical-data`, `/market-data/trading-calendar`, `/market-data/market-hours`
+     - **Positions**: `/positions`, `/positions/stock-position`, `/positions/warrant-position`, `/positions/bond-positions`, `/positions/trade-summary`
+     - **PnL**: `/pnl`, `/pnl/pnl-change`, `/pnl/pnl-summary`, `/pnl/pnl-currency`, `/pnl/pnl-full`
+     - **Risk**: `/risk`, `/risk/delta-change`, `/risk/risk-measures`, `/risk/risk-inputs`, `/risk/pricer-warrant`, `/risk/pricer-bond`
+     - **Recon**: `/recon`, `/recon/pps-recon`, `/recon/settlement-recon`, `/recon/failed-trades`, `/recon/pnl-recon`, `/recon/risk-input-recon`
+     - **Compliance**: `/compliance`, `/compliance/restricted-list`, `/compliance/undertakings`, `/compliance/beneficial-ownership`, `/compliance/monthly-exercise-limit`
+     - **Portfolio Tools**: `/portfolio-tools`, `/portfolio-tools/pay-to-hold`, `/portfolio-tools/short-ecl`, `/portfolio-tools/stock-borrow`, `/portfolio-tools/po-settlement`, `/portfolio-tools/deal-indication`, `/portfolio-tools/reset-dates`, `/portfolio-tools/coming-resets`, `/portfolio-tools/cb-installments`, `/portfolio-tools/excess-amount`
+     - **Instruments**: `/instruments`, `/instruments/ticker-data`, `/instruments/stock-screener`, `/instruments/special-term`, `/instruments/instrument-data`, `/instruments/instrument-term`
+     - **Events**: `/events`, `/events/event-calendar`, `/events/event-stream`, `/events/reverse-inquiry`
+     - **Operations**: `/operations`, `/operations/daily-procedure-check`, `/operations/operation-process`
+     - **Orders**: `/orders`, `/orders/emsx-order`, `/orders/emsx-route`
+     - **Confirm**: Tables are rendering with mock data (not empty).
+     - **Confirm**: The Notification Sidebar on the right is populated with alerts.
 
 ## Scope
 - **Primary Target**: `pmt_core_pkg/pmt_core/`

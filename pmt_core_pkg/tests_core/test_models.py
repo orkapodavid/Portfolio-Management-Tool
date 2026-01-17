@@ -15,7 +15,7 @@ from pmt_core.models import (
     OrderStatus,
     ComplianceType,
 )
-from pmt_core.models.enums import OrderSide, MarketStatus, Currency
+from pmt_core.models.common import OrderSide, MarketStatus, Currency
 
 
 class TestTypeDefinitions:
