@@ -23,12 +23,19 @@ Place these files in `C:\Apps\Software` on both build and target machines:
 - URL Rewrite installer (for offline servers)
 - ARR installer (for offline servers)
 
-## Deployment Scripts
+## Deployment Files
 
+### Configuration & Utilities
+| File | Purpose |
+|------|---------|
+| `deploy_config.psd1` | **Centralized configuration** file. Defines paths, ports, and service settings. **Edit this first.** |
+| `deploy_utils.psm1` | Shared utility module for logging, service management, and IIS setup. |
+
+### Scripts
 | Script | Purpose |
 |--------|---------|
 | `build_artifact.ps1` | Creates offline deployment package (run on ONLINE machine) |
-| `verify_prereqs.ps1` | Verifies all prerequisites before deployment |
+| `verify_prereqs.ps1` | Verifies all prerequisites before deployment using config settings |
 | `deploy_initial.ps1` | First-time deployment to target server |
 | `deploy_update.ps1` | Updates existing deployment |
 | `deploy_rollback.ps1` | Rolls back to a previous version |
@@ -61,6 +68,8 @@ cd deployment
 - `reflex_service.exe` - WinSW service wrapper
 - `config/` - IIS and service configuration files
 - `scripts/` - Deployment scripts
+- `deploy_config.psd1` - Deployment configuration
+- `deploy_utils.psm1` - Deployment utilities
 
 ---
 
@@ -75,43 +84,46 @@ Before initial deployment, verify the server is ready:
 This checks:
 - Windows features installed
 - IIS modules (URL Rewrite, ARR)
-- Software cache contents
+- Software cache contents (based on config)
 - Python availability
-- Port availability (80, 8000)
+- Port availability (based on config)
 - IIS Default Web Site status
 
 ---
 
 ## 3. Initial Deployment (Offline Server)
 
-1. Transfer `deployment_package.zip` to the server
-2. Extract to temporary location
-3. Open PowerShell **as Administrator**
-4. Navigate to the extracted `scripts` folder
-5. Run:
+1. Review `deploy_config.psd1` and adjust paths if necessary.
+2. Transfer `deployment_package.zip` to the server
+3. Extract to temporary location
+4. Open PowerShell **as Administrator**
+5. Navigate to the extracted folder
+6. Run:
 
 ```powershell
 .\deploy_initial.ps1
 ```
 
 **What it does:**
-1. Verifies IIS prerequisites (URL Rewrite, ARR)
-2. Enables ARR proxy
-3. Creates application directory
-4. Creates Python virtual environment
-5. Installs dependencies offline
-6. Initializes database
-7. Deploys static frontend
-8. Registers Windows Service (WinSW)
-9. Configures IIS application `/pmt`
-10. Starts service and verifies
+1. Loads configuration from `deploy_config.psd1`
+2. Verifies prerequisites
+3. Enables ARR proxy
+4. Creates application directory (`AppRoot`)
+5. Creates Python virtual environment
+6. Installs dependencies offline
+7. Initializes database
+8. Deploys static frontend
+9. Registers Windows Service (WinSW)
+10. Configures IIS application (default: `/pmt`)
+11. Starts service and verifies
+12. **Schedules Nightly Restart** task (default: 00:00)
 
 ---
 
 ## 4. Updates (Offline Server)
 
 1. Transfer new `deployment_package.zip`
-2. Extract to the existing `C:\Inetpub\wwwroot\ReflexPMT` folder
+2. Extract to the existing `C:\Inetpub\wwwroot\ReflexPMT` folder (or configured `AppRoot`)
 3. Run:
 
 ```powershell
@@ -128,6 +140,7 @@ This checks:
 7. Updates frontend static files
 8. Restarts service
 9. Performs health check
+10. Ensures Nightly Restart task exists
 
 ---
 
@@ -140,7 +153,7 @@ If an update causes issues:
 ```
 
 This interactive script:
-1. Lists available backups with timestamps
+1. Lists available backups from configured backup directory
 2. Lets you select which version to restore
 3. Stops service, restores files, restarts service
 
@@ -148,7 +161,21 @@ This interactive script:
 
 ## Configuration Files
 
-### `rxconfig.py`
+### `deploy_config.psd1` (PowerShell)
+Central configuration for deployment scripts.
+
+```powershell
+@{
+    AppName       = "ReflexPMT"
+    AppRoot       = "C:\Inetpub\wwwroot\ReflexPMT"
+    IISAppPath    = "/pmt"
+    ServicePort   = 8000
+    TaskTime      = "00:00" # Nightly restart time
+    ...
+}
+```
+
+### `rxconfig.py` (Python)
 
 To support the `/pmt` subpath, configure:
 
@@ -256,5 +283,7 @@ C:\Inetpub\wwwroot\ReflexPMT\
 ├── requirements.txt        # Python dependencies
 ├── rxconfig.py             # Reflex config
 ├── pyproject.toml          # Project metadata
-└── uv.exe                  # Python package manager
+├── uv.exe                  # Python package manager
+├── deploy_config.psd1      # Deployment Config
+└── deploy_utils.psm1       # Deployment Utilities
 ```

@@ -4,140 +4,118 @@
 
 .DESCRIPTION
     1. Stops the Windows Service.
-    2. Overwrites application files.
-    3. Updates dependencies (offline).
-    4. Runs DB migrations.
-    5. Updates frontend static files.
-    6. Restarts the service and verifies.
-
-    NOTE: Database (MS SQL) is hosted externally. Backup is managed separately.
+    2. Backs up current version.
+    3. Overwrites application files.
+    4. Updates dependencies (offline).
+    5. Runs DB migrations.
+    6. Updates frontend static files.
+    7. Restarts the service.
 
 .NOTES
     Run as Administrator.
-    Ensure the new deployment package is unzipped to the package root.
 #>
 
-$ErrorActionPreference = "Stop"
 $ScriptDir = $PSScriptRoot
+Import-Module "$ScriptDir\deploy_utils.psm1" -Force
+
+$ErrorActionPreference = "Stop"
 $PackageRoot = "$ScriptDir\.."
 
-# --- Configuration ---
-$AppName = "ReflexPMT"
-$AppRoot = "C:\Inetpub\wwwroot\$AppName"
-$ServiceName = "reflex_service"
-$LogDir = "$AppRoot\logs"
-
-Write-Host "Starting Update for $AppName..." -ForegroundColor Cyan
+# --- Load Configuration ---
+try {
+    $Config = Get-DeployConfig
+    Write-Host "Starting Update for $($Config.AppName)..." -ForegroundColor Cyan
+}
+catch {
+    Write-Error "Failed to load configuration: $_"
+    exit 1
+}
 
 # --- 1. Stop Service ---
-$svc = Get-Service $ServiceName -ErrorAction SilentlyContinue
-if ($svc) {
-    if ($svc.Status -eq 'Running') {
-        Write-Host "Stopping Service..."
-        Stop-Service $ServiceName -Force
-        # Wait for service to fully stop
-        $svc.WaitForStatus('Stopped', '00:00:30')
-        Write-Host "[OK] Service stopped" -ForegroundColor Green
-    }
-    else {
-        Write-Host "Service already stopped (status: $($svc.Status))"
-    }
-}
-else {
-    Write-Warning "Service '$ServiceName' not found. Continuing with update..."
-}
+Ensure-ServiceStopped -ServiceName $Config.ServiceName
 
-# --- 3. Backup current version (for rollback) ---
-$BackupDir = "$AppRoot\backups\$(Get-Date -Format 'yyyyMMddHHmmss')"
-Write-Host "Creating backup of current version..."
+# --- 3. Backup current version ---
+$BackupConfigDir = if ($Config.BackupRoot) { $Config.BackupRoot } else { "$($Config.AppRoot)\backups" }
+$BackupDir = "$BackupConfigDir\$(Get-Date -Format 'yyyyMMddHHmmss')"
+
+Write-Log "Creating backup of current version..."
 New-Item -ItemType Directory -Force -Path $BackupDir | Out-Null
-Copy-Item "$AppRoot\app" "$BackupDir\app" -Recurse -ErrorAction SilentlyContinue
-Copy-Item "$AppRoot\rxconfig.py" "$BackupDir\" -ErrorAction SilentlyContinue
-Copy-Item "$AppRoot\pyproject.toml" "$BackupDir\" -ErrorAction SilentlyContinue
-Write-Host "Backup created at: $BackupDir"
+Copy-Item "$($Config.AppRoot)\app" "$BackupDir\app" -Recurse -ErrorAction SilentlyContinue
+Copy-Item "$($Config.AppRoot)\rxconfig.py" "$BackupDir\" -ErrorAction SilentlyContinue
+Copy-Item "$($Config.AppRoot)\pyproject.toml" "$BackupDir\" -ErrorAction SilentlyContinue
+Write-Log "Backup created at: $BackupDir"
 
 # --- 4. Overwrite Code ---
-Write-Host "Overwriting files..."
+Write-Log "Overwriting files..."
 # Exclude items that should not be overwritten
 $ExcludeItems = @("scripts", "*.db", ".venv", "wheels", "logs", "backups", "public")
-Copy-Item "$PackageRoot\*" "$AppRoot" -Recurse -Force -Exclude $ExcludeItems
+Copy-Item "$PackageRoot\*" "$Config.AppRoot" -Recurse -Force -Exclude $ExcludeItems
 
-# Update wheels folder (merge new wheels)
+# Update wheels folder
 if (Test-Path "$PackageRoot\wheels") {
-    New-Item -ItemType Directory -Force -Path "$AppRoot\wheels" | Out-Null
-    Copy-Item "$PackageRoot\wheels\*" "$AppRoot\wheels\" -Recurse -Force
+    New-Item -ItemType Directory -Force -Path "$($Config.AppRoot)\wheels" | Out-Null
+    Copy-Item "$PackageRoot\wheels\*" "$($Config.AppRoot)\wheels\" -Recurse -Force
 }
 
 # --- 5. Update Dependencies ---
-Write-Host "Updating dependencies..." -ForegroundColor Cyan
-$uvSrc = "$AppRoot\uv.exe"
+Write-Log "Updating dependencies..." "Cyan"
+$uvSrc = "$($Config.AppRoot)\uv.exe"
 
-# Verify uv.exe exists
 if (-not (Test-Path $uvSrc)) {
-    Write-Error "uv.exe not found at $uvSrc"
+    Write-ErrorLog "uv.exe not found at $uvSrc"
+    exit 1
 }
 
-# Use explicit python path for venv targeting
-& $uvSrc pip install --python "$AppRoot\.venv\Scripts\python.exe" --no-index --find-links "$AppRoot\wheels" -r "$AppRoot\requirements.txt" --upgrade
+& $uvSrc pip install --python "$($Config.AppRoot)\.venv\Scripts\python.exe" --no-index --find-links "$($Config.AppRoot)\wheels" -r "$($Config.AppRoot)\requirements.txt" --upgrade
 
 # --- 6. Migrations ---
-Write-Host "Running Migrations..." -ForegroundColor Cyan
-Set-Location $AppRoot
-$env:PATH = "$AppRoot\.venv\Scripts;$env:PATH"
-# Ensure env vars are set correctly.
-# python-dotenv (if used in pyproject) should load from .env file
+Write-Log "Running Migrations..." "Cyan"
+Set-Location $Config.AppRoot
+$env:PATH = "$($Config.AppRoot)\.venv\Scripts;$env:PATH"
 reflex db migrate
 
 # --- 7. Update Frontend Static Files ---
-Write-Host "Updating Frontend..." -ForegroundColor Cyan
+Write-Log "Updating Frontend..." "Cyan"
 if (Test-Path "$PackageRoot\frontend_static") {
     # Backup old public folder
-    if (Test-Path "$AppRoot\public") {
-        Copy-Item "$AppRoot\public" "$BackupDir\public" -Recurse -ErrorAction SilentlyContinue
-        Remove-Item "$AppRoot\public" -Recurse -Force
+    if (Test-Path "$($Config.AppRoot)\public") {
+        Copy-Item "$($Config.AppRoot)\public" "$BackupDir\public" -Recurse -ErrorAction SilentlyContinue
+        Remove-Item "$($Config.AppRoot)\public" -Recurse -Force
     }
-    New-Item -ItemType Directory -Force -Path "$AppRoot\public" | Out-Null
-    Copy-Item "$PackageRoot\frontend_static\*" "$AppRoot\public\" -Recurse -Force
+    New-Item -ItemType Directory -Force -Path "$($Config.AppRoot)\public" | Out-Null
+    Copy-Item "$PackageRoot\frontend_static\*" "$($Config.AppRoot)\public\" -Recurse -Force
+    
     # Re-apply web.config
-    Copy-Item "$AppRoot\config\web.config" "$AppRoot\public\web.config"
-    Write-Host "Frontend updated."
+    Copy-Item "$($Config.AppRoot)\config\web.config" "$($Config.AppRoot)\public\web.config"
+    Write-Log "Frontend updated."
 }
 else {
-    Write-Host "No frontend_static in package. Frontend unchanged."
+    Write-Log "No frontend_static in package. Frontend unchanged."
 }
 
 # --- 8. Restart Service and Verify ---
-Write-Host "Starting Service..." -ForegroundColor Cyan
-Start-Service $ServiceName
+Ensure-ServiceStarted -ServiceName $Config.ServiceName
 
-# Wait and verify service started successfully
-Start-Sleep -Seconds 5
-$svc = Get-Service $ServiceName
-if ($svc.Status -eq 'Running') {
-    Write-Host "[OK] Service '$ServiceName' is running" -ForegroundColor Green
-}
-else {
-    Write-Error "Service '$ServiceName' failed to start (status: $($svc.Status)). Check logs at $LogDir"
-}
+# Ensure nightly restart is configured (idempotent)
+Ensure-ScheduledRestart -TaskName $Config.TaskName -ServiceName $Config.ServiceName -Time $Config.TaskTime
 
 # --- 9. Health Check (Optional) ---
-Write-Host "Performing health check..." -ForegroundColor Cyan
+Write-Log "Performing health check..." "Cyan"
 Start-Sleep -Seconds 3
 try {
-    $response = Invoke-WebRequest -Uri "http://localhost:8000/ping" -TimeoutSec 10 -UseBasicParsing
+    $response = Invoke-WebRequest -Uri "http://localhost:$($Config.ServicePort)/ping" -TimeoutSec 10 -UseBasicParsing
     if ($response.StatusCode -eq 200) {
-        Write-Host "[OK] Backend health check passed" -ForegroundColor Green
+        Write-Success "Backend health check passed"
     }
 }
 catch {
-    Write-Warning "Health check failed. Backend may still be starting up. Check logs at $LogDir"
+    Write-WarningLog "Health check failed. Backend may still be starting up. Check logs at $($Config.LogDir)"
 }
 
 # --- Finish ---
 Write-Host ""
-Write-Host "========================================" -ForegroundColor Green
-Write-Host "Update Complete!" -ForegroundColor Green
-Write-Host "========================================" -ForegroundColor Green
+Write-Success "Update Complete!"
+Write-Log "Rollback available at: $BackupDir"
+Write-Log "To rollback, run deploy_rollback.ps1"
 Write-Host ""
-Write-Host "Rollback available at: $BackupDir"
-Write-Host "To rollback: Stop service, restore files from backup, start service"
+
