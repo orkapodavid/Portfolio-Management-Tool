@@ -4,12 +4,13 @@
 
 .DESCRIPTION
     1. Stops the Windows Service.
-    2. Backups the database (if sqlite).
-    3. Overwrites application files.
-    4. Updates dependencies (offline).
-    5. Runs DB migrations.
-    6. Updates frontend static files.
-    7. Restarts the service and verifies.
+    2. Overwrites application files.
+    3. Updates dependencies (offline).
+    4. Runs DB migrations.
+    5. Updates frontend static files.
+    6. Restarts the service and verifies.
+
+    NOTE: Database (MS SQL) is hosted externally. Backup is managed separately.
 
 .NOTES
     Run as Administrator.
@@ -44,22 +45,6 @@ if ($svc) {
 }
 else {
     Write-Warning "Service '$ServiceName' not found. Continuing with update..."
-}
-
-# --- 2. Backup DB ---
-# Assuming sqlite for now. Adjust path if using different DB.
-$PossibleDbFiles = @(
-    "$AppRoot\app.db",
-    "$AppRoot\reflex.db",
-    "$AppRoot\.db\reflex.db"
-)
-
-foreach ($DbFile in $PossibleDbFiles) {
-    if (Test-Path $DbFile) {
-        $BackupName = "$DbFile.bak.$(Get-Date -Format 'yyyyMMddHHmmss')"
-        Copy-Item $DbFile $BackupName
-        Write-Host "Database backed up: $BackupName" -ForegroundColor Green
-    }
 }
 
 # --- 3. Backup current version (for rollback) ---

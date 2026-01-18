@@ -111,6 +111,20 @@ pmt_core/tests/
 └── test_init.py         # Package init tests
 ```
 
+## Database
+
+This application uses **MS SQL Server** hosted externally (not SQLite or any local database).
+
+- **Connection**: Configured via `DATABASE_URL` environment variable
+- **Driver**: ODBC Driver 17 for SQL Server
+- **Backup**: Managed externally by database administrators
+- **Migrations**: Run via `reflex db migrate` (connects to remote MS SQL)
+
+Example connection string format:
+```
+mssql+pyodbc://user:password@server/database?driver=ODBC+Driver+17+for+SQL+Server
+```
+
 ## Current Blockers
 
 The following external resources are **not yet available** and block certain integration tasks:
@@ -118,7 +132,7 @@ The following external resources are **not yet available** and block certain int
 | Resource | Status | Blocks |
 |----------|--------|--------|
 | PyQt Source Code (`source/`) | Unavailable | Service adapters, ReportClass integration |
-| Database Access (MS SQL Server) | Unavailable | Database connectivity |
+| Database Access (MS SQL Server) | Unavailable (hosted externally) | Database connectivity |
 | Configuration Files (`resources/config/`) | Unavailable | Config migration |
 | Bloomberg Terminal | Unavailable | EMSX integration |
 

@@ -133,7 +133,7 @@ All config values can be overridden with environment variables:
 export REFLEX_APP_NAME="myapp"
 export REFLEX_FRONTEND_PORT=3001
 export REFLEX_BACKEND_PORT=8001
-export REFLEX_DB_URL="postgresql://user:pass@localhost/db"
+export REFLEX_DB_URL="mssql+pyodbc://user:pass@server/db?driver=ODBC+Driver+17+for+SQL+Server"
 export REFLEX_REDIS_URL="redis://localhost:6379"
 export REFLEX_LOGLEVEL="DEBUG"
 export REFLEX_API_URL="https://api.myapp.com"
@@ -152,7 +152,7 @@ config = rx.Config(
     frontend_port=3000 if not is_production else None,
     backend_port=8000 if not is_production else None,
     api_url="https://api.yourapp.com" if is_production else "http://localhost:8000",
-    db_url=os.getenv("DATABASE_URL", "sqlite:///reflex.db"),
+    db_url=os.getenv("DATABASE_URL"),  # MS SQL connection string
 )
 ```
 
@@ -292,7 +292,7 @@ def get_config():
         frontend_port=3000,
         backend_port=8000,
         api_url="http://localhost:8000",
-        db_url="sqlite:///reflex.db",
+        db_url=os.getenv("DATABASE_URL"),  # MS SQL hosted externally
     )
 
 config = get_config()
