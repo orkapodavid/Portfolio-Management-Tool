@@ -189,7 +189,7 @@ uv run pytest -v
 uv run pytest tests/ -v
 
 # Run only pmt_core tests
-uv run pytest pmt_core/tests_core/ -v
+uv run pytest
 ```
 
 ### Project Commands Summary

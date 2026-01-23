@@ -46,44 +46,11 @@ A professional portfolio management web dashboard built with [Reflex](https://re
    # Create virtual environment with Python 3.13
    uv venv --python 3.13 .venv
    
-   # Install dependencies (much faster than pip!)
-   uv pip install -r requirements.txt
+   # Install dependencies (including pmt_core)
+   uv sync
    ```
 
-### Option 2: Using standard pip
 
-1. **Ensure Python 3.13 is installed**:
-   ```bash
-   # macOS
-   brew install python@3.13
-   
-   # Check version
-   python3.13 --version
-   ```
-
-2. **Clone the repository**:
-   ```bash
-   git clone <repository-url>
-   cd Portfolio-Management-Tool
-   ```
-
-3. **Create a virtual environment**:
-   ```bash
-   python3.13 -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   ```
-
-4. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-   The `requirements.txt` includes:
-   ```
-   reflex==0.8.20
-   yfinance
-   PyGithub
-   ```
 
 
 5. **Initialize the Reflex project** (first time only):

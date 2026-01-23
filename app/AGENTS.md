@@ -44,6 +44,8 @@ app/
 │   └── [other pages...]
 ├── services/
 │   └── finance_service.py      # yfinance API integration
+├── utils/                  # Utilities (logger, etc.)
+├── exceptions.py           # Custom exceptions
 └── rxconfig.py                 # Reflex configuration (TailwindV3 plugin)
 
 

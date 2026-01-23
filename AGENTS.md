@@ -68,11 +68,11 @@ uv pip install -e ./pmt_core_pkg
 pmt_core_pkg/
 └── pmt_core/
     ├── models/       # TypedDicts, enums, data structures
-    ├── services/     # Business logic (pending)
-    ├── repositories/ # Data access (pending)
-    ├── resources/    # Configuration templates (pending)
+    ├── services/     # Business logic
+    ├── repositories/ # Data access
+    ├── resources/    # Configuration templates
     └── utilities/    # Logging, config helpers
-└── tests/            # Package-level tests
+    └── tests_core/   # Package-level tests
 ```
 
 ### Usage
@@ -96,7 +96,7 @@ def process_position(pos: PositionRecord) -> None:
 uv sync --group dev
 
 # Run all tests
-uv run pytest tests/ pmt_core/tests/ -v
+uv run pytest
 ```
 
 ### Test Structure
@@ -105,7 +105,7 @@ tests/
 ├── conftest.py          # Shared fixtures
 └── services/            # Service tests
 
-pmt_core/tests/
+pmt_core_pkg/tests_core/
 ├── conftest.py          # pmt_core fixtures
 ├── test_models.py       # Type and enum tests
 └── test_init.py         # Package init tests
