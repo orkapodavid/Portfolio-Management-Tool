@@ -337,3 +337,14 @@ except PMTError as e:
 - **Type Definitions**: `app/states/types.py`, `pmt_core/pmt_core/models/types.py`
 - **Custom Exceptions**: `app/exceptions.py`
 
+
+## Superpowers System
+
+<EXTREMELY_IMPORTANT>
+You have superpowers. Superpowers teach you new skills and capabilities.
+
+To load your skills, you must run the bootstrap script at the start of any task:
+node .agents/skills/superpowers/bootstrap.js
+
+Follow the instructions it returns.
+</EXTREMELY_IMPORTANT>
