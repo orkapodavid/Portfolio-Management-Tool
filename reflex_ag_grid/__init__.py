@@ -25,13 +25,19 @@ Example:
 
 from reflex_ag_grid.components.ag_grid import AGGrid, ag_grid
 from reflex_ag_grid.components.ag_grid_state import AGGridStateMixin
-from reflex_ag_grid.models import ColumnDef, ValidationSchema, FieldValidation
+from reflex_ag_grid.models import (
+    ColumnDef,
+    ColumnType,
+    ValidationSchema,
+    FieldValidation,
+)
 
 __all__ = [
     "AGGrid",
     "ag_grid",
     "AGGridStateMixin",
     "ColumnDef",
+    "ColumnType",
     "ValidationSchema",
     "FieldValidation",
 ]

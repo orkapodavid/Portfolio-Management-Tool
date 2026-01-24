@@ -68,10 +68,18 @@ class AGGrid(NoSSRComponent):
 
     # Library path - relative to static folder
     library = "../../reflex_ag_grid/static/ag_grid_wrapper.js"
-    tag = "default"  # Default export
+    tag = "AGGridWrapper"  # Must match the exported component name
 
     # Disable SSR - AG Grid requires browser APIs
     is_default = True
+
+    # CRITICAL: Define dependencies here. Reflex handles the install.
+    # This replaces manual package.json editing.
+    lib_dependencies: list[str] = [
+        "ag-grid-react@31.3.0",
+        "ag-grid-community@31.3.0",
+        "ag-grid-enterprise@31.3.0",
+    ]
 
     # ===== Props =====
 

@@ -3,12 +3,16 @@ Column Definition Pydantic Models
 
 Defines type-safe column configurations that serialize to AG Grid ColDef format.
 Uses string keys for formatters/renderers via the Registry Pattern.
+
+CRITICAL: Uses Pydantic aliases (serialization_alias) to output camelCase
+for JavaScript consumption, since Reflex's NoSSRComponent doesn't
+rename keys inside data lists like column_defs.
 """
 
 from enum import Enum
 from typing import Any, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ColumnType(str, Enum):
@@ -33,47 +37,80 @@ class ColumnDef(BaseModel):
     are specified as string keys that map to JavaScript functions
     registered in the ag_grid_wrapper.js registry.
 
+    IMPORTANT: Use model_dump(by_alias=True, exclude_none=True) to get
+    proper camelCase keys for JavaScript. The `to_ag_grid_def()` method
+    does this automatically.
+
     Example:
-        ColumnDef(
+        col = ColumnDef(
             field="price",
             header_name="Price",
             type=ColumnType.NUMBER,
             editable=True,
-            formatter="currency",  # Maps to JS registry
-            cell_class_rules="traffic_light",  # Maps to JS registry
+            formatter="currency",
         )
+        js_def = col.model_dump(by_alias=True, exclude_none=True)
+        # Result: {"field": "price", "headerName": "Price", ...}
     """
+
+    model_config = ConfigDict(
+        populate_by_name=True,  # Allow both field name and alias for input
+        use_enum_values=True,  # Serialize enums as their values
+    )
 
     # Core properties
     field: str = Field(..., description="The field name in the row data")
     header_name: Optional[str] = Field(
-        None, description="Display name for column header"
+        None,
+        serialization_alias="headerName",
+        description="Display name for column header",
     )
 
-    # Type and editing
+    # Type and editing (prefixed with _ for JS registry lookup)
     type: ColumnType = Field(
-        ColumnType.STRING, description="Data type for editor selection"
+        ColumnType.STRING,
+        serialization_alias="_type",
+        description="Data type for editor selection",
     )
     editable: bool = Field(False, description="Whether cells can be edited")
 
     # Enum values (for ColumnType.ENUM)
     enum_values: Optional[list[str]] = Field(
-        None, description="Allowed values for enum type"
+        None,
+        serialization_alias="_enumValues",
+        description="Allowed values for enum type",
     )
 
     # Sizing
     width: Optional[int] = Field(None, description="Fixed width in pixels")
-    min_width: Optional[int] = Field(None, description="Minimum width in pixels")
-    max_width: Optional[int] = Field(None, description="Maximum width in pixels")
+    min_width: Optional[int] = Field(
+        None,
+        serialization_alias="minWidth",
+        description="Minimum width in pixels",
+    )
+    max_width: Optional[int] = Field(
+        None,
+        serialization_alias="maxWidth",
+        description="Maximum width in pixels",
+    )
     flex: Optional[int] = Field(None, description="Flex grow factor")
 
     # Visibility and pinning
     hide: bool = Field(False, description="Whether column is hidden")
     pinned: Optional[Literal["left", "right"]] = Field(
-        None, description="Pin to left or right"
+        None,
+        description="Pin to left or right",
     )
-    lock_pinned: bool = Field(False, description="Prevent unpinning")
-    lock_position: bool = Field(False, description="Prevent moving")
+    lock_pinned: bool = Field(
+        False,
+        serialization_alias="lockPinned",
+        description="Prevent unpinning",
+    )
+    lock_position: bool = Field(
+        False,
+        serialization_alias="lockPosition",
+        description="Prevent moving",
+    )
 
     # Sorting and filtering
     sortable: bool = Field(True, description="Enable sorting")
@@ -81,133 +118,107 @@ class ColumnDef(BaseModel):
     filter_type: Optional[str] = Field(None, description="Filter type override")
 
     # Grouping and aggregation
-    row_group: bool = Field(False, description="Enable grouping by this column")
+    row_group: bool = Field(
+        False,
+        serialization_alias="rowGroup",
+        description="Enable grouping by this column",
+    )
     agg_func: Optional[
         Literal["sum", "avg", "count", "min", "max", "first", "last"]
-    ] = Field(None, description="Aggregation function for grouped rows")
+    ] = Field(
+        None,
+        serialization_alias="aggFunc",
+        description="Aggregation function for grouped rows",
+    )
 
-    # Registry Pattern: String keys for JS functions
+    # Registry Pattern: String keys for JS functions (prefixed with _)
     formatter: Optional[str] = Field(
         None,
+        serialization_alias="_formatter",
         description="Registry key for valueFormatter (e.g., 'currency', 'percentage')",
     )
     renderer: Optional[str] = Field(
         None,
+        serialization_alias="_renderer",
         description="Registry key for cellRenderer (e.g., 'status_badge', 'progress_bar')",
     )
     cell_class_rules: Optional[str] = Field(
         None,
+        serialization_alias="_cellClassRules",
         description="Registry key for cellClassRules (e.g., 'traffic_light', 'threshold')",
     )
     value_parser: Optional[str] = Field(
-        None, description="Registry key for valueParser for custom parsing"
+        None,
+        serialization_alias="_valueParser",
+        description="Registry key for valueParser for custom parsing",
     )
 
     # Validation (references ValidationSchema by field name)
     validation: Optional[dict[str, Any]] = Field(
-        None, description="Inline validation rules: {min, max, pattern, required}"
+        None,
+        serialization_alias="_validation",
+        description="Inline validation rules: {min, max, pattern, required}",
     )
 
     # Cell styling
-    cell_style: Optional[dict[str, str]] = Field(None, description="Static cell styles")
-    header_class: Optional[str] = Field(None, description="CSS class for header")
-    cell_class: Optional[str] = Field(None, description="CSS class for cells")
+    cell_style: Optional[dict[str, str]] = Field(
+        None,
+        serialization_alias="cellStyle",
+        description="Static cell styles",
+    )
+    header_class: Optional[str] = Field(
+        None,
+        serialization_alias="headerClass",
+        description="CSS class for header",
+    )
+    cell_class: Optional[str] = Field(
+        None,
+        serialization_alias="cellClass",
+        description="CSS class for cells",
+    )
 
     # Tooltip
-    tooltip_field: Optional[str] = Field(None, description="Field to use for tooltip")
+    tooltip_field: Optional[str] = Field(
+        None,
+        serialization_alias="tooltipField",
+        description="Field to use for tooltip",
+    )
 
     # Extra AG Grid options (passthrough)
     extra: Optional[dict[str, Any]] = Field(
-        None, description="Additional AG Grid ColDef options to merge"
+        None,
+        description="Additional AG Grid ColDef options to merge",
     )
 
     def to_ag_grid_def(self) -> dict[str, Any]:
         """
         Convert to AG Grid ColDef format.
 
-        Maps Pydantic field names to AG Grid property names and
-        includes registry keys for JS-side resolution.
+        Uses Pydantic's model_dump with aliases to produce camelCase keys.
+        Automatically generates headerName from field if not provided.
         """
-        col_def: dict[str, Any] = {
-            "field": self.field,
-            "headerName": self.header_name or self.field.replace("_", " ").title(),
-        }
+        # Dump with aliases, excluding None values
+        col_def = self.model_dump(by_alias=True, exclude_none=True)
 
-        # Type and editor
-        col_def["_type"] = self.type.value  # Custom prop for registry lookup
-        col_def["editable"] = self.editable
+        # Generate headerName from field if not provided
+        if "headerName" not in col_def:
+            col_def["headerName"] = self.field.replace("_", " ").title()
 
-        if self.enum_values:
-            col_def["_enumValues"] = self.enum_values
-
-        # Sizing
-        if self.width is not None:
-            col_def["width"] = self.width
-        if self.min_width is not None:
-            col_def["minWidth"] = self.min_width
-        if self.max_width is not None:
-            col_def["maxWidth"] = self.max_width
-        if self.flex is not None:
-            col_def["flex"] = self.flex
-
-        # Visibility and pinning
-        if self.hide:
-            col_def["hide"] = True
-        if self.pinned:
-            col_def["pinned"] = self.pinned
-        if self.lock_pinned:
-            col_def["lockPinned"] = True
-        if self.lock_position:
-            col_def["lockPosition"] = True
-
-        # Sorting and filtering
-        col_def["sortable"] = self.sortable
-        col_def["filter"] = self.filter
+        # Handle filter_type override (not aliased, needs manual handling)
         if self.filter_type:
             col_def["filter"] = self.filter_type
-
-        # Grouping
-        if self.row_group:
-            col_def["rowGroup"] = True
-        if self.agg_func:
-            col_def["aggFunc"] = self.agg_func
-
-        # Registry keys (prefixed with _ for JS to detect)
-        if self.formatter:
-            col_def["_formatter"] = self.formatter
-        if self.renderer:
-            col_def["_renderer"] = self.renderer
-        if self.cell_class_rules:
-            col_def["_cellClassRules"] = self.cell_class_rules
-        if self.value_parser:
-            col_def["_valueParser"] = self.value_parser
-
-        # Validation
-        if self.validation:
-            col_def["_validation"] = self.validation
-
-        # Styling
-        if self.cell_style:
-            col_def["cellStyle"] = self.cell_style
-        if self.header_class:
-            col_def["headerClass"] = self.header_class
-        if self.cell_class:
-            col_def["cellClass"] = self.cell_class
-
-        # Tooltip
-        if self.tooltip_field:
-            col_def["tooltipField"] = self.tooltip_field
+            col_def.pop("filter_type", None)
 
         # Merge extra options
         if self.extra:
-            col_def.update(self.extra)
+            extra = col_def.pop("extra", {})
+            col_def.update(extra)
+
+        # Remove hide if False (default)
+        if not self.hide:
+            col_def.pop("hide", None)
 
         return col_def
-
-    class Config:
-        """Pydantic configuration."""
-
-        use_enum_values = True
 
 
 def column_defs_to_ag_grid(columns: list[ColumnDef]) -> list[dict[str, Any]]:

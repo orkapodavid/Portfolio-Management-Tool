@@ -1,0 +1,2 @@
+# AG Grid Demo App Dependencies
+reflex==0.8.26

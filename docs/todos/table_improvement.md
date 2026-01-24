@@ -90,21 +90,20 @@ Build the foundational AG Grid wrapper component that can render a basic grid wi
 - [x] **1.4** Create base state mixin (`ag_grid_state.py`)
   - [x] `AGGridStateMixin` with common handlers
   - [x] `jump_to_row()`, `export_excel()`, `export_csv()` via `rx.call_script`
-- [ ] **1.5** Add AG Grid Enterprise to `package.json` dependencies
-- [ ] **1.6** Write unit tests for Python models/services
+- [x] **1.5** Add AG Grid Enterprise dependencies via `lib_dependencies` (Reflex-native, no package.json)
+- [x] **1.6** Write serialization unit tests (17 tests, all passing)
 - [x] **1.7** Create basic usage example
-- [ ] **1.8** Create full demo app (`reflex_ag_grid/examples/demo_app/`)
-  - [ ] `rxconfig.py` for standalone execution
-  - [ ] Multi-page app showcasing all features:
-    - [ ] Basic Grid page - simple data display
-    - [ ] Editable Grid page - cell editing with validation
-    - [ ] Grouped Grid page - row grouping with aggregation
-    - [ ] Streaming Data page - mock real-time updates
-  - [ ] Mock streaming data with toggle (manual/auto-refresh modes)
-  - [ ] `rx.background` task for periodic state updates
-  - [ ] Notifications panel with jump-to-row
-  - [ ] Export buttons (Excel, CSV)
-  - [ ] README with run instructions
+- [x] **1.8** Create full demo app (`reflex_ag_grid/examples/demo_app/`)
+  - [x] `rxconfig.py` for standalone execution
+  - [x] Multi-page app showcasing all features:
+    - [x] Basic Grid page - simple data display
+    - [x] Editable Grid page - cell editing with validation
+    - [x] Grouped Grid page - row grouping with aggregation
+    - [x] Streaming Data page - mock real-time updates
+  - [x] Mock streaming data with toggle (manual refresh mode - rx.background N/A in 0.8.26)
+  - [x] Notifications panel (simplified)
+  - [x] Export buttons (Excel, CSV)
+  - [x] README with run instructions
 - [ ] **1.9** Create Playwright E2E tests (`reflex_ag_grid/tests/`)
   - [ ] `tests/setup_browsers.py` - Browser installation check/setup script
   - [ ] `tests/e2e_ag_grid.py` - Main E2E test script using `uv run`
