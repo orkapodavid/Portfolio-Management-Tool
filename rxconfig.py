@@ -25,6 +25,6 @@ config = rx.Config(
     frontend_port=frontend_port,
     backend_port=backend_port,
     disable_plugins=["reflex.plugins.sitemap.SitemapPlugin"],
-    state_manager_mode=os.getenv("REFLEX_STATE_MANAGER_MODE", "redis"),
+    state_manager_mode=os.getenv("REFLEX_STATE_MANAGER_MODE", "memory"),
     redis_url=os.getenv("REFLEX_REDIS_URL"),
 )

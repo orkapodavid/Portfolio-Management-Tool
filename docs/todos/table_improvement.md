@@ -1,14 +1,407 @@
-# Table Improvement Consultation Report
+# AG Grid Reflex Wrapper Implementation Plan
 
-## Status
-**Current Stage**: Requirements Analysis & Options Evaluation
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-## Objective
-Find an open-source table framework or design a generic Reflex table to satisfy the requirements in `docs/todos/table_improvement.md`.
+**Goal:** Build a generic, reusable AG Grid Enterprise wrapper as a local Reflex package, then migrate existing tables in phases.
 
-## Requirements Analysis Matrix
+**Architecture:** Local package (`reflex_ag_grid/`) with Python Reflex component wrapping AG Grid Enterprise. Uses standard Reflex state management (no dedicated WebSocket). Config-driven column definitions enable easy customization per table.
 
-I have mapped your 15 requirements to the capabilities of **Reflex Ag-Grid** (the standard robust solution) and a **Custom Implementation** (using `rx.table` or wrapping a new library).
+**Tech Stack:** Reflex Python, AG Grid Enterprise 31.x, React 18, TypeScript/JavaScript
+
+---
+
+## Design Decisions
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Licensing | **Enterprise** | Full feature set for context menu, range selection, grouping, Excel export |
+| Real-time Updates | **Reflex State** | Simpler architecture, sufficient for current needs |
+| Migration | **Phased Rollout** | Start with 1-2 critical tables, validate, then migrate others |
+| Package Structure | **Local Package** | Copyable between repos as `reflex_ag_grid/` folder |
+
+---
+
+## Requirements Traceability Matrix
+
+| # | Requirement | AG-Grid Feature | Implementation Approach |
+|---|-------------|-----------------|------------------------|
+| 1 | Right-click context menu | `getContextMenuItems()` | Enterprise: Built-in customizable menu |
+| 2 | Bulk state changes (Range) | `enableRangeSelection` | Enterprise: Range selection + batch updates |
+| 3 | Blinking cell changes | `api.flashCells()` | Community: CSS animation on value change |
+| 4 | Notification jump & highlight | `ensureNodeVisible()` | Community: Scroll + flash API |
+| 5 | Grouping & Summary | `rowGroup` + `aggFunc` | Enterprise: Row grouping with aggregation |
+| 6 | Notification publisher | Reflex State | Python: State-based notification list |
+| 7 | Data Validation (.ini) | `valueParser` | Python: ConfigParser → JS validators |
+| 8 | Copy cell / with header | Clipboard API | Enterprise: Context menu copy actions |
+| 9 | Export Excel | `exportDataAsExcel()` | Enterprise: Native Excel export |
+| 10 | WebSocket publishing | Reflex WebSocket | Reflex: Native state updates |
+| 11 | Different Cell Editors | `cellEditor` mapping | Community: Type-based editor selection |
+| 12 | Disable auto-refresh on edit | Edit tracking | JS: Track editing cells, skip updates |
+| 13 | Cell-by-cell update | Transaction API | Community: `applyTransaction()` for delta |
+| 14 | Update timing | Reflex background | Python: Background task scheduling |
+| 15 | Save table format | `localStorage` | Community: Column state persistence |
+
+---
+
+## Project Structure
+
+```
+reflex_ag_grid/
+├── __init__.py                    # Package exports
+├── components/
+│   ├── __init__.py
+│   ├── ag_grid.py                 # Main Reflex custom component
+│   ├── ag_grid_state.py           # Base state mixin class
+│   └── notification_panel.py      # Optional notification UI
+├── services/
+│   ├── __init__.py
+│   ├── validation_loader.py       # .ini config parser
+│   └── column_config.py           # Column definition helpers
+├── static/
+│   └── ag_grid_wrapper.js         # React wrapper for AG Grid
+├── config/
+│   └── validation.example.ini     # Example validation config
+└── README.md                      # Usage documentation
+```
+
+---
+
+## Phase 1: Core Wrapper Implementation
+
+### Objective
+Build the foundational AG Grid wrapper component that can render a basic grid with Enterprise features.
+
+### Checklist
+
+- [x] **1.1** Set up `reflex_ag_grid/` package structure
+- [x] **1.2** Create JavaScript React wrapper (`ag_grid_wrapper.js`)
+  - [x] AG Grid Enterprise initialization
+  - [x] Column definition processing
+  - [x] Cell editor mapping by type
+  - [x] Context menu with copy/export actions
+  - [x] Column state localStorage persistence
+  - [x] **Function Registry Pattern** - String keys for formatters/renderers
+  - [x] **Event Sanitization** - Safe event data, no circular refs
+  - [x] **License Key Injection** - Via prop or window.AG_GRID_LICENSE_KEY
+- [x] **1.3** Create Reflex custom component (`ag_grid.py`)
+  - [x] `NoSSRComponent` subclass
+  - [x] Props: `column_defs`, `row_data`, `theme`, `height`, `width`
+  - [x] Events: `on_cell_edit`, `on_selection_change`, `on_grid_ready`
+- [x] **1.4** Create base state mixin (`ag_grid_state.py`)
+  - [x] `AGGridStateMixin` with common handlers
+  - [x] `jump_to_row()`, `export_excel()`, `export_csv()` via `rx.call_script`
+- [ ] **1.5** Add AG Grid Enterprise to `package.json` dependencies
+- [ ] **1.6** Write unit tests for Python services
+- [x] **1.7** Create basic usage example
+
+### Architectural Constraints Applied (Per Senior Review)
+
+1. ✅ **Function Registry Pattern** - Formatters/renderers use string keys mapped to JS functions
+2. ✅ **Event Sanitization** - All AG Grid events sanitized before sending to Python
+3. ✅ **Pydantic Validation** - Using `ColumnDef` and `ValidationSchema` Pydantic models
+4. ✅ **License Key Injection** - Supports `license_key` prop or `window.AG_GRID_LICENSE_KEY`
+
+### Testing Plan - Phase 1
+
+| Test Type | Test Case | Expected Result |
+|-----------|-----------|-----------------|
+| Unit | `ag_grid.py` component creation | No errors, valid component |
+| Unit | Column def processing | Type → editor mapping works |
+| Integration | Render empty grid | Grid displays with headers |
+| Integration | Render with data | Rows display correctly |
+| E2E | Right-click context menu | Menu appears with options |
+| E2E | Column resize + refresh | Size persists in localStorage |
+
+**Verification Commands:**
+```bash
+# Run Python unit tests
+pytest tests/unit/reflex_ag_grid/ -v
+
+# Run Reflex dev server
+reflex run
+
+# Manual browser test
+# Navigate to grid demo page, verify grid renders
+```
+
+---
+
+## Phase 2: Validation & Cell Editing
+
+### Objective
+Add validation configuration loading and type-based cell editing with validation feedback.
+
+### Checklist
+
+- [ ] **2.1** Create validation loader (`validation_loader.py`)
+  - [ ] Parse `.ini` config file
+  - [ ] `FieldValidation` dataclass
+  - [ ] Type, min, max, pattern, enum support
+- [ ] **2.2** Integrate validation into JS wrapper
+  - [ ] `valueParser` with validation rules
+  - [ ] Visual feedback for invalid cells (red border)
+  - [ ] Reject invalid values, keep old value
+- [ ] **2.3** Cell editor configuration
+  - [ ] Map types to AG Grid editors (text, number, select, checkbox, date)
+  - [ ] `enumValues` → dropdown options
+  - [ ] Number precision and range
+- [ ] **2.4** Edit event handling
+  - [ ] `on_cell_edit` fires with rowId, field, oldValue, newValue
+  - [ ] Python handler receives edit data
+- [ ] **2.5** Create example validation config
+- [ ] **2.6** Write validation loader unit tests
+- [ ] **2.7** Document validation config format
+
+### Testing Plan - Phase 2
+
+| Test Type | Test Case | Expected Result |
+|-----------|-----------|-----------------|
+| Unit | Load valid .ini config | FieldValidation objects created |
+| Unit | Load invalid .ini | Graceful error handling |
+| Unit | Validate int in range | Returns (True, None) |
+| Unit | Validate int out of range | Returns (False, error_msg) |
+| Unit | Validate enum value | Accepts valid, rejects invalid |
+| Integration | Edit numeric cell | Number editor appears |
+| Integration | Edit enum cell | Dropdown with options |
+| E2E | Enter invalid value | Cell shows error, reverts |
+| E2E | Enter valid value | Cell updates, event fires |
+
+**Verification Commands:**
+```bash
+# Run validation tests
+pytest tests/unit/reflex_ag_grid/test_validation_loader.py -v
+
+# Manual test: Edit cells with different types
+```
+
+---
+
+## Phase 3: Advanced Features
+
+### Objective
+Implement grouping, aggregation, notifications, and export functionality.
+
+### Checklist
+
+- [ ] **3.1** Row grouping support
+  - [ ] `rowGroup: true` in column def
+  - [ ] Group expansion/collapse
+  - [ ] `aggFunc` for summary values (sum, avg, count, min, max)
+- [ ] **3.2** Range selection and bulk updates
+  - [ ] `enableRangeSelection: true`
+  - [ ] Bulk state change handler
+  - [ ] Flash affected cells
+- [ ] **3.3** Cell flashing on value change
+  - [ ] CSS animation class
+  - [ ] `api.flashCells()` integration
+- [ ] **3.4** Notification panel component
+  - [ ] `notification_panel.py` UI component
+  - [ ] Click notification → jump to row
+  - [ ] Notification types: info, warning, error, success
+- [ ] **3.5** Export functionality
+  - [ ] Excel export via `exportDataAsExcel()`
+  - [ ] CSV export via `exportDataAsCsv()`
+  - [ ] Toolbar buttons for export
+- [ ] **3.6** Jump to row functionality
+  - [ ] `ensureNodeVisible()` + flash
+  - [ ] Triggered from notifications or external
+- [ ] **3.7** Write integration tests
+- [ ] **3.8** Update documentation
+
+### Testing Plan - Phase 3
+
+| Test Type | Test Case | Expected Result |
+|-----------|-----------|-----------------|
+| Integration | Group by column | Rows grouped with headers |
+| Integration | Collapse group | Child rows hidden |
+| Integration | Aggregation sum | Group shows sum of values |
+| E2E | Select range | Multiple cells highlighted |
+| E2E | Export to Excel | .xlsx file downloads |
+| E2E | Export to CSV | .csv file downloads |
+| E2E | Notification click | Grid scrolls to row, flashes |
+| E2E | Cell value change | Cell flashes briefly |
+
+**Verification Commands:**
+```bash
+# Run all tests
+pytest tests/ -v
+
+# Manual tests:
+# 1. Group by a column, verify aggregation
+# 2. Click export buttons, verify downloads
+# 3. Add notification, click to jump
+```
+
+---
+
+## Phase 4: Pilot Migration - Holdings Table
+
+### Objective
+Migrate `holdings_table.py` as the first real table to validate the wrapper.
+
+### Checklist
+
+- [ ] **4.1** Analyze current `holdings_table.py`
+  - [ ] Document current columns and data types
+  - [ ] Document current styling/behavior
+- [ ] **4.2** Create column definition config
+  - [ ] Define columns: symbol, shares, price, value, gain_loss, change
+  - [ ] Set types, formatters, styles
+- [ ] **4.3** Create `holdings_ag_grid.py` using wrapper
+  - [ ] Use `AGGrid` component with config
+  - [ ] Wire up to `PortfolioState`
+- [ ] **4.4** Add validation config for holdings
+  - [ ] Price validation (min 0)
+  - [ ] Shares validation (min 1)
+- [ ] **4.5** Style matching
+  - [ ] Match or improve current visual design
+  - [ ] Dark/light theme support
+- [ ] **4.6** Side-by-side comparison
+  - [ ] Create toggle between old/new table
+  - [ ] Verify feature parity
+- [ ] **4.7** Remove old implementation (after validation)
+- [ ] **4.8** Document migration learnings
+
+### Testing Plan - Phase 4
+
+| Test Type | Test Case | Expected Result |
+|-----------|-----------|-----------------|
+| Visual | Compare old vs new | Visually equivalent or better |
+| Functional | View holdings | All data displays correctly |
+| Functional | Sort by column | Sorting works |
+| Functional | Filter by column | Filtering works |
+| E2E | Edit share count | Value updates, state syncs |
+| E2E | Right-click copy | Cell value copied |
+| Performance | Load 100 holdings | Renders in <1s |
+
+**Verification Commands:**
+```bash
+# Run app
+reflex run
+
+# Navigate to portfolio page
+# Compare old table vs new AG Grid table
+# Test all interactive features
+```
+
+---
+
+## Phase 5: Batch Migration
+
+### Objective
+Migrate remaining tables systematically using patterns from Phase 4.
+
+### Migration Order (by complexity)
+
+| Priority | Component | File | Complexity |
+|----------|-----------|------|------------|
+| 1 | Risk Views | `risk/risk_views.py` (5 tables) | Medium |
+| 2 | Positions | `positions/positions_views.py` (5 tables) | Medium |
+| 3 | PnL Views | `pnl/pnl_views.py` (4 tables) | Medium |
+| 4 | Reconciliation | `reconciliation/reconciliation_views.py` (5 tables) | Medium |
+| 5 | Portfolio Tools | `portfolio_tools/portfolio_tools_views.py` (9 tables) | High |
+| 6 | Market Data | `market_data/market_data_views.py` (5 tables) | Medium |
+| 7 | Instruments | `instruments/instrument_views.py` (5 tables) | Medium |
+| 8 | Events | `events/events_views.py` (3 tables) | Low |
+| 9 | Operations | `operations/operations_views.py` (2 tables) | Low |
+| 10 | EMSX | `emsx/emsx_views.py` (2 tables) | Low |
+| 11 | Compliance | `compliance/` (2 tables) | Low |
+| 12 | Others | Remaining tables | Low |
+
+### Checklist per Component
+
+For each component migration:
+- [ ] Create column config for all tables
+- [ ] Create validation config if needed
+- [ ] Create new AG Grid-based component
+- [ ] Test feature parity
+- [ ] Remove old implementation
+- [ ] Update imports
+
+### Testing Plan - Phase 5
+
+| Test Type | Test Case | Expected Result |
+|-----------|-----------|-----------------|
+| Regression | All pages load | No errors |
+| Regression | All tables render | Data displays |
+| Regression | All interactions work | Sorting, filtering, editing |
+| Performance | Full app benchmark | No performance regression |
+
+**Verification Commands:**
+```bash
+# Run full test suite
+pytest tests/ -v
+
+# Smoke test all pages
+# Manual navigation through app
+```
+
+---
+
+## Phase 6: Documentation & Polish
+
+### Objective
+Finalize documentation, create migration guide, ensure package is ready for reuse.
+
+### Checklist
+
+- [ ] **6.1** Complete `reflex_ag_grid/README.md`
+  - [ ] Installation instructions
+  - [ ] Quick start guide
+  - [ ] API reference
+  - [ ] Configuration examples
+- [ ] **6.2** Create migration guide
+  - [ ] Step-by-step migration from `rx.el.table`
+  - [ ] Common patterns and solutions
+  - [ ] Troubleshooting guide
+- [ ] **6.3** Add inline code documentation
+  - [ ] Docstrings for all public functions
+  - [ ] Type hints throughout
+- [ ] **6.4** Create example gallery
+  - [ ] Basic grid
+  - [ ] Grouped grid
+  - [ ] Editable grid with validation
+  - [ ] Full-featured trading grid
+- [ ] **6.5** Performance optimization review
+  - [ ] Review large table performance
+  - [ ] Document best practices
+- [ ] **6.6** Final cleanup
+  - [ ] Remove deprecated code
+  - [ ] Consistent code style
+  - [ ] Update all imports
+
+### Testing Plan - Phase 6
+
+| Test Type | Test Case | Expected Result |
+|-----------|-----------|-----------------|
+| Documentation | Follow README quickstart | Grid works as documented |
+| Documentation | All examples run | No errors |
+| Code Quality | Linting passes | No lint errors |
+| Code Quality | Type checking | No type errors |
+
+**Verification Commands:**
+```bash
+# Lint check
+ruff check reflex_ag_grid/
+
+# Type check
+mypy reflex_ag_grid/
+
+# Build docs (if applicable)
+# Run all examples
+```
+
+---
+
+## Appendix A: Original Requirements Analysis
+
+### Status
+**Current Stage**: Implementation Planning Complete
+
+### Objective
+Build a generic AG Grid wrapper to satisfy all 15 requirements from original analysis.
+
+### Requirements Analysis Matrix
 
 | # | Requirement | Ag-Grid Community (FOSS) | Ag-Grid Enterprise (Paid) | Custom `rx.table` / `rx.data_editor` | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -28,36 +421,105 @@ I have mapped your 15 requirements to the capabilities of **Reflex Ag-Grid** (th
 | 14 | Update timing | **N/A** (Backend logic) | **N/A** | **N/A** | Backend task. |
 | 15 | Save table format (Local Storage) | **Yes** (`getColumnState`) | **Yes** | **Hard** | Ag-Grid has built-in state methods. Custom requires manually tracking/saving column widths/order. |
 
-## Options
+### Selected Option
+**Option A: AG Grid Enterprise** - All requirements are out-of-the-box (OOTB), highly performant.
 
-### Option A: Reflex Ag-Grid (Recommended Technology, but Licensing Constraint?)
-*   **Pros**: Most requirements are out-of-the-box (OOTB). Highly performant.
-*   **Cons**:
-    *   **Grouping (#5)**, **Context Menu (#1)**, **Range Selection (#2)**, and **Excel Export (#9)** are **Enterprise** features.
-    *   Requires a license key for deployment if these specific features are used.
-*   **Workaround**: Use Community version for the basics. Implement "Grouping" via backend (pre-process data into a tree structure, though Ag-Grid Community tree-data might also be Enterprise or limited). Export to Excel via backend (pandas).
+---
 
-### Option B: Custom `rx.table` or `rx.data_editor` Wrapper
-*   **Pros**: 100% Free / Open Source. Full control.
-*   **Cons**: High development effort. You explicitly asked to "create a generic Reflex table" - this would likely involve building a reusable component that handles sorting/filtering/pagination/editing state in Python.
-*   **Feasibility**:
-    *   **Grouping**: Complex to implement effectively in UI (indentation, folding).
-    *   **Range Selection**: Very hard to do efficiently in pure Python/Reflex without custom React code.
+## Appendix B: Dependencies
 
-### Option C: Wrap a different FOSS Library (Explore "TanStack Table")
-*   **Pros**: TanStack Table is "headless" and powerful, often used for building custom tables. Open Source.
-*   **Cons**: Requires wrapping React components into Reflex (creating `reflex-tanstack-table` does not exist yet). High initial setup cost.
+### Python (requirements.txt)
+```
+reflex>=0.4.0
+configparser>=5.0
+```
 
-## Recommendation
-If **Grouping (#5)** and **Range Selection (#2)** are critical *and* you cannot pay for Ag-Grid Enterprise:
-1.  **Grouping**: We can simulate this in Ag-Grid Community or a custom table by flattening the data on the backend (creating "Group Header" rows) and managing expand/collapse state in Reflex.
-2.  **Range Selection**: `rx.data_editor` (Glide Data Grid) might be the best FOSS bet for "Excel-like" feel, but it might lack rigid grouping.
+### JavaScript (package.json additions)
+```json
+{
+  "dependencies": {
+    "ag-grid-react": "^31.3.0",
+    "ag-grid-enterprise": "^31.3.0",
+    "ag-grid-community": "^31.3.0"
+  }
+}
+```
 
-## Critical Questions for You
-1.  **Licensing**: Do you have or can you acquire an Ag-Grid Enterprise license?
-2.  **Trade-offs**: If not, which is more important:
-    *   **Features** (Grouping, Range Select)? -> We might need to stick with Ag-Grid and accept the watermark (dev) / pay (prod), or try `rx.data_editor` and compromise on Grouping.
-    *   **Cost** (Must be FOSS)? -> We will likely have to build a custom solution or heavily customize Ag-Grid Community (e.g., enable CSV export instead of Excel, backend grouping).
+---
 
-## Proposed Next Step
-I can prototype a **Generic Reflex Table** using Ag-Grid Community that attempts to solve the "Grouping" and "Context Menu" requirements using Reflex-side logic (e.g. backend data transformation for groups, `rx.context_menu` wrapper) to see if it meets your needs without the Enterprise license.
+## Appendix C: Timeline Estimate
+
+| Phase | Duration | Dependencies |
+|-------|----------|--------------|
+| Phase 1: Core Wrapper | 3-4 days | None |
+| Phase 2: Validation & Editing | 2-3 days | Phase 1 |
+| Phase 3: Advanced Features | 2-3 days | Phase 2 |
+| Phase 4: Pilot Migration | 1-2 days | Phase 3 |
+| Phase 5: Batch Migration | 5-7 days | Phase 4 |
+| Phase 6: Documentation | 1-2 days | Phase 5 |
+
+**Total Estimate: 14-21 days**
+
+---
+
+## Implementation Checklist Summary
+
+### Phase 1: Core Wrapper
+- [ ] 1.1 Package structure setup
+- [ ] 1.2 JavaScript React wrapper
+- [ ] 1.3 Reflex custom component
+- [ ] 1.4 Base state mixin
+- [ ] 1.5 Package dependencies
+- [ ] 1.6 Unit tests
+- [ ] 1.7 Basic example
+
+### Phase 2: Validation & Editing
+- [ ] 2.1 Validation loader
+- [ ] 2.2 JS validation integration
+- [ ] 2.3 Cell editor config
+- [ ] 2.4 Edit event handling
+- [ ] 2.5 Example config
+- [ ] 2.6 Validation tests
+- [ ] 2.7 Documentation
+
+### Phase 3: Advanced Features
+- [ ] 3.1 Row grouping
+- [ ] 3.2 Range selection
+- [ ] 3.3 Cell flashing
+- [ ] 3.4 Notification panel
+- [ ] 3.5 Export functionality
+- [ ] 3.6 Jump to row
+- [ ] 3.7 Integration tests
+- [ ] 3.8 Documentation
+
+### Phase 4: Pilot Migration
+- [ ] 4.1 Analyze holdings_table
+- [ ] 4.2 Column config
+- [ ] 4.3 New AG Grid component
+- [ ] 4.4 Validation config
+- [ ] 4.5 Style matching
+- [ ] 4.6 Side-by-side comparison
+- [ ] 4.7 Remove old implementation
+- [ ] 4.8 Document learnings
+
+### Phase 5: Batch Migration
+- [ ] 5.1 Risk Views (5 tables)
+- [ ] 5.2 Positions (5 tables)
+- [ ] 5.3 PnL Views (4 tables)
+- [ ] 5.4 Reconciliation (5 tables)
+- [ ] 5.5 Portfolio Tools (9 tables)
+- [ ] 5.6 Market Data (5 tables)
+- [ ] 5.7 Instruments (5 tables)
+- [ ] 5.8 Events (3 tables)
+- [ ] 5.9 Operations (2 tables)
+- [ ] 5.10 EMSX (2 tables)
+- [ ] 5.11 Compliance (2 tables)
+- [ ] 5.12 Remaining tables
+
+### Phase 6: Documentation
+- [ ] 6.1 README.md
+- [ ] 6.2 Migration guide
+- [ ] 6.3 Code documentation
+- [ ] 6.4 Example gallery
+- [ ] 6.5 Performance review
+- [ ] 6.6 Final cleanup
