@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "A professional portfolio management web dashboard built with Reflex"
 requires-python = ">=3.11,<3.14"
 dependencies = [
-    "reflex==0.8.20",
+    "reflex==0.8.26",
     "yfinance",
     "PyGithub",
     "pyodbc",

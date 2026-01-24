@@ -222,3 +222,15 @@ cp .env.example .env
 Key variables:
 - `LOG_LEVEL` - Logging level (DEBUG, INFO, WARNING, ERROR)
 - Database credentials (when available)
+
+### Redis on Windows (Memurai/Garnet)
+
+If you set up **Memurai** (see [docs/setups/memurai.md](docs/setups/memurai.md)) or **Garnet** (see [docs/setups/garnet.md](docs/setups/garnet.md)), you must configure the following in your `.env` file:
+
+```bash
+# Redis Configuration (Garnet/Memurai)
+REFLEX_REDIS_URL=redis://localhost:6379
+
+# State Manager
+REFLEX_STATE_MANAGER_MODE=redis
+```
