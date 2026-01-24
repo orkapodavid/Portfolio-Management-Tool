@@ -91,8 +91,33 @@ Build the foundational AG Grid wrapper component that can render a basic grid wi
   - [x] `AGGridStateMixin` with common handlers
   - [x] `jump_to_row()`, `export_excel()`, `export_csv()` via `rx.call_script`
 - [ ] **1.5** Add AG Grid Enterprise to `package.json` dependencies
-- [ ] **1.6** Write unit tests for Python services
+- [ ] **1.6** Write unit tests for Python models/services
 - [x] **1.7** Create basic usage example
+- [ ] **1.8** Create full demo app (`reflex_ag_grid/examples/demo_app/`)
+  - [ ] `rxconfig.py` for standalone execution
+  - [ ] Multi-page app showcasing all features:
+    - [ ] Basic Grid page - simple data display
+    - [ ] Editable Grid page - cell editing with validation
+    - [ ] Grouped Grid page - row grouping with aggregation
+    - [ ] Streaming Data page - mock real-time updates
+  - [ ] Mock streaming data with toggle (manual/auto-refresh modes)
+  - [ ] `rx.background` task for periodic state updates
+  - [ ] Notifications panel with jump-to-row
+  - [ ] Export buttons (Excel, CSV)
+  - [ ] README with run instructions
+- [ ] **1.9** Create Playwright E2E tests (`reflex_ag_grid/tests/`)
+  - [ ] `tests/setup_browsers.py` - Browser installation check/setup script
+  - [ ] `tests/e2e_ag_grid.py` - Main E2E test script using `uv run`
+  - [ ] Test cases:
+    - [ ] Grid renders with correct row count
+    - [ ] Cell editing updates value
+    - [ ] Right-click shows context menu
+    - [ ] Copy cell to clipboard works
+    - [ ] Export triggers file download
+    - [ ] Column resize persists after refresh
+    - [ ] Notifications display and jump-to-row works
+  - [ ] Uses semantic locators (per Playwright skill best practices)
+  - [ ] Screenshots on failure for debugging
 
 ### Architectural Constraints Applied (Per Senior Review)
 
@@ -103,25 +128,33 @@ Build the foundational AG Grid wrapper component that can render a basic grid wi
 
 ### Testing Plan - Phase 1
 
-| Test Type | Test Case | Expected Result |
-|-----------|-----------|-----------------|
-| Unit | `ag_grid.py` component creation | No errors, valid component |
-| Unit | Column def processing | Type → editor mapping works |
-| Integration | Render empty grid | Grid displays with headers |
-| Integration | Render with data | Rows display correctly |
-| E2E | Right-click context menu | Menu appears with options |
-| E2E | Column resize + refresh | Size persists in localStorage |
+| Test Type | Test Case | Expected Result | Verification Method |
+|-----------|-----------|-----------------|---------------------|
+| Unit | `ColumnDef.to_ag_grid_def()` | Correct dict output | `pytest reflex_ag_grid/tests/test_models.py -v` |
+| Unit | `ValidationSchema.validate_row()` | Valid/invalid detection | `pytest reflex_ag_grid/tests/test_models.py -v` |
+| Integration | Demo app starts | No errors on `reflex run` | Manual: `cd reflex_ag_grid/examples/demo_app && reflex run` |
+| E2E | Grid renders with data | Rows visible in browser | `uv run reflex_ag_grid/tests/e2e_ag_grid.py` |
+| E2E | Cell edit saves value | New value persists | `uv run reflex_ag_grid/tests/e2e_ag_grid.py` |
+| E2E | Context menu appears | Menu visible on right-click | `uv run reflex_ag_grid/tests/e2e_ag_grid.py` |
+| E2E | Export downloads file | .xlsx/.csv file created | `uv run reflex_ag_grid/tests/e2e_ag_grid.py` |
 
 **Verification Commands:**
 ```bash
-# Run Python unit tests
-pytest tests/unit/reflex_ag_grid/ -v
+# 1. Setup Playwright browsers (one-time)
+uv run reflex_ag_grid/tests/setup_browsers.py
 
-# Run Reflex dev server
+# 2. Run Python unit tests
+pytest reflex_ag_grid/tests/test_models.py -v
+
+# 3. Start demo app (in separate terminal)
+cd reflex_ag_grid/examples/demo_app
 reflex run
 
-# Manual browser test
-# Navigate to grid demo page, verify grid renders
+# 4. Run E2E tests (requires demo app running)
+uv run reflex_ag_grid/tests/e2e_ag_grid.py --url http://localhost:3000
+
+# 5. Manual verification
+# Navigate to http://localhost:3000, test each page
 ```
 
 ---
