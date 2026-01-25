@@ -24,6 +24,7 @@ class PricerBondState(rx.State):
             coupon = np.random.choice([2.0, 3.0, 4.0, 5.0], n_points)
             duration = maturity * (1 - np.exp(-0.05 * maturity)) / 0.05
             convexity = duration ** 2 / 2
+            volatility = np.random.normal(0.2, 0.05, n_points) # Mock volatility
 
             df = pd.DataFrame({
                 "Maturity": maturity,
@@ -31,7 +32,8 @@ class PricerBondState(rx.State):
                 "Price": price,
                 "Coupon": coupon,
                 "Duration": duration,
-                "Convexity": convexity
+                "Convexity": convexity,
+                "Volatility": volatility
             })
 
             # Sort by X axis for cleaner lines if it's a line chart
@@ -73,12 +75,14 @@ class PricerBondState(rx.State):
             X, Y = np.meshgrid(x, y)
 
             # Calculate Z based on X and Y to create a surface
-            # This is a mock function to create a visually interesting surface
-            if self.z_axis == "Coupon":
-                # Mock relationship: Coupon influences Price/Yield
-                Z = np.sin(X/5) * np.cos(Y/2) * 2 + 3
+            if self.z_axis == "Volatility":
+                # Volatility surface: often curved
+                # Mock: Vol increases with yield (Y) and varies with maturity (X)
+                Z = 0.2 + (Y / 20) + np.sin(X / 5) * 0.05
             elif self.z_axis == "Convexity":
-                 Z = (X**2 / 100) + (Y / 10)
+                # Convexity usually relates to duration^2
+                # Here we mock it based on X (Maturity/Duration) and Y
+                Z = (X**2 / 100) + (Y / 10)
             else:
                 Z = np.sin(np.sqrt(X**2 + Y**2))
 

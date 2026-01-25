@@ -85,7 +85,7 @@ def pricer_bond_view() -> rx.Component:
             rx.el.div(
                 rx.text("Z-Axis:", class_name="text-sm font-bold mr-2"),
                 rx.select(
-                    ["None", "Coupon", "Convexity"],
+                    ["None", "Volatility", "Convexity"],
                     value=PricerBondState.z_axis,
                     on_change=PricerBondState.set_z_axis,
                     class_name="border rounded p-1 text-xs"
