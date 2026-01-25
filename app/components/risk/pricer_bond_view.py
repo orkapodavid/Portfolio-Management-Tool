@@ -4,8 +4,9 @@ from .risk_views import header_cell, text_cell
 
 def pricer_bond_view() -> rx.Component:
     return rx.el.div(
-        # Top Section: Terms and Pricing Results (Original layout preserved in a wrapper)
+        # Top Section: Terms and Pricing Results
         rx.el.div(
+            # Left Column: Terms
             rx.el.div(
                 rx.el.h3(
                     "Terms", class_name="text-sm font-bold mb-4 bg-gray-100 p-2 rounded"
@@ -19,12 +20,17 @@ def pricer_bond_view() -> rx.Component:
                     ),
                     rx.el.div(
                         rx.el.label("Coupon Rate", class_name="font-bold block mb-1"),
-                        rx.el.input(class_name="border rounded p-1 w-full text-xs"),
+                        rx.el.input(
+                            type="number",
+                            placeholder="e.g. 5.0",
+                            class_name="border rounded p-1 w-full text-xs"
+                        ),
                     ),
                     class_name="grid grid-cols-1 gap-4 text-xs",
                 ),
                 class_name="w-1/3 p-4 border-r border-gray-200 overflow-y-auto",
             ),
+            # Right Column: Pricing Results
             rx.el.div(
                 rx.el.h3(
                     "Pricing Results",
@@ -51,7 +57,7 @@ def pricer_bond_view() -> rx.Component:
                 ),
                 class_name="flex-1 p-4",
             ),
-            class_name="flex w-full h-1/2 bg-white",
+            class_name="flex w-full h-1/2 bg-white border-b border-gray-200",
         ),
 
         # Middle Section: Visualization Controls
@@ -59,7 +65,7 @@ def pricer_bond_view() -> rx.Component:
             rx.el.div(
                 rx.text("X-Axis:", class_name="text-sm font-bold mr-2"),
                 rx.select(
-                    ["Maturity", "Coupon", "Duration"],
+                    ["Maturity", "Duration"],
                     value=PricerBondState.x_axis,
                     on_change=PricerBondState.set_x_axis,
                     class_name="border rounded p-1 text-xs"
@@ -69,7 +75,7 @@ def pricer_bond_view() -> rx.Component:
             rx.el.div(
                 rx.text("Y-Axis:", class_name="text-sm font-bold mr-2"),
                 rx.select(
-                    ["Yield", "Price", "Convexity"],
+                    ["Yield", "Price"],
                     value=PricerBondState.y_axis,
                     on_change=PricerBondState.set_y_axis,
                     class_name="border rounded p-1 text-xs"
@@ -79,14 +85,14 @@ def pricer_bond_view() -> rx.Component:
             rx.el.div(
                 rx.text("Z-Axis:", class_name="text-sm font-bold mr-2"),
                 rx.select(
-                    ["None", "Price", "Spread"],
+                    ["None", "Coupon", "Convexity"],
                     value=PricerBondState.z_axis,
                     on_change=PricerBondState.set_z_axis,
                     class_name="border rounded p-1 text-xs"
                 ),
                 class_name="flex items-center"
             ),
-            class_name="flex gap-6 p-4 bg-gray-50 border-t border-b border-gray-200"
+            class_name="flex gap-6 p-4 bg-gray-50 border-b border-gray-200"
         ),
 
         # Bottom Section: Chart
