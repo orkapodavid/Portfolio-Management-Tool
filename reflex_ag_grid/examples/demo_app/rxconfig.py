@@ -6,4 +6,5 @@ config = rx.Config(
     app_name="ag_grid_demo",
     title="AG Grid Demo",
     description="Demonstration of AG Grid Enterprise wrapper for Reflex",
+    disable_plugins=["reflex.plugins.sitemap.SitemapPlugin"],
 )

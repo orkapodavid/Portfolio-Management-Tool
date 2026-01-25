@@ -1,249 +1,392 @@
-"""
-AG Grid Custom Component for Reflex
-
-This module defines the Reflex wrapper around AG Grid Enterprise.
-Uses NoSSRComponent since AG Grid requires browser APIs.
-
-ARCHITECTURAL PATTERNS:
-- Function Registry: Formatters/renderers are string keys, not Python functions
-- Event Sanitization: All events received are pre-sanitized by JS wrapper
-- Pydantic Models: Column definitions use ColumnDef Pydantic models
-"""
-
-from __future__ import annotations
-
-from typing import Any, Dict, List, Optional, Union
+from types import SimpleNamespace
+from typing import Any, Literal
 
 import reflex as rx
-from reflex.components.component import NoSSRComponent
-from reflex.vars import Var
-
-from reflex_ag_grid.models.column_def import ColumnDef, column_defs_to_ag_grid
-from reflex_ag_grid.models.validation import ValidationSchema
+from pydantic import BaseModel
+from reflex.components.el import Div
+from reflex.components.props import PropsBase
 
 
-class AGGrid(NoSSRComponent):
-    """
-    Custom AG Grid Enterprise wrapper component for Reflex.
+# =============================================================================
+# EVENT SANITIZATION HELPERS
+# =============================================================================
 
-    This component renders AG Grid with Enterprise features including:
-    - Context menu with copy/export
-    - Range selection
-    - Row grouping and aggregation
-    - Excel export
-    - Column state persistence
 
-    IMPORTANT: Event handlers receive sanitized data dicts, not raw AG Grid events.
+def callback_content(iterable: list[str]) -> str:
+    """Join expressions for arrow callback."""
+    return "; ".join(iterable)
 
-    Props:
-        column_defs: List of column definitions (ColumnDef models or dicts)
-        row_data: List of row data dictionaries
-        row_id_field: Field name to use as unique row identifier (default: "id")
-        validation_config: ValidationSchema for field validation
-        grid_options: Additional AG Grid options to merge
-        theme: AG Grid theme class (default: "ag-theme-balham-dark")
-        height: Grid height (default: "100%")
-        width: Grid width (default: "100%")
-        grid_id: Unique identifier for this grid instance
-        license_key: AG Grid Enterprise license key
 
-    Events:
-        on_cell_edit: Fired with {rowId, field, oldValue, newValue, rowData}
-        on_row_click: Fired with {rowId, rowData}
-        on_row_double_click: Fired with {rowId, rowData}
-        on_row_right_click: Fired with {rowId, rowData, clientX, clientY}
-        on_selection_change: Fired with {selectedRows, selectedCount}
-        on_grid_ready: Fired with {gridId}
+def arrow_callback(js_expr: str | list[str]):
+    """Create an arrow callback that executes JS expressions."""
+    if isinstance(js_expr, list):
+        js_expr = callback_content(js_expr)
+    return rx.Var(f"(() => {{{js_expr}}})()")
 
-    Example:
-        AGGrid.create(
-            column_defs=[
-                ColumnDef(field="name", header_name="Name"),
-                ColumnDef(field="price", type="number", formatter="currency"),
-            ],
-            row_data=State.data,
-            on_cell_edit=State.handle_edit,
-        )
-    """
 
-    # Library path - relative to static folder
-    library = "../../reflex_ag_grid/static/ag_grid_wrapper.js"
-    tag = "AGGridWrapper"  # Must match the exported component name
-
-    # Disable SSR - AG Grid requires browser APIs
-    is_default = True
-
-    # CRITICAL: Define dependencies here. Reflex handles the install.
-    # This replaces manual package.json editing.
-    lib_dependencies: list[str] = [
-        "ag-grid-react@31.3.0",
-        "ag-grid-community@31.3.0",
-        "ag-grid-enterprise@31.3.0",
+def exclude_non_serializable_keys(
+    event: rx.Var,
+    exclude_keys: list[str],
+) -> list[str]:
+    """Create JS expressions to exclude non-serializable keys from event."""
+    exclude_keys_str = ", ".join(exclude_keys)
+    return [
+        f"let {{{exclude_keys_str}, ...rest}} = {event}",
+        "return rest",
     ]
 
-    # ===== Props =====
 
-    column_defs: Var[List[Dict[str, Any]]]
+def _on_cell_event_spec(event: rx.Var) -> list[rx.Var]:
+    """Event spec for cell events - sanitizes AG Grid event data."""
+    exclude_keys = [
+        "context",
+        "api",
+        "columnApi",
+        "column",
+        "node",
+        "event",
+        "eventPath",
+    ]
+    return [
+        arrow_callback(exclude_non_serializable_keys(event, exclude_keys)),
+    ]
+
+
+def _on_row_event_spec(event: rx.Var) -> list[rx.Var]:
+    """Event spec for row events - sanitizes AG Grid event data."""
+    exclude_keys = ["context", "api", "source", "node", "event", "eventPath"]
+    return [
+        arrow_callback(exclude_non_serializable_keys(event, exclude_keys)),
+    ]
+
+
+def _on_cell_value_changed(event: rx.Var) -> list[rx.Var]:
+    """Event spec for cell value changes - returns row index, field, and new value."""
+    return [
+        rx.Var(f"(() => {{let {{rowIndex, ...rest}} = {event}; return rowIndex}})()"),
+        rx.Var(f"(() => {{let {{colDef, ...rest}} = {event}; return colDef.field}})()"),
+        rx.Var(f"(() => {{let {{newValue, ...rest}} = {event}; return newValue}})()"),
+    ]
+
+
+def _on_selection_change_signature(event: rx.Var) -> list[rx.Var]:
+    """Event spec for selection changes - returns selected rows."""
+    return [
+        rx.Var(f"{event}.api.getSelectedRows()"),
+        rx.Var(f"{event}.source"),
+        rx.Var(f"{event}.type"),
+    ]
+
+
+# =============================================================================
+# AG GRID CONSTANTS
+# =============================================================================
+
+
+class AGFilters(SimpleNamespace):
+    """Available AG Grid filter types."""
+
+    text = "agTextColumnFilter"
+    number = "agNumberColumnFilter"
+    date = "agDateColumnFilter"
+    set = "agSetColumnFilter"
+    multi = "agMultiColumnFilter"
+
+
+class AGEditors(SimpleNamespace):
+    """Available AG Grid editor types."""
+
+    text = "agTextCellEditor"
+    large_text = "agLargeTextCellEditor"
+    select = "agSelectCellEditor"
+    rich_select = "agRichSelectCellEditor"
+    number = "agNumberCellEditor"
+    date = "agDateCellEditor"
+    checkbox = "agCheckboxCellEditor"
+
+
+# =============================================================================
+# COLUMN DEFINITION MODEL
+# =============================================================================
+
+
+class ColumnDef(PropsBase):
+    """AG Grid column definition with automatic camelCase conversion."""
+
+    field: str | rx.Var[str]
+    col_id: str | rx.Var[str] | None = None
+    type: str | rx.Var[str] | None = None
+    hide: bool | rx.Var[bool] = False
+    editable: bool | rx.Var[bool] = False
+    filter: str | rx.Var[str] | None = None
+    floating_filter: bool | rx.Var[bool] = False
+    header_name: str | rx.Var[str] | None = None
+    header_tooltip: str | rx.Var[str] | None = None
+    checkbox_selection: bool | rx.Var[bool] = False
+    cell_editor: str | rx.Var[str] | None = None
+    cell_editor_params: dict[str, list[Any]] | rx.Var[dict[str, list[Any]]] | None = (
+        None
+    )
+    value_formatter: rx.Var | None = None
+    wrap_text: bool | None = None
+    auto_height: bool | None = None
+    enable_cell_change_flash: bool | None = None
+    resizable: bool | None = None
+    cell_renderer: rx.Var | None = None
+    flex: int | rx.Var[int] | None = None
+    sortable: bool | rx.Var[bool] = True
+    width: int | rx.Var[int] | None = None
+    min_width: int | rx.Var[int] | None = None
+    max_width: int | rx.Var[int] | None = None
+    # Grouping
+    row_group: bool | rx.Var[bool] = False
+    agg_func: str | rx.Var[str] | None = None
+
+
+class ColumnGroup(PropsBase):
+    """AG Grid column group definition."""
+
+    children: list["ColumnDef | ColumnGroup"] | rx.Var[list["ColumnDef | ColumnGroup"]]
+    group_id: str | rx.Var[str]
+    marry_children: bool | rx.Var[bool] = False
+    open_by_default: bool | rx.Var[bool] = False
+    column_group_show: Literal["open", "closed"] | rx.Var[str] = "open"
+    header_name: str | rx.Var[str]
+    header_tooltip: str | rx.Var[str] | None = None
+
+
+# =============================================================================
+# AG GRID API HELPER
+# =============================================================================
+
+
+class AgGridAPI(BaseModel):
+    """Helper for calling AG Grid API methods from Python."""
+
+    model_config = {"arbitrary_types_allowed": True}
+
+    ref: str
+
+    @classmethod
+    def create(cls, id: str) -> "AgGridAPI":
+        """Create an instance from a grid ID."""
+        return cls(ref=rx.utils.format.format_ref(id))
+
+    @property
+    def _api(self) -> rx.Var:
+        return f"refs['{self.ref}']?.current?.api"
+
+    def __getattr__(self, name: str):
+        def _call_api(*args, **kwargs):
+            var_args = [str(rx.Var.create(arg)) for arg in args]
+            return rx.call_script(
+                f"{self._api}.{rx.utils.format.to_camel_case(name)}({', '.join(var_args)})",
+                **kwargs,
+            )
+
+        return _call_api
+
+
+# =============================================================================
+# SIZE COLUMNS TO FIT HELPER
+# =============================================================================
+
+size_columns_to_fit = rx.Var(
+    "(event) => event.api.sizeColumnsToFit()", _var_type=rx.EventChain
+)
+
+
+# =============================================================================
+# MAIN AG GRID COMPONENT
+# =============================================================================
+
+
+class AgGrid(rx.Component):
     """
-    Column definitions in AG Grid format.
-    Use ColumnDef.to_ag_grid_def() or column_defs_to_ag_grid() to convert.
-    
-    Registry keys (resolved in JS):
-    - _formatter: string key for valueFormatter
-    - _renderer: string key for cellRenderer
-    - _cellClassRules: string key for cellClassRules
-    - _type: column type for editor selection
-    - _validation: inline validation rules
+    Reflex AG Grid component wrapping ag-grid-react with Enterprise support.
+
+    Based on the proven reflex-ag-grid package patterns with:
+    - CSS imports via add_imports()
+    - License key injection via add_custom_code()
+    - Event sanitization to remove non-serializable AG Grid objects
+
+    Note: ResizeObserver errors may appear briefly during initialization
+    but do not affect grid functionality.
     """
 
-    row_data: Var[List[Dict[str, Any]]]
-    """Row data. Each row MUST have a unique identifier field."""
+    # Standard ag-grid-react library import
+    library: str = "ag-grid-react@32.3.0"
+    tag: str = "AgGridReact"
 
-    row_id_field: Var[str] = "id"  # type: ignore
-    """Field name to use as unique row identifier."""
+    # Dependencies - AG Grid packages
+    lib_dependencies: list[str] = [
+        "ag-grid-community@32.3.0",
+        "ag-grid-enterprise@32.3.0",
+    ]
 
-    validation_config: Var[Dict[str, Dict[str, Any]]] = {}  # type: ignore
-    """
-    Validation rules per field from ValidationSchema.to_js_config().
-    Format: { field_name: { type, min, max, pattern, required, ... } }
-    """
+    # ===== Core Props =====
+    column_defs: rx.Var[list[dict[str, Any] | ColumnDef | ColumnGroup]]
+    row_data: rx.Var[list[dict[str, Any]]]
 
-    grid_options: Var[Dict[str, Any]] = {}  # type: ignore
-    """Additional AG Grid options to merge with defaults."""
+    # ===== Selection =====
+    row_selection: rx.Var[str] = "single"
+    cell_selection: bool | rx.Var[bool] = False
+    suppress_row_click_selection: rx.Var[bool] = rx.Var.create(False)
 
-    theme: Var[str] = "ag-theme-balham-dark"  # type: ignore
-    """AG Grid theme class name."""
+    # ===== Pagination =====
+    pagination: rx.Var[bool] = False
+    pagination_page_size: rx.Var[int] = rx.Var.create(10)
+    pagination_page_size_selector: rx.Var[list[int]] = rx.Var.create([10, 25, 50])
 
-    height: Var[str] = "100%"  # type: ignore
-    """Grid container height."""
+    # ===== Styling =====
+    animate_rows: rx.Var[bool] = False
+    theme: rx.Var[Literal["quartz", "balham", "alpine", "material"]]
 
-    width: Var[str] = "100%"  # type: ignore
-    """Grid container width."""
+    # ===== Column Defaults =====
+    default_col_def: rx.Var[dict[str, Any]] = rx.Var.create({})
+    auto_size_strategy: rx.Var[dict] = rx.Var.create({})
 
-    grid_id: Var[str] = "default"  # type: ignore
-    """Unique identifier for this grid (used for state persistence)."""
+    # ===== Grouping =====
+    group_default_expanded: rx.Var[int] | None = rx.Var.create(-1)
+    group_selects_children: rx.Var[bool] = rx.Var.create(False)
+    auto_group_column_def: rx.Var[Any] = rx.Var.create({})
 
-    license_key: Var[Optional[str]] = None  # type: ignore
-    """AG Grid Enterprise license key. Can also be set via window.AG_GRID_LICENSE_KEY."""
+    # ===== Pinned Rows =====
+    pinned_top_row_data: rx.Var[list[dict[str, Any]]] = rx.Var.create([])
+    pinned_bottom_row_data: rx.Var[list[dict[str, Any]]] = rx.Var.create([])
 
-    context_menu_items: Var[List[str]] = []  # type: ignore
-    """Custom context menu item keys (resolved via registry)."""
+    # ===== Sidebar =====
+    side_bar: rx.Var[str | dict[str, Any] | bool | list[str]] = rx.Var.create("")
+
+    # ===== Row ID =====
+    get_row_id: rx.EventHandler[lambda e0: [e0]]
 
     # ===== Event Handlers =====
-    # All events receive SANITIZED data - no circular references
-
-    on_cell_edit: rx.EventHandler[lambda data: [data]]
-    """
-    Fired when cell edit is completed with value change.
-    Payload: { rowId: str, field: str, oldValue: Any, newValue: Any, rowData: dict }
-    """
-
-    on_row_click: rx.EventHandler[lambda data: [data]]
-    """
-    Fired when row is clicked.
-    Payload: { rowId: str, rowData: dict }
-    """
-
-    on_row_double_click: rx.EventHandler[lambda data: [data]]
-    """
-    Fired when row is double-clicked.
-    Payload: { rowId: str, rowData: dict }
-    """
-
-    on_row_right_click: rx.EventHandler[lambda data: [data]]
-    """
-    Fired on row right-click (before context menu appears).
-    Payload: { rowId: str, rowData: dict, clientX: int, clientY: int }
-    """
-
-    on_selection_change: rx.EventHandler[lambda data: [data]]
-    """
-    Fired when row selection changes.
-    Payload: { selectedRows: list[dict], selectedCount: int }
-    """
-
-    on_grid_ready: rx.EventHandler[lambda data: [data]]
-    """
-    Fired when grid is fully initialized.
-    Payload: { gridId: str }
-    """
+    on_cell_clicked: rx.EventHandler[_on_cell_event_spec]
+    on_cell_double_clicked: rx.EventHandler[_on_cell_event_spec]
+    on_cell_value_changed: rx.EventHandler[_on_cell_value_changed]
+    on_row_clicked: rx.EventHandler[_on_row_event_spec]
+    on_row_double_clicked: rx.EventHandler[_on_row_event_spec]
+    on_selection_changed: rx.EventHandler[_on_selection_change_signature]
+    on_grid_ready: rx.EventHandler[lambda e0: [e0]]
+    on_first_data_rendered: rx.EventHandler[_on_cell_event_spec]
 
     @classmethod
     def create(
         cls,
-        column_defs: Union[List[ColumnDef], List[Dict[str, Any]], Var],
-        row_data: Union[List[Dict[str, Any]], Var],
-        validation_schema: Optional[ValidationSchema] = None,
+        *children,
+        id: str,
+        row_id_key: str | None = None,
         **props,
-    ) -> "AGGrid":
-        """
-        Create an AGGrid component instance.
+    ) -> rx.Component:
+        """Create an AG Grid component."""
+        props.setdefault("id", id)
 
-        Args:
-            column_defs: Column definitions (ColumnDef list, dict list, or Var)
-            row_data: Row data (list of dicts or Var)
-            validation_schema: Optional Pydantic validation schema
-            **props: Additional component props
+        # Configure row ID getter
+        if row_id_key is not None:
+            props["get_row_id"] = rx.Var(f"(params) => params.data.{row_id_key}").to(
+                rx.EventChain
+            )
 
-        Returns:
-            AGGrid component instance
-        """
-        # Convert ColumnDef models to AG Grid format if needed
-        if isinstance(column_defs, list) and len(column_defs) > 0:
-            if isinstance(column_defs[0], ColumnDef):
-                column_defs = column_defs_to_ag_grid(column_defs)  # type: ignore
-
-        # Convert ValidationSchema to JS config if provided
-        if validation_schema:
-            props["validation_config"] = validation_schema.to_js_config()
-
-        # Set column_defs
-        props["column_defs"] = column_defs
-        props["row_data"] = row_data
-
-        return super().create(**props)
-
-    def _get_imports(self) -> dict:
-        """Get the JS imports for this component."""
-        return {}
-
-    def _get_custom_code(self) -> Optional[str]:
-        """Custom code to inject."""
-        return None
-
-
-def ag_grid(
-    column_defs: Union[List[ColumnDef], List[Dict[str, Any]], Var],
-    row_data: Union[List[Dict[str, Any]], Var],
-    validation_schema: Optional[ValidationSchema] = None,
-    **props,
-) -> AGGrid:
-    """
-    Convenience function to create an AG Grid component.
-
-    Args:
-        column_defs: Column definitions
-        row_data: Row data
-        validation_schema: Optional validation schema
-        **props: Additional props
-
-    Returns:
-        AGGrid component
-
-    Example:
-        ag_grid(
-            column_defs=[
-                ColumnDef(field="id", header_name="ID"),
-                ColumnDef(field="price", type="number", editable=True),
-            ],
-            row_data=State.items,
-            on_cell_edit=State.handle_edit,
-            height="600px",
+        # Set theme class based on color mode
+        theme_name = props.pop("theme", "quartz")  # Remove theme from props
+        props["class_name"] = rx.match(
+            theme_name,
+            ("quartz", rx.color_mode_cond("ag-theme-quartz", "ag-theme-quartz-dark")),
+            ("balham", rx.color_mode_cond("ag-theme-balham", "ag-theme-balham-dark")),
+            ("alpine", rx.color_mode_cond("ag-theme-alpine", "ag-theme-alpine-dark")),
+            (
+                "material",
+                rx.color_mode_cond("ag-theme-material", "ag-theme-material-dark"),
+            ),
+            "",
         )
-    """
-    return AGGrid.create(
-        column_defs=column_defs,
-        row_data=row_data,
-        validation_schema=validation_schema,
-        **props,
-    )
+
+        # Auto-size columns on grid ready
+        if "auto_size_strategy" in props:
+            props["on_grid_ready"] = size_columns_to_fit
+
+        return super().create(*children, **props)
+
+    def add_imports(self):
+        """Import AG Grid CSS and Enterprise modules."""
+        return {
+            "": [
+                "ag-grid-community/styles/ag-grid.css",
+                "ag-grid-community/styles/ag-theme-quartz.css",
+                "ag-grid-community/styles/ag-theme-balham.css",
+                "ag-grid-community/styles/ag-theme-material.css",
+                "ag-grid-community/styles/ag-theme-alpine.css",
+                "ag-grid-enterprise",
+            ],
+            "ag-grid-enterprise": [
+                "LicenseManager",
+            ],
+        }
+
+    def add_custom_code(self) -> list[str]:
+        """Inject license key from environment variable."""
+        import os
+
+        ag_grid_license_key = os.getenv("AG_GRID_LICENSE_KEY")
+        if ag_grid_license_key is not None:
+            return [f"LicenseManager.setLicenseKey('{ag_grid_license_key}');"]
+        return ["LicenseManager.setLicenseKey(null);"]
+
+    @property
+    def api(self) -> AgGridAPI:
+        """Access the AG Grid API for imperative operations."""
+        return AgGridAPI(ref=self.get_ref())
+
+    def get_selected_rows(self, callback: rx.EventHandler):
+        return self.api.getSelectedRows(callback=callback)
+
+    def select_all(self):
+        return self.api.selectAll()
+
+    def deselect_all(self):
+        return self.api.deselectAll()
+
+    def export_data_as_csv(self):
+        """Export the grid data as a CSV file."""
+        return self.api.exportDataAsCsv()
+
+    def export_data_as_excel(self):
+        """Export the grid data as an Excel file (Enterprise)."""
+        return self.api.exportDataAsExcel()
+
+
+class WrappedAgGrid(AgGrid):
+    """AG Grid wrapped in a div with configurable dimensions."""
+
+    @classmethod
+    def create(cls, *children, **props):
+        width = props.pop("width", None)
+        height = props.pop("height", None)
+        return Div.create(
+            super().create(*children, **props),
+            width=width or "100%",
+            height=height or "400px",
+        )
+
+
+# =============================================================================
+# NAMESPACE FOR CLEAN API
+# =============================================================================
+
+
+class AgGridNamespace(rx.ComponentNamespace):
+    """Namespace providing clean API: ag_grid(id="...", ...)"""
+
+    api = AgGridAPI.create
+    column_def = ColumnDef
+    column_group = ColumnGroup
+    filters = AGFilters
+    editors = AGEditors
+    size_columns_to_fit = size_columns_to_fit
+    root = AgGrid.create
+    __call__ = WrappedAgGrid.create
+
+
+# Main export
+ag_grid = AgGridNamespace()
