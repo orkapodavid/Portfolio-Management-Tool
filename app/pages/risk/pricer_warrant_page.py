@@ -1,6 +1,6 @@
 import reflex as rx
 from app.components.shared.module_layout import module_layout
-from app.components.risk.risk_views import pricer_warrant_view
+from app.components.risk.pricer_warrant_view import pricer_warrant_view
 from app.states.ui.ui_state import UIState
 
 
