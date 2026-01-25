@@ -14,6 +14,44 @@ from app.states.market_data.market_data_state import MarketDataState
 # COLUMN DEFINITIONS
 # =============================================================================
 
+# Cell style for Ticker - blue link style
+_TICKER_STYLE = rx.Var(
+    """(params) => ({
+        color: '#2563eb',
+        cursor: 'pointer',
+        fontWeight: '600'
+    })"""
+)
+
+# Cell style for 1D Change % - green for positive, red for negative
+_CHANGE_STYLE = rx.Var(
+    """(params) => {
+        const val = parseFloat(params.value);
+        if (isNaN(val)) return {};
+        return {
+            color: val >= 0 ? '#059669' : '#dc2626',
+            fontWeight: '500'
+        };
+    }"""
+)
+
+# Cell style for Market Status - badge style with background
+_STATUS_STYLE = rx.Var(
+    """(params) => {
+        const val = (params.value || '').toLowerCase();
+        const isOpen = val.includes('open');
+        return {
+            backgroundColor: isOpen ? '#d1fae5' : '#fee2e2',
+            color: isOpen ? '#065f46' : '#991b1b',
+            padding: '2px 8px',
+            borderRadius: '9999px',
+            fontSize: '11px',
+            fontWeight: '500',
+            display: 'inline-block'
+        };
+    }"""
+)
+
 
 def _get_column_defs() -> list:
     """Return column definitions for the market data grid."""
@@ -23,6 +61,7 @@ def _get_column_defs() -> list:
             header_name="Ticker",
             filter=AGFilters.text,
             min_width=100,
+            cell_style=_TICKER_STYLE,
         ),
         ag_grid.column_def(
             field="listed_shares",
@@ -65,6 +104,7 @@ def _get_column_defs() -> list:
             header_name="1D Change %",
             filter=AGFilters.text,
             min_width=110,
+            cell_style=_CHANGE_STYLE,
         ),
         ag_grid.column_def(
             field="implied_vol_pct",
@@ -77,6 +117,7 @@ def _get_column_defs() -> list:
             header_name="Market Status",
             filter=AGFilters.text,
             min_width=120,
+            cell_style=_STATUS_STYLE,
         ),
         ag_grid.column_def(
             field="created_by",

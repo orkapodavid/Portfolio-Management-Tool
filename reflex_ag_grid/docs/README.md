@@ -21,6 +21,7 @@ This directory contains documentation for each of the 15 AG Grid demo pages in t
 | 13 | Transaction API | [13_transaction_api.md](13_transaction_api.md) | `/13-transaction-api` |
 | 14 | Background Tasks | [14_background_tasks.md](14_background_tasks.md) | `/14-background-tasks` |
 | 15 | Column State | [15_column_state.md](15_column_state.md) | `/15-column-state` |
+| 16 | Cell Renderers | [16_cell_renderers.md](16_cell_renderers.md) | `/16-cell-renderers` |
 
 ## Running the Demo
 

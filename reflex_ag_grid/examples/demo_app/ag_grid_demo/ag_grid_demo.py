@@ -1,5 +1,5 @@
 """
-AG Grid Demo App - 15 demo pages showcasing all AG Grid requirements.
+AG Grid Demo App - 16 demo pages showcasing all AG Grid requirements.
 
 One page per requirement from the AG Grid Traceability Matrix.
 """
@@ -22,12 +22,13 @@ from .pages import (
     transaction_api_page,
     background_tasks_page,
     column_state_page,
+    cell_renderers_page,
     gallery_page,
 )
 
 
 # =============================================================================
-# APP - 15 Demo Pages (one per requirement)
+# APP - 16 Demo Pages (one per requirement)
 # =============================================================================
 
 app = rx.App()
@@ -63,3 +64,8 @@ app.add_page(
     background_tasks_page, route="/14-background-tasks", title="14 - Background Tasks"
 )
 app.add_page(column_state_page, route="/15-column-state", title="15 - Column State")
+
+# Req 16
+app.add_page(
+    cell_renderers_page, route="/16-cell-renderers", title="16 - Cell Renderers"
+)

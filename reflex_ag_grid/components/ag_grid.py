@@ -238,6 +238,15 @@ class ColumnDef(PropsBase):
     cell_renderer: rx.Var | None = None
     checkbox_selection: bool | rx.Var[bool] = False
 
+    # Styling (conditional cell styling)
+    # cell_style: JS function returning CSS style object, e.g., (params) => ({ color: 'red' })
+    cell_style: rx.Var | None = None
+    # cell_class: JS function returning CSS class name(s), e.g., (params) => 'my-class'
+    cell_class: rx.Var | None = None
+    # cell_class_rules: Object mapping class names to conditions
+    # e.g., {'positive': 'params.value >= 0', 'negative': 'params.value < 0'}
+    cell_class_rules: dict[str, str] | rx.Var | None = None
+
     # Sizing
     width: int | rx.Var[int] | None = None
     min_width: int | rx.Var[int] | None = None

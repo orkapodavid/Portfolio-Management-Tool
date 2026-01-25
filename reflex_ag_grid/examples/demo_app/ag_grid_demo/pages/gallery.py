@@ -163,6 +163,14 @@ def gallery_page() -> rx.Component:
                 "layout-grid",
                 "blue",
             ),
+            # Req 16: Cell Renderers
+            feature_card(
+                "16 - Cell Renderers",
+                "Custom cell styling & formatting.",
+                "/16-cell-renderers",
+                "palette",
+                "fuchsia",
+            ),
             columns="3",  # 3 columns layout
             spacing="4",
             width="100%",

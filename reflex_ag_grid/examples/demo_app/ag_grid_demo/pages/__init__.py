@@ -1,5 +1,5 @@
 """
-Demo App Pages - All 15 demo pages (one per requirement).
+Demo App Pages - All 16 demo pages (one per requirement).
 
 Exports all page functions for app registration.
 """
@@ -19,6 +19,7 @@ from .req12_edit_pause import edit_pause_page
 from .req13_transaction_api import transaction_api_page
 from .req14_background_tasks import background_tasks_page
 from .req15_column_state import column_state_page
+from .req16_cell_renderers import cell_renderers_page
 from .gallery import gallery_page
 
 __all__ = [
@@ -38,4 +39,5 @@ __all__ = [
     "transaction_api_page",
     "background_tasks_page",
     "column_state_page",
+    "cell_renderers_page",
 ]
