@@ -21,7 +21,7 @@ from app.services.pnl.pnl_service import PnLService
 from app.services.positions.position_service import PositionService
 from app.services.risk.risk_service import RiskService
 from app.services.compliance.compliance_service import ComplianceService
-from app.services.portfolio.portfolio_service import PortfolioService
+from app.services.portfolio_tools.portfolio_tools_service import PortfolioToolsService
 from app.services.market_data.market_data_service import MarketDataService
 from app.services.emsx.emsx_service import EMSXService
 from app.services.notifications.notification_service import NotificationService
@@ -34,7 +34,7 @@ __all__ = [
     "PositionService",
     "RiskService",
     "ComplianceService",
-    "PortfolioService",
+    "PortfolioToolsService",
     "MarketDataService",
     "EMSXService",
     "NotificationService",

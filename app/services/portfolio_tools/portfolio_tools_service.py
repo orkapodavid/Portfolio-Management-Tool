@@ -1,8 +1,8 @@
 """
-Portfolio Service for Portfolio Management Tool.
+Portfolio Tools Service for Portfolio Management Tool.
 
-Handles portfolio-level operations including portfolio management,
-transactions, and dividend tracking.
+Handles portfolio tools operations including pay-to-hold, stock borrow,
+resets, installments, and excess amounts.
 """
 
 import asyncio
@@ -15,9 +15,9 @@ from app.services.shared.database_service import DatabaseService
 logger = logging.getLogger(__name__)
 
 
-class PortfolioService:
+class PortfolioToolsService:
     """
-    Service for managing portfolios, transactions, and dividends.
+    Service for managing portfolio tools data.
     """
 
     def __init__(self, db_service: Optional[DatabaseService] = None):
@@ -369,17 +369,11 @@ class PortfolioService:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
-    async def test_portfolio_service():
-        service = PortfolioService()
+    async def test_portfolio_tools_service():
+        service = PortfolioToolsService()
 
-        # Test get portfolios
-        portfolios = await service.get_portfolios("user123")
-        print(f"Portfolios: {portfolios}")
+        # Test get pay to hold
+        data = await service.get_pay_to_hold()
+        print(f"Pay to hold: {data}")
 
-        # Test create portfolio
-        new_portfolio = await service.create_portfolio(
-            {"name": "Test Portfolio", "description": "Testing portfolio service"}
-        )
-        print(f"Created portfolio: {new_portfolio}")
-
-    asyncio.run(test_portfolio_service())
+    asyncio.run(test_portfolio_tools_service())

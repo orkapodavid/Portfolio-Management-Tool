@@ -15,37 +15,39 @@ This is a **professional portfolio management dashboard** reimplemented from a P
 app/
 ├── app.py                      # Main entry point - defines index() and all page routes
 ├── constants.py                # UI constants (colors, heights, sizes)
-├── states/                     # All rx.State classes
-│   ├── __init__.py
-│   ├── portfolio_dashboard_state.py  # PRIMARY STATE - modules, subtabs, KPIs, tables, PnL
-│   ├── dashboard_state.py            # Holdings, portfolio metrics
-│   ├── portfolio_state.py            # Individual portfolio management
-│   ├── watchlist_state.py            # Watchlist + alerts
-│   ├── research_state.py             # Stock research data
-│   ├── reports_state.py              # Performance reports
-│   ├── goals_state.py                # Financial goals
-│   ├── profile_state.py              # User profile
-│   ├── settings_state.py             # App settings
-│   ├── notification_state.py         # General notifications
-│   ├── notification_pagination_state.py  # Sidebar notification pagination
-│   └── mobile_nav_state.py           # Mobile navigation toggle
-├── components/                 # Reusable UI components
-│   ├── top_navigation.py             # Region 1 - Top nav bar (11 modules)
-│   ├── performance_header.py         # Region 2 - KPIs + Top Movers
-│   ├── contextual_workspace.py       # Region 3 - Main data tables
-│   ├── notification_sidebar.py       # Region 4 - Alert cards
-│   ├── pnl_views.py                  # PnL Change/Summary/Currency tables
-│   ├── summary_cards.py              # Portfolio summary KPI cards
-│   └── [other components...]
-├── pages/                      # Secondary page definitions
-│   ├── portfolio_page.py
-│   ├── watchlist_page.py
-│   ├── research_page.py
-│   └── [other pages...]
-├── services/
-│   └── finance_service.py      # yfinance API integration
-├── utils/                  # Utilities (logger, etc.)
-├── exceptions.py           # Custom exceptions
+├── states/                     # All rx.State classes (module-based)
+│   ├── types.py                      # Shared TypedDict definitions
+│   ├── ui/                           # UI state management
+│   ├── pnl/                          # P&L data and operations
+│   ├── positions/                    # Position data
+│   ├── risk/                         # Risk metrics
+│   ├── compliance/                   # Compliance module
+│   ├── market_data/                  # Market data & FX
+│   ├── instruments/                  # Instrument data
+│   ├── events/                       # Event calendar & streams
+│   ├── operations/                   # Daily procedures
+│   ├── reconciliation/               # Recon workflows
+│   ├── portfolio_tools/              # Pay-to-hold, stock borrow, etc.
+│   ├── emsx/                         # Bloomberg EMSX orders
+│   ├── notifications/                # Alerts & notifications
+│   ├── navigation/                   # Navigation state
+│   └── reports/                      # Report generation
+├── components/                 # Module-based UI components
+│   ├── shared/                       # Shared components (top_navigation, etc.)
+│   ├── pnl/                          # PnL-specific components
+│   ├── positions/                    # Position components
+│   ├── risk/                         # Risk components
+│   ├── compliance/                   # Compliance components
+│   └── [other module components...]
+├── pages/                      # Module-based page definitions
+│   ├── pnl/                          # PnL pages (change, summary, currency, full)
+│   ├── positions/                    # Position pages
+│   ├── risk/                         # Risk pages
+│   ├── compliance/                   # Compliance pages
+│   └── [other module pages...]
+├── services/                   # Business logic wrappers
+├── utils/                      # Utilities (logger, etc.)
+├── exceptions.py               # Custom exceptions
 └── rxconfig.py                 # Reflex configuration (TailwindV3 plugin)
 
 
@@ -105,18 +107,22 @@ def paginated_table_data(self) -> list[dict]:  # Page-sliced data
 def filtered_pnl_change(self) -> list[PnLChangeItem]:  # Filtered PnL data
 
 
-### Secondary States
+### Module States
 
-| State Class | Purpose | Key Vars |
-|-------------|---------|----------|
-| `DashboardState` | Portfolio holdings & metrics | `holdings`, `total_value`, `daily_change_value` |
-| `WatchlistState` | Stock watchlist + alerts | `watchlist`, `alerts`, `news_feed`, `search_query` |
-| `ResearchState` | Stock research & analysis | `all_stocks`, `selected_stock`, `chart_data` |
-| `PortfolioState` | Multi-portfolio management | `portfolios`, `selected_portfolio_index`, transactions |
-| `GoalsState` | Financial goals tracking | `goals`, `total_goals_value`, `goals_on_track` |
-| `ReportsState` | Performance reports | `performance_data`, `allocation_analysis` |
-| `ProfileState` | User profile data | `name`, `email`, `linked_accounts` |
-| `NotificationPaginationState` | Sidebar pagination | Accesses `PortfolioDashboardState` via `get_state()` |
+| State Class | Location | Purpose |
+|-------------|----------|----------|
+| `UIState` | `states/ui/` | Navigation, active module/subtab, sidebar toggles |
+| `PnLState` | `states/pnl/` | P&L data and operations |
+| `PositionsState` | `states/positions/` | Position data and holdings |
+| `RiskState` | `states/risk/` | Risk metrics and delta changes |
+| `ComplianceState` | `states/compliance/` | Restricted lists, undertakings |
+| `MarketDataState` | `states/market_data/` | Market data, FX, historical data |
+| `InstrumentState` | `states/instruments/` | Instrument data and screeners |
+| `EventsState` | `states/events/` | Event calendar and streams |
+| `OperationsState` | `states/operations/` | Daily procedures |
+| `ReconciliationState` | `states/reconciliation/` | Recon workflows |
+| `PortfolioToolsState` | `states/portfolio_tools/` | Pay-to-hold, stock borrow, etc. |
+| `EMSXState` | `states/emsx/` | Bloomberg EMSX orders |
 
 ### Cross-State Communication Pattern
 

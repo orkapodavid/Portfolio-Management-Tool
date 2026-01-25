@@ -14,7 +14,7 @@ Handles all portfolio tools-related data:
 """
 
 import reflex as rx
-from app.services import PortfolioService
+from app.services import PortfolioToolsService
 from app.states.portfolio_tools.types import (
     PayToHoldItem,
     ShortECLItem,
@@ -59,10 +59,10 @@ class PortfolioToolsState(rx.State):
         await self.load_portfolio_tools_data()
 
     async def load_portfolio_tools_data(self):
-        """Load all portfolio tools data from PortfolioService."""
+        """Load all portfolio tools data from PortfolioToolsService."""
         self.is_loading = True
         try:
-            service = PortfolioService()
+            service = PortfolioToolsService()
             self.pay_to_hold = await service.get_pay_to_hold()
             self.short_ecl = await service.get_short_ecl()
             self.stock_borrow = await service.get_stock_borrow()

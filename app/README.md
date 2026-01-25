@@ -116,13 +116,17 @@ config = rx.Config(
 | Route | Description |
 |-------|-------------|
 | `/` | Main dashboard with 4-region layout |
-| `/portfolios` | Portfolio management |
-| `/watchlist` | Stock watchlist & alerts |
-| `/research` | Stock research & analysis |
-| `/reports` | Performance reports |
-| `/goals` | Financial goals tracker |
-| `/profile` | User profile |
-| `/settings` | Application settings |
+| `/pnl` | P&L Change, Summary, Currency, Full views |
+| `/positions` | Position data, Stock/Warrant/Bond positions |
+| `/market-data` | Market data, FX, Historical, Trading Calendar |
+| `/risk` | Delta Change, Risk Measures, Risk Inputs, Pricers |
+| `/recon` | PPS, Settlement, Failed Trades, PnL Recon |
+| `/compliance` | Restricted List, Undertakings, Beneficial Ownership |
+| `/portfolio-tools` | Pay-To-Hold, Stock Borrow, Resets, Installments |
+| `/instruments` | Ticker Data, Stock Screener, Special Terms |
+| `/events` | Event Calendar, Event Stream, Reverse Inquiry |
+| `/operations` | Daily Procedure Check, Operation Process |
+| `/orders` | EMSX Order, EMSX Route |
 
 ## Tech Stack
 

@@ -246,19 +246,22 @@ class GreeterState(rx.State):
 
 ```
 app/states/
-├── dashboard/
-│   ├── types.py              # Shared TypedDict definitions
-│   ├── pnl_state.py          # P&L data and operations
-│   ├── positions_state.py    # Position data
-│   ├── risk_state.py         # Risk metrics
-│   └── compliance_state.py   # Compliance data
-├── portfolio/
-│   ├── portfolio_state.py
-│   ├── watchlist_state.py
-│   └── goals_state.py
-└── user/
-    ├── profile_state.py
-    └── settings_state.py
+├── types.py                  # Shared TypedDict definitions
+├── compliance/               # Compliance module
+├── emsx/                     # Bloomberg EMSX orders
+├── events/                   # Event calendar & streams
+├── instruments/              # Instrument data
+├── market_data/              # Market data & FX
+├── navigation/               # Navigation state
+├── notifications/            # Alerts & notifications
+├── operations/               # Daily procedures
+├── pnl/                      # P&L data and operations
+├── portfolio_tools/          # Pay-to-hold, stock borrow, etc.
+├── positions/                # Position data
+├── reconciliation/           # Recon workflows
+├── reports/                  # Report generation
+├── risk/                     # Risk metrics
+└── ui/                       # UI state management
 ```
 
 ###  Service Layer Pattern

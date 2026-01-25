@@ -18,14 +18,6 @@ from app.states.events.events_state import EventsState
 from app.states.operations.operations_state import OperationsState
 from app.states.emsx.emsx_state import EMSXState
 
-from app.pages.portfolio.portfolio_page import portfolio_page
-from app.pages.portfolio.watchlist_page import watchlist_page
-from app.pages.research.research_page import research_page
-from app.pages.reports.reports_page import reports_page
-from app.pages.portfolio.goals_page import goals_page
-from app.pages.user.profile_page import profile_page
-from app.pages.notifications.notifications_page import notifications_page
-from app.pages.user.settings_page import settings_page
 
 # Import PnL Pages
 from app.pages.pnl.pnl_change_page import pnl_change_page
@@ -123,14 +115,6 @@ app = rx.App(
     ],
 )
 app.add_page(index, route="/", on_load=UIState.on_load)
-app.add_page(portfolio_page, route="/portfolios")
-app.add_page(watchlist_page, route="/watchlist")
-app.add_page(research_page, route="/research")
-app.add_page(reports_page, route="/reports")
-app.add_page(goals_page, route="/goals")
-app.add_page(profile_page, route="/profile")
-app.add_page(notifications_page, route="/notifications")
-app.add_page(settings_page, route="/settings")
 
 # ================= Module Root Redirects =================
 # ================= Module Root Redirects =================

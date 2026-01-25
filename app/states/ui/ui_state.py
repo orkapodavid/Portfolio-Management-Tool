@@ -6,13 +6,20 @@ Handles:
 - Sidebar State
 - Mobile Menu
 - Global Settings/Filters
+- Portfolio Summary Data for KPIs
 """
 
 import reflex as rx
 from typing import Dict, List, Any
 import random
 from datetime import datetime
-from app.states.types import NotificationItem, KPIMetric, TopMover, GenericTableItem
+from app.states.types import (
+    NotificationItem,
+    KPIMetric,
+    TopMover,
+    GenericTableItem,
+    Holding,
+)
 
 
 class UIState(rx.State):
@@ -119,6 +126,70 @@ class UIState(rx.State):
     top_movers_delta: List[TopMover] = []
     top_movers_price: List[TopMover] = []
     top_movers_volume: List[TopMover] = []
+
+    # Portfolio summary data for performance header
+    portfolio_holdings: List[Holding] = [
+        {
+            "symbol": "AAPL",
+            "name": "Apple Inc.",
+            "shares": 150,
+            "avg_cost": 175.0,
+            "current_price": 189.5,
+            "daily_change_pct": 1.25,
+            "asset_class": "Technology",
+        },
+        {
+            "symbol": "MSFT",
+            "name": "Microsoft Corp.",
+            "shares": 100,
+            "avg_cost": 350.0,
+            "current_price": 402.1,
+            "daily_change_pct": 0.85,
+            "asset_class": "Technology",
+        },
+        {
+            "symbol": "JPM",
+            "name": "JPMorgan Chase",
+            "shares": 200,
+            "avg_cost": 140.0,
+            "current_price": 175.3,
+            "daily_change_pct": -0.45,
+            "asset_class": "Finance",
+        },
+    ]
+
+    # Portfolio computed vars
+    @rx.var
+    def portfolio_total_value(self) -> float:
+        """Total portfolio value."""
+        return sum([h["shares"] * h["current_price"] for h in self.portfolio_holdings])
+
+    @rx.var
+    def portfolio_total_cost_basis(self) -> float:
+        """Total cost basis."""
+        return sum([h["shares"] * h["avg_cost"] for h in self.portfolio_holdings])
+
+    @rx.var
+    def portfolio_total_gain_loss(self) -> float:
+        """Total gain/loss."""
+        return self.portfolio_total_value - self.portfolio_total_cost_basis
+
+    @rx.var
+    def portfolio_total_gain_loss_pct(self) -> float:
+        """Total gain/loss percentage."""
+        if self.portfolio_total_cost_basis == 0:
+            return 0.0
+        return self.portfolio_total_gain_loss / self.portfolio_total_cost_basis * 100
+
+    @rx.var
+    def portfolio_daily_change_value(self) -> float:
+        """Daily change value."""
+        return sum(
+            [
+                h["shares"] * h["current_price"] * (h["daily_change_pct"] / 100)
+                for h in self.portfolio_holdings
+            ]
+        )
 
     # Module configuration
     MODULE_ICONS: Dict[str, str] = {

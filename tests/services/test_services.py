@@ -35,11 +35,11 @@ class TestServiceImports:
 
         assert ComplianceService is not None
 
-    def test_import_portfolio_service(self):
-        """Test PortfolioService can be imported."""
-        from app.services import PortfolioService
+    def test_import_portfolio_tools_service(self):
+        """Test PortfolioToolsService can be imported."""
+        from app.services import PortfolioToolsService
 
-        assert PortfolioService is not None
+        assert PortfolioToolsService is not None
 
     def test_import_market_data_service(self):
         """Test MarketDataService can be imported."""
