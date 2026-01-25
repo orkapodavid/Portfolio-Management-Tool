@@ -449,19 +449,18 @@ Implement grouping, aggregation, notifications, and export functionality.
 - [x] **3.8** Update documentation ✅
   - [x] Added notification panel section to README
 
-### Future Enhancement: Cross-Page Navigation with Highlighting
+### Future Enhancement: Cross-Page Navigation with Highlighting ✅
 
 > [!NOTE]
-> This enhancement will allow notifications to navigate to a different page/table and then highlight a specific row or cell.
+> This enhancement allows notifications to navigate to a different page/table and then highlight a specific row or cell.
 
-**Planned Features:**
-- [ ] **3.9** Enhanced cross-page navigation
-  - [ ] Navigate to different route before jumping to row
-  - [ ] Wait for page/grid to load before executing jump
-  - [ ] Support for multiple grids on a page (grid_id selector)
-  - [ ] Cell-level highlighting (specify column field)
-  - [ ] Configurable highlight styles (flash, border, background)
-  - [ ] URL query parameter support (e.g., `/portfolio?highlight=row_123&field=price`)
+**Implemented Features:**
+- [x] **3.9** Enhanced cross-page navigation ✅
+  - [x] `pending_highlight` state for storing target row
+  - [x] `navigate_and_highlight(route, grid_id, row_id)` method
+  - [x] `execute_pending_highlight(grid_id)` called on grid ready
+  - [x] Jump Demo page at `/jump-demo` with navigation buttons
+  - [x] Supports multiple grids via grid_id
 
 **Example API:**
 ```python
@@ -514,35 +513,35 @@ pytest tests/ -v
 
 ---
 
-## Phase 4: Pilot Migration - Holdings Table
+## Phase 5: Pilot Migration - Holdings Table
 
 ### Objective
 Migrate `holdings_table.py` as the first real table to validate the wrapper.
 
 ### Checklist
 
-- [ ] **4.1** Analyze current `holdings_table.py`
+- [ ] **5.1** Analyze current `holdings_table.py`
   - [ ] Document current columns and data types
   - [ ] Document current styling/behavior
-- [ ] **4.2** Create column definition config
+- [ ] **5.2** Create column definition config
   - [ ] Define columns: symbol, shares, price, value, gain_loss, change
   - [ ] Set types, formatters, styles
-- [ ] **4.3** Create `holdings_ag_grid.py` using wrapper
+- [ ] **5.3** Create `holdings_ag_grid.py` using wrapper
   - [ ] Use `AGGrid` component with config
   - [ ] Wire up to `PortfolioState`
-- [ ] **4.4** Add validation config for holdings
+- [ ] **5.4** Add validation config for holdings
   - [ ] Price validation (min 0)
   - [ ] Shares validation (min 1)
-- [ ] **4.5** Style matching
+- [ ] **5.5** Style matching
   - [ ] Match or improve current visual design
   - [ ] Dark/light theme support
-- [ ] **4.6** Side-by-side comparison
+- [ ] **5.6** Side-by-side comparison
   - [ ] Create toggle between old/new table
   - [ ] Verify feature parity
-- [ ] **4.7** Remove old implementation (after validation)
-- [ ] **4.8** Document migration learnings
+- [ ] **5.7** Remove old implementation (after validation)
+- [ ] **5.8** Document migration learnings
 
-### Testing Plan - Phase 4
+### Testing Plan - Phase 5
 
 | Test Type | Test Case | Expected Result |
 |-----------|-----------|-----------------|
@@ -566,10 +565,10 @@ reflex run
 
 ---
 
-## Phase 5: Batch Migration
+## Phase 6: Batch Migration
 
 ### Objective
-Migrate remaining tables systematically using patterns from Phase 4.
+Migrate remaining tables systematically using patterns from Phase 5.
 
 ### Migration Order (by complexity)
 
@@ -598,7 +597,7 @@ For each component migration:
 - [ ] Remove old implementation
 - [ ] Update imports
 
-### Testing Plan - Phase 5
+### Testing Plan - Phase 6
 
 | Test Type | Test Case | Expected Result |
 |-----------|-----------|-----------------|
@@ -618,39 +617,89 @@ pytest tests/ -v
 
 ---
 
-## Phase 6: Documentation & Polish
+## Phase 4: Documentation & Polish
 
 ### Objective
 Finalize documentation, create migration guide, ensure package is ready for reuse.
 
 ### Checklist
 
-- [ ] **6.1** Complete `reflex_ag_grid/README.md`
+- [ ] **4.1** Split demo app into modular files
+  - [ ] Create `demo_app/pages/` directory
+  - [ ] Extract each page to separate file:
+    - [ ] `pages/index.py` - Basic Grid
+    - [ ] `pages/editable.py` - Editable Grid
+    - [ ] `pages/validation.py` - Validation Demo
+    - [ ] `pages/grouped.py` - Grouped Grid
+    - [ ] `pages/streaming.py` - Streaming Data
+    - [ ] `pages/range.py` - Range Selection
+    - [ ] `pages/column_state.py` - Column State
+    - [ ] `pages/search.py` - Global Search
+    - [ ] `pages/jump_demo.py` - Cross-Page Jump Demo
+  - [ ] Create `components/` directory for shared components:
+    - [ ] `components/nav_bar.py` - Navigation bar
+    - [ ] `components/notification_panel.py` - Notification panel
+    - [ ] `components/status_badge.py` - Status badge
+  - [ ] Create `state.py` for DemoState class
+  - [ ] Create `columns.py` for column definitions
+  - [ ] Add inline documentation to all files
+  - [ ] Update `__init__.py` to export app
+
+- [ ] **4.2** Create requirement-specific documentation
+  - [ ] Create `reflex_ag_grid/docs/` directory
+  - [ ] Create doc page for each requirement:
+    - [ ] `01_context_menu.md` - Right-click context menu
+    - [ ] `02_range_selection.md` - Bulk state changes
+    - [ ] `03_cell_flash.md` - Blinking cell changes
+    - [ ] `04_jump_highlight.md` - Notification jump & highlight
+    - [ ] `05_grouping.md` - Grouping & Summary
+    - [ ] `06_notifications.md` - Notification publisher
+    - [ ] `07_validation.md` - Data Validation (.ini)
+    - [ ] `08_clipboard.md` - Copy cell / with header
+    - [ ] `09_excel_export.md` - Export Excel
+    - [ ] `10_websocket.md` - WebSocket publishing
+    - [ ] `11_cell_editors.md` - Different Cell Editors
+    - [ ] `12_edit_pause.md` - Disable auto-refresh on edit
+    - [ ] `13_transaction_api.md` - Cell-by-cell update
+    - [ ] `14_background_tasks.md` - Update timing
+    - [ ] `15_column_state.md` - Save table format
+  - [ ] Each doc should include:
+    - [ ] Requirement description
+    - [ ] AG Grid feature used
+    - [ ] Code example
+    - [ ] How to implement in your app
+
+- [ ] **4.3** Complete `reflex_ag_grid/README.md`
   - [ ] Installation instructions
   - [ ] Quick start guide
   - [ ] API reference
   - [ ] Configuration examples
-- [ ] **6.2** Create migration guide
+
+- [ ] **4.4** Create migration guide
   - [ ] Step-by-step migration from `rx.el.table`
   - [ ] Common patterns and solutions
   - [ ] Troubleshooting guide
-- [ ] **6.3** Add inline code documentation
+
+- [ ] **4.5** Add inline code documentation
   - [ ] Docstrings for all public functions
   - [ ] Type hints throughout
-- [ ] **6.4** Create example gallery
+
+- [ ] **4.6** Create example gallery
   - [ ] Basic grid
   - [ ] Grouped grid
   - [ ] Editable grid with validation
   - [ ] Full-featured trading grid
-- [ ] **6.5** Performance optimization review
+
+- [ ] **4.7** Performance optimization review
   - [ ] Review large table performance
   - [ ] Document best practices
-- [ ] **6.6** Final cleanup
+
+- [ ] **4.8** Final cleanup
   - [ ] Remove deprecated code
   - [ ] Consistent code style
   - [ ] Update all imports
 
-### Testing Plan - Phase 6
+### Testing Plan - Phase 4
 
 | Test Type | Test Case | Expected Result |
 |-----------|-----------|-----------------|
