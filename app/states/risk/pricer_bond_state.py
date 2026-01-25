@@ -13,29 +13,27 @@ class PricerBondState(rx.State):
         return self.generate_chart()
 
     def generate_chart(self) -> go.Figure:
-        # Generate mock financial data
         np.random.seed(42)
-        n_points = 100
-
-        # Create base data
-        maturity = np.linspace(1, 30, n_points)
-        yield_val = np.log(maturity) * 2 + 1 + np.random.normal(0, 0.2, n_points)
-        price = 100 * np.exp(-yield_val/100 * maturity) + np.random.normal(0, 1, n_points)
-        coupon = np.random.choice([2.0, 3.0, 4.0, 5.0], n_points)
-        duration = maturity * (1 - np.exp(-0.05 * maturity)) / 0.05 # Rough duration approx
-        convexity = duration ** 2 / 2
-
-        df = pd.DataFrame({
-            "Maturity": maturity,
-            "Yield": yield_val,
-            "Price": price,
-            "Coupon": coupon,
-            "Duration": duration,
-            "Convexity": convexity
-        })
 
         if self.z_axis == "None":
             # Scenario A (2D): Standard 2D Line/Scatter chart
+            n_points = 100
+            maturity = np.linspace(1, 30, n_points)
+            yield_val = np.log(maturity) * 2 + 1 + np.random.normal(0, 0.2, n_points)
+            price = 100 * np.exp(-yield_val/100 * maturity) + np.random.normal(0, 1, n_points)
+            coupon = np.random.choice([2.0, 3.0, 4.0, 5.0], n_points)
+            duration = maturity * (1 - np.exp(-0.05 * maturity)) / 0.05
+            convexity = duration ** 2 / 2
+
+            df = pd.DataFrame({
+                "Maturity": maturity,
+                "Yield": yield_val,
+                "Price": price,
+                "Coupon": coupon,
+                "Duration": duration,
+                "Convexity": convexity
+            })
+
             # Sort by X axis for cleaner lines if it's a line chart
             df_sorted = df.sort_values(by=self.x_axis)
 
@@ -54,22 +52,40 @@ class PricerBondState(rx.State):
             )
             return fig
         else:
-            # Scenario B (3D): Interactive 3D Scatter Plot
-            fig = go.Figure(data=[go.Scatter3d(
-                x=df[self.x_axis],
-                y=df[self.y_axis],
-                z=df[self.z_axis],
-                mode='markers',
-                marker=dict(
-                    size=5,
-                    color=df[self.z_axis],
-                    colorscale='Viridis',
-                    opacity=0.8,
-                    showscale=True
-                )
-            )])
+            # Scenario B (3D): Surface Plot
+            # We need a grid for Surface plots
+
+            # Define ranges for X and Y axes based on selection
+            if self.x_axis == "Maturity":
+                x = np.linspace(1, 30, 50)
+            elif self.x_axis == "Duration":
+                x = np.linspace(0, 20, 50)
+            else:
+                x = np.linspace(0, 100, 50) # Fallback
+
+            if self.y_axis == "Yield":
+                y = np.linspace(0, 10, 50)
+            elif self.y_axis == "Price":
+                y = np.linspace(80, 120, 50)
+            else:
+                y = np.linspace(0, 100, 50) # Fallback
+
+            X, Y = np.meshgrid(x, y)
+
+            # Calculate Z based on X and Y to create a surface
+            # This is a mock function to create a visually interesting surface
+            if self.z_axis == "Coupon":
+                # Mock relationship: Coupon influences Price/Yield
+                Z = np.sin(X/5) * np.cos(Y/2) * 2 + 3
+            elif self.z_axis == "Convexity":
+                 Z = (X**2 / 100) + (Y / 10)
+            else:
+                Z = np.sin(np.sqrt(X**2 + Y**2))
+
+            fig = go.Figure(data=[go.Surface(z=Z, x=X, y=Y, colorscale='Viridis')])
+
             fig.update_layout(
-                title=f"{self.y_axis} vs {self.x_axis} vs {self.z_axis}",
+                title=f"{self.z_axis} Surface ({self.y_axis} vs {self.x_axis})",
                 scene=dict(
                     xaxis_title=self.x_axis,
                     yaxis_title=self.y_axis,
