@@ -16,6 +16,7 @@ from .components.ag_grid import (
     ag_grid,
     size_columns_to_fit,
 )
+from .components.notification_panel import notification_panel
 from .models.validation import FieldValidation, ValidationSchema
 
 __all__ = [
@@ -33,6 +34,8 @@ __all__ = [
     "AgGridAPI",
     "AgGridNamespace",
     "size_columns_to_fit",
+    # UI Components
+    "notification_panel",
     # Validation
     "FieldValidation",
     "ValidationSchema",

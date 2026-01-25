@@ -325,6 +325,44 @@ All events receive sanitized data (no circular references):
 | `on_selection_change` | `{selectedRows, selectedCount}` |
 | `on_grid_ready` | `{gridId}` |
 
+## Notification Panel
+
+A reusable component for displaying notifications with jump-to-row functionality.
+
+```python
+from reflex_ag_grid import ag_grid, notification_panel
+
+class MyState(rx.State):
+    notifications: list[dict] = []
+    
+    def add_notification(self, message: str, row_id: str, level: str = "info"):
+        self.notifications.append({
+            "message": message,
+            "row_id": row_id,
+            "level": level,  # "info", "warning", "error", "success"
+        })
+    
+    def clear_notifications(self):
+        self.notifications = []
+
+def my_page():
+    return rx.hstack(
+        ag_grid(
+            id="my_grid",
+            row_data=MyState.data,
+            column_defs=columns,
+        ),
+        notification_panel(
+            notifications=MyState.notifications,
+            grid_id="my_grid",
+            on_clear=MyState.clear_notifications,
+        ),
+    )
+```
+
+Clicking a notification jumps to the associated row and flashes it.
+
 ## License
 
 Requires AG Grid Enterprise license for production use without watermark.
+

@@ -183,6 +183,30 @@ def run_tests(base_url: str, headless: bool = True, screenshot_dir: Path | None 
                 log_result("Sector dropdown opens", False, str(ex))
 
             # ========================================
+            # Test Grouped Grid Page (/grouped)
+            # ========================================
+            print("\n[Page: Grouped Grid /grouped]")
+            page.goto(f"{base_url}/grouped", timeout=30000)
+            page.wait_for_load_state("networkidle", timeout=10000)
+
+            try:
+                page.wait_for_selector(".ag-root-wrapper", timeout=10000)
+                log_result("Grouped Grid loads", True)
+
+                # Check for group rows (expandable)
+                group_rows = page.locator(".ag-row-group")
+                has_groups = group_rows.count() > 0
+                log_result(
+                    "Group rows present", has_groups, f"{group_rows.count()} groups"
+                )
+
+                # Check for aggregation columns (sum, avg, etc.)
+                agg_cells = page.locator(".ag-row-group .ag-cell")
+                log_result("Aggregation cells visible", agg_cells.count() > 0)
+            except Exception as ex:
+                log_result("Grouped Grid loads", False, str(ex))
+
+            # ========================================
             # Test Streaming Page (/streaming)
             # ========================================
             print("\n[Page: Streaming /streaming]")
