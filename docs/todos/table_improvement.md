@@ -222,7 +222,7 @@ Build the foundational AG Grid wrapper component that can render a basic grid wi
   - Reused across multiple projects
   
   **Tasks:**
-  - [ ] 1.11.1 Create `reflex_ag_grid/pyproject.toml` with package metadata
+  - [x] 1.11.1 Create `reflex_ag_grid/pyproject.toml` with package metadata
     ```toml
     [project]
     name = "reflex-ag-grid"
@@ -233,7 +233,7 @@ Build the foundational AG Grid wrapper component that can render a basic grid wi
     requires = ["hatchling"]
     build-backend = "hatchling.build"
     ```
-  - [ ] 1.11.2 Add to root workspace in main `pyproject.toml`
+  - [x] 1.11.2 Add to root workspace in main `pyproject.toml`
     ```toml
     [tool.uv.sources]
     reflex-ag-grid = { workspace = true }
@@ -241,12 +241,12 @@ Build the foundational AG Grid wrapper component that can render a basic grid wi
     [tool.uv.workspace]
     members = ["reflex_ag_grid"]
     ```
-  - [ ] 1.11.3 Remove sys.path hacks from `demo_app/ag_grid_demo.py`
-  - [ ] 1.11.4 Run `uv sync` to install as editable workspace member
-  - [ ] 1.11.5 Verify import works: `from reflex_ag_grid import ag_grid`
-  - [ ] 1.11.6 Update `app/components/shared` to use the package
-  - [ ] 1.11.7 Update demo_app to use package import
-  - [ ] 1.11.8 Run E2E tests to verify no regressions
+  - [x] 1.11.3 Remove sys.path hacks from `demo_app/ag_grid_demo.py`
+  - [x] 1.11.4 Run `uv sync` to install as editable workspace member
+  - [x] 1.11.5 Verify import works: `from reflex_ag_grid import ag_grid`
+  - [N/A] 1.11.6 Update `app/components/shared` to use the package (not currently using it)
+  - [x] 1.11.7 Update demo_app to use package import
+  - [x] 1.11.8 Run E2E tests to verify no regressions (12/12 passed ✅)
 - [ ] **1.12** Global Search / Quick Filter Component
   > Add a `quick_filter_text` prop to the AG Grid component for reactive text filtering
   
@@ -679,7 +679,7 @@ lib_dependencies: list[str] = [
 - [x] 1.8 Demo app
 - [x] 1.9 E2E tests (6/6 passed)
 - [x] 1.10 Demo requirements coverage ✅ (10/10 tasks, 15/15 reqs)
-- [ ] 1.11 Standalone package setup (0/8 tasks)
+- [x] 1.11 Standalone package setup ✅ (7/8 tasks, 1 N/A)
 - [x] 1.12 Global search / Quick filter ✅ (4/4 tasks)
 
 ### Phase 2: Validation & Editing

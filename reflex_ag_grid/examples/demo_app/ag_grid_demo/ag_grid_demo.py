@@ -4,18 +4,11 @@ AG Grid Demo App - Multi-page demo showcasing all AG Grid features.
 Demonstrates all 15 requirements from the AG Grid Traceability Matrix.
 """
 
-import sys
-from pathlib import Path
 import random
 
 import reflex as rx
 
-# Add reflex_ag_grid package to path
-_package_root = Path(__file__).resolve().parents[3]
-if str(_package_root.parent) not in sys.path:
-    sys.path.insert(0, str(_package_root.parent))
-
-from reflex_ag_grid import ag_grid  # noqa: E402
+from reflex_ag_grid import ag_grid
 
 
 # =============================================================================

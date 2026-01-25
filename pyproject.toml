@@ -11,6 +11,7 @@ dependencies = [
     "python-dotenv",
     "pandas",
     "pmt-core",
+    "reflex-ag-grid",
 ]
 
 [build-system]
@@ -22,6 +23,10 @@ packages = ["app"]
 
 [tool.uv.sources]
 pmt-core = { path = "./pmt_core_pkg", editable = true }
+reflex-ag-grid = { workspace = true }
+
+[tool.uv.workspace]
+members = ["reflex_ag_grid"]
 
 [dependency-groups]
 dev = [

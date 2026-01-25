@@ -1,0 +1,16 @@
+[project]
+name = "ag-grid-demo"
+version = "0.1.0"
+description = "Demo app for reflex-ag-grid component"
+requires-python = ">=3.10"
+dependencies = [
+    "reflex>=0.8.26",
+    "reflex-ag-grid",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv.sources]
+reflex-ag-grid = { path = "../..", editable = true }

@@ -6,6 +6,12 @@ resolution-markers = [
     "python_full_version < '3.12'",
 ]
 
+[manifest]
+members = [
+    "portfolio-management-tool",
+    "reflex-ag-grid",
+]
+
 [[package]]
 name = "alembic"
 version = "1.17.2"
@@ -706,6 +712,7 @@ dependencies = [
     { name = "pyodbc" },
     { name = "python-dotenv" },
     { name = "reflex" },
+    { name = "reflex-ag-grid" },
     { name = "yfinance" },
 ]
 
@@ -725,6 +732,7 @@ requires-dist = [
     { name = "pyodbc" },
     { name = "python-dotenv" },
     { name = "reflex", specifier = "==0.8.26" },
+    { name = "reflex-ag-grid", editable = "reflex_ag_grid" },
     { name = "yfinance" },
 ]
 
@@ -1108,6 +1116,21 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/38/7d/b4e6e7de6eae4258bae3dee3e2196eca0f8a59655c471be3e9beb51734bf/reflex-0.8.26.tar.gz", hash = "sha256:27e0571b5422454032674d155a4372fe526670312ddeb9b137bbe1e14d6835d9", size = 572220, upload-time = "2026-01-20T22:54:43.21Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/11/49/0441019df3c113927cdb5d439a975c5c6674183d637186f439e4a25d7d58/reflex-0.8.26-py3-none-any.whl", hash = "sha256:b51bc6c1a5087f52c1567ace3752edcbff4bd12453fee0f90384271d0cc4da48", size = 814949, upload-time = "2026-01-20T22:54:41.292Z" },
+]
+
+[[package]]
+name = "reflex-ag-grid"
+version = "0.1.0"
+source = { editable = "reflex_ag_grid" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "reflex" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "pydantic", specifier = ">=2.0" },
+    { name = "reflex", specifier = ">=0.8.26" },
 ]
 
 [[package]]
