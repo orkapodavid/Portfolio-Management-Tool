@@ -325,6 +325,29 @@ class DemoState(rx.State):
         """Clear all notifications."""
         self.notifications = []
 
+    def jump_to_row(self, row_id: str):
+        """Jump to a row in the streaming grid and flash it."""
+        # Use refs to access AG Grid API: refs['ref_{grid_id}'].current.api
+        script = f"""
+        (() => {{
+            const gridRef = refs['ref_streaming_grid'];
+            if (gridRef && gridRef.current && gridRef.current.api) {{
+                const api = gridRef.current.api;
+                const node = api.getRowNode('{row_id}');
+                if (node) {{
+                    api.ensureNodeVisible(node, 'middle');
+                    api.flashCells({{rowNodes: [node]}});
+                    console.log('Jumped to row:', '{row_id}');
+                }} else {{
+                    console.warn('Row not found:', '{row_id}');
+                }}
+            }} else {{
+                console.warn('Grid API not available');
+            }}
+        }})()
+        """
+        return rx.call_script(script)
+
 
 # =============================================================================
 # UI COMPONENTS
@@ -356,6 +379,31 @@ def status_badge() -> rx.Component:
 
 def notification_panel() -> rx.Component:
     """Notification panel with jump-to-row (Req 4, 6)."""
+
+    def notification_item(n: rx.Var[dict]) -> rx.Component:
+        """Single notification with jump button."""
+        return rx.card(
+            rx.hstack(
+                rx.badge(
+                    n["level"],
+                    color_scheme=rx.match(
+                        n["level"],
+                        ("warning", "orange"),
+                        ("success", "green"),
+                        ("error", "red"),
+                        "blue",
+                    ),
+                ),
+                rx.text(n["message"], size="2", flex="1"),
+                rx.button(
+                    "→",
+                    size="1",
+                    on_click=DemoState.jump_to_row(n["row_id"]),
+                ),
+            ),
+            size="1",
+        )
+
     return rx.vstack(
         rx.hstack(
             rx.heading("Notifications", size="4"),
@@ -364,33 +412,7 @@ def notification_panel() -> rx.Component:
         rx.cond(
             DemoState.notifications.length() > 0,
             rx.vstack(
-                rx.foreach(
-                    DemoState.notifications,
-                    lambda n: rx.card(
-                        rx.hstack(
-                            rx.badge(
-                                n["level"],
-                                color_scheme=rx.match(
-                                    n["level"],
-                                    ("warning", "orange"),
-                                    ("success", "green"),
-                                    ("error", "red"),
-                                    "blue",
-                                ),
-                            ),
-                            rx.text(n["message"], size="2"),
-                            rx.button(
-                                "→",
-                                size="1",
-                                on_click=rx.call_script(
-                                    f"window.gridApi?.ensureNodeVisible(window.gridApi.getRowNode('{n['row_id']}'), 'middle'); "
-                                    f"window.gridApi?.flashCells({{rowNodes: [window.gridApi.getRowNode('{n['row_id']}')]}})"
-                                ),
-                            ),
-                        ),
-                        size="1",
-                    ),
-                ),
+                rx.foreach(DemoState.notifications, notification_item),
                 spacing="1",
             ),
             rx.text("No notifications", color="gray", size="2"),

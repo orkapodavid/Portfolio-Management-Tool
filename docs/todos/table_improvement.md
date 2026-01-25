@@ -430,20 +430,63 @@ Implement grouping, aggregation, notifications, and export functionality.
   - [x] `api.flashCells()` integration
 - [x] **3.4** Notification panel component ✅
   - [x] `notification_panel.py` reusable component
-  - [x] Click notification → jump to row
+  - [x] Click notification → jump to row (uses refs-based AG Grid API access)
   - [x] Notification types: info, warning, error, success
+  - [x] `flash_on_jump` parameter for configurable highlight
+  - [x] `route` parameter for cross-page navigation before jumping
+  - [x] `jump_to_row()` standalone helper function exported
 - [x] **3.5** Export functionality ✅ (Done in Phase 1)
   - [x] Excel export via `exportDataAsExcel()`
   - [x] CSV export via `exportDataAsCsv()`
   - [x] Export buttons in demo app
-- [x] **3.6** Jump to row functionality ✅ (Done in Phase 1 - Notifications panel)
-  - [x] `ensureNodeVisible()` + flash
+- [x] **3.6** Jump to row functionality ✅ (Uses refs API: `refs['ref_{grid_id}'].current.api`)
+  - [x] `ensureNodeVisible()` + `flashCells()`
   - [x] Triggered from notifications
+  - [x] Works on streaming page with correct ref name
 - [x] **3.7** Write integration tests ✅
   - [x] Grouped grid tests (3 E2E tests)
   - [x] Streaming page tests (2 E2E tests)
 - [x] **3.8** Update documentation ✅
   - [x] Added notification panel section to README
+
+### Future Enhancement: Cross-Page Navigation with Highlighting
+
+> [!NOTE]
+> This enhancement will allow notifications to navigate to a different page/table and then highlight a specific row or cell.
+
+**Planned Features:**
+- [ ] **3.9** Enhanced cross-page navigation
+  - [ ] Navigate to different route before jumping to row
+  - [ ] Wait for page/grid to load before executing jump
+  - [ ] Support for multiple grids on a page (grid_id selector)
+  - [ ] Cell-level highlighting (specify column field)
+  - [ ] Configurable highlight styles (flash, border, background)
+  - [ ] URL query parameter support (e.g., `/portfolio?highlight=row_123&field=price`)
+
+**Example API:**
+```python
+# Notification with cross-page navigation
+notification = {
+    "message": "Price alert for AAPL",
+    "row_id": "row_3",
+    "level": "warning",
+    "route": "/portfolio",           # Navigate to this page first
+    "grid_id": "holdings_grid",      # Target specific grid
+    "highlight_field": "price",      # Highlight specific cell
+    "highlight_style": "flash",      # flash | border | bg-color
+}
+
+# Or programmatic jump
+def jump_to_cell(grid_id: str, row_id: str, field: str = None) -> rx.EventSpec:
+    """Jump to a specific cell in a grid, optionally on another page."""
+    pass
+```
+
+**Implementation Notes:**
+1. Store target row/cell in URL or session state before navigation
+2. On grid ready, check for pending highlight and execute
+3. Support multiple highlight styles via CSS classes
+4. Add E2E tests for cross-page navigation flow
 
 ### Testing Plan - Phase 3
 

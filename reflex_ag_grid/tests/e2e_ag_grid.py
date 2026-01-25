@@ -169,13 +169,18 @@ def run_tests(base_url: str, headless: bool = True, screenshot_dir: Path | None 
                 if sector_cells.count() > 0:
                     first_sector = sector_cells.first
                     first_sector.dblclick()
-                    page.wait_for_timeout(300)
-                    # Check if dropdown appears
+                    page.wait_for_timeout(500)
+                    # AG Grid uses various popup elements for editors
                     dropdown = page.locator(
-                        ".ag-select-list, .ag-rich-select-list, select"
+                        ".ag-popup, .ag-select-list, .ag-rich-select-list, "
+                        ".ag-cell-edit-input, select, .ag-cell-editor"
                     )
                     has_dropdown = dropdown.count() > 0
-                    log_result("Sector dropdown opens", has_dropdown)
+                    log_result(
+                        "Sector dropdown opens",
+                        has_dropdown,
+                        f"Found {dropdown.count()} editor elements",
+                    )
                     page.keyboard.press("Escape")  # Close editor
                 else:
                     log_result("Sector dropdown opens", False, "No sector cells")
