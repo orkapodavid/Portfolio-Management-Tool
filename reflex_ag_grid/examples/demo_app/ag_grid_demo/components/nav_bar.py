@@ -16,6 +16,7 @@ def nav_bar() -> rx.Component:
             rx.divider(orientation="vertical", size="2"),
             rx.scroll_area(
                 rx.hstack(
+                    rx.link("Gallery", href="/", size="1", weight="bold"),
                     rx.link("01-Menu", href="/01-context-menu", size="1"),
                     rx.link("02-Range", href="/02-range-selection", size="1"),
                     rx.link("03-Flash", href="/03-cell-flash", size="1"),

@@ -19,8 +19,10 @@ from .req12_edit_pause import edit_pause_page
 from .req13_transaction_api import transaction_api_page
 from .req14_background_tasks import background_tasks_page
 from .req15_column_state import column_state_page
+from .gallery import gallery_page
 
 __all__ = [
+    "gallery_page",
     "context_menu_page",
     "range_selection_page",
     "cell_flash_page",

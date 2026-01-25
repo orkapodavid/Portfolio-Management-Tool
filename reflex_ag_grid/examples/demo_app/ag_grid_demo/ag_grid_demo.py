@@ -22,6 +22,7 @@ from .pages import (
     transaction_api_page,
     background_tasks_page,
     column_state_page,
+    gallery_page,
 )
 
 
@@ -30,6 +31,9 @@ from .pages import (
 # =============================================================================
 
 app = rx.App()
+
+# Home
+app.add_page(gallery_page, route="/", title="AG Grid Demo Gallery")
 
 # Req 1-5
 app.add_page(context_menu_page, route="/01-context-menu", title="01 - Context Menu")
@@ -59,6 +63,3 @@ app.add_page(
     background_tasks_page, route="/14-background-tasks", title="14 - Background Tasks"
 )
 app.add_page(column_state_page, route="/15-column-state", title="15 - Column State")
-
-# Default route redirects to first page
-app.add_page(context_menu_page, route="/", title="AG Grid Demo")
