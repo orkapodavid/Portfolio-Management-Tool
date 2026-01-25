@@ -42,7 +42,7 @@ from app.components.operations import (
     operation_process_table,
 )
 from app.components.market_data import (
-    market_data_table,
+    market_data_ag_grid,
     fx_data_table,
     historical_data_table,
     trading_calendar_table,
@@ -606,7 +606,7 @@ def contextual_workspace() -> rx.Component:
             "Market Data",
             rx.match(
                 UIState.active_subtab,
-                ("Market Data", market_data_table()),
+                ("Market Data", market_data_ag_grid()),
                 ("FX Data", fx_data_table()),
                 ("Historical Data", historical_data_table()),
                 ("Trading Calendar", trading_calendar_table()),
