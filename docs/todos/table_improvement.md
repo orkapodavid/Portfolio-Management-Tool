@@ -551,7 +551,7 @@ Finalize documentation, create migration guide, ensure package is ready for reus
     | 2 | Range Selection | `02_range_selection.py` | `/02-range-selection` | ✅ Exists (range.py) |
     | 3 | Cell Flash | `03_cell_flash.py` | `/03-cell-flash` | 🔄 Extract from streaming.py |
     | 4 | Jump & Highlight | `04_jump_highlight.py` | `/04-jump-highlight` | ✅ Exists (jump_demo.py) |
-    | 5 | Grouping & Summary | `05_grouping.py` | `/05-grouping` | ✅ Exists (grouped.py) |
+    | 5 | Grouping & Summary | `05_grouping.py` | `/05-grouping` | ✅ Enhanced with dynamic grouping |
     | 6 | Notifications | `06_notifications.py` | `/06-notifications` | 🔄 Extract from streaming.py |
     | 7 | Validation | `07_validation.py` | `/07-validation` | ✅ Exists (validation.py) |
     | 8 | Clipboard | `08_clipboard.py` | `/08-clipboard` | 🆕 New page |

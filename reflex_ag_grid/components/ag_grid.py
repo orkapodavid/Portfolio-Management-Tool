@@ -150,6 +150,7 @@ class ColumnDef(PropsBase):
     max_width: int | rx.Var[int] | None = None
     # Grouping
     row_group: bool | rx.Var[bool] = False
+    enable_row_group: bool | rx.Var[bool] = False  # Allows drag-to-group
     agg_func: str | rx.Var[str] | None = None
 
 
@@ -267,6 +268,10 @@ class AgGrid(rx.Component):
     group_default_expanded: rx.Var[int] | None = rx.Var.create(-1)
     group_selects_children: rx.Var[bool] = rx.Var.create(False)
     auto_group_column_def: rx.Var[Any] = rx.Var.create({})
+    # Row Group Panel - shows drag-drop area for grouping
+    row_group_panel_show: rx.Var[Literal["always", "onlyWhenGrouping", "never"]] = (
+        "never"
+    )
 
     # ===== Pinned Rows =====
     pinned_top_row_data: rx.Var[list[dict[str, Any]]] = rx.Var.create([])
@@ -330,6 +335,9 @@ class AgGrid(rx.Component):
         # Auto-size columns on grid ready
         if "auto_size_strategy" in props:
             props["on_grid_ready"] = size_columns_to_fit
+
+        # Ensure row group panel show is explicitly set (default to "never")
+        props.setdefault("row_group_panel_show", "never")
 
         return super().create(*children, **props)
 
