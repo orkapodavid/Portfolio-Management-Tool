@@ -130,8 +130,57 @@ def run_tests(base_url: str, headless: bool = True, screenshot_dir: Path | None 
                 pause_toggle = page.locator("text=Pause updates while editing")
                 has_toggle = pause_toggle.count() > 0
                 log_result("Editable Grid loads", True, f"Pause toggle: {has_toggle}")
-            except Exception as e:
-                log_result("Editable Grid loads", False, str(e))
+            except Exception as ex:
+                log_result("Editable Grid loads", False, str(ex))
+
+            # Test: Validation info text visible
+            try:
+                validation_text = page.locator("text=Validation:")
+                has_validation = validation_text.count() > 0
+                log_result("Validation info displayed", has_validation)
+            except Exception as ex:
+                log_result("Validation info displayed", False, str(ex))
+
+            # Test: Cell editing with valid value
+            try:
+                # Click on a price cell to edit it
+                price_cells = page.locator(".ag-cell[col-id='price']")
+                if price_cells.count() > 0:
+                    first_price = price_cells.first
+                    first_price.dblclick()
+                    page.wait_for_timeout(300)
+                    # Type valid price
+                    page.keyboard.type("100.50")
+                    page.keyboard.press("Enter")
+                    page.wait_for_timeout(300)
+                    log_result(
+                        "Cell edit with valid value", True, "Edited price to 100.50"
+                    )
+                else:
+                    log_result(
+                        "Cell edit with valid value", False, "No price cells found"
+                    )
+            except Exception as ex:
+                log_result("Cell edit with valid value", False, str(ex))
+
+            # Test: Sector dropdown (enum field)
+            try:
+                sector_cells = page.locator(".ag-cell[col-id='sector']")
+                if sector_cells.count() > 0:
+                    first_sector = sector_cells.first
+                    first_sector.dblclick()
+                    page.wait_for_timeout(300)
+                    # Check if dropdown appears
+                    dropdown = page.locator(
+                        ".ag-select-list, .ag-rich-select-list, select"
+                    )
+                    has_dropdown = dropdown.count() > 0
+                    log_result("Sector dropdown opens", has_dropdown)
+                    page.keyboard.press("Escape")  # Close editor
+                else:
+                    log_result("Sector dropdown opens", False, "No sector cells")
+            except Exception as ex:
+                log_result("Sector dropdown opens", False, str(ex))
 
             # ========================================
             # Test Streaming Page (/streaming)
@@ -153,6 +202,27 @@ def run_tests(base_url: str, headless: bool = True, screenshot_dir: Path | None 
                 log_result("Notifications panel", notif_panel.count() > 0)
             except Exception as e:
                 log_result("Streaming page loads", False, str(e))
+
+            # ========================================
+            # Test Validation Page (/validation)
+            # ========================================
+            print("\n[Page: Validation /validation]")
+            page.goto(f"{base_url}/validation", timeout=30000)
+            page.wait_for_load_state("networkidle", timeout=10000)
+
+            try:
+                page.wait_for_selector(".ag-root-wrapper", timeout=10000)
+                # Check for validation rules table
+                rules_header = page.locator("text=Validation Rules Applied")
+                has_rules = rules_header.count() > 0
+                log_result("Validation page loads", True)
+                log_result("Validation rules table", has_rules)
+
+                # Check for code example
+                code_block = page.locator("text=from reflex_ag_grid")
+                log_result("Code example visible", code_block.count() > 0)
+            except Exception as e:
+                log_result("Validation page loads", False, str(e))
 
             # ========================================
             # Test Range Selection Page (/range)

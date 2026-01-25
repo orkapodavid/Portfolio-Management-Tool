@@ -275,6 +275,10 @@ class AgGrid(rx.Component):
     # ===== Sidebar =====
     side_bar: rx.Var[str | dict[str, Any] | bool | list[str]] = rx.Var.create("")
 
+    # ===== Validation =====
+    # Validation schema config from ValidationSchema.to_js_config()
+    validation_schema: rx.Var[dict[str, Any]] = rx.Var.create({})
+
     # ===== Row ID =====
     get_row_id: rx.EventHandler[lambda e0: [e0]]
 

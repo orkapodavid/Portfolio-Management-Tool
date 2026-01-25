@@ -226,34 +226,71 @@ Available cell styling rules:
 
 ## Validation
 
-Use Pydantic models for validation:
+Use Pydantic models for type-safe field validation:
 
 ```python
-from reflex_ag_grid import ValidationSchema, FieldValidation
+from reflex_ag_grid import ag_grid, FieldValidation, ValidationSchema
 
+# Define validation rules
 schema = ValidationSchema(
     fields=[
         FieldValidation(
             field_name="price",
             field_type="number",
             min_value=0,
-            max_value=10000,
+            max_value=1_000_000,
+            required=True,
+            error_message="Price must be between 0 and 1,000,000",
+        ),
+        FieldValidation(
+            field_name="qty",
+            field_type="integer",
+            min_value=1,
+            max_value=10_000,
+        ),
+        FieldValidation(
+            field_name="symbol",
+            field_type="string",
+            pattern=r"^[A-Z]{1,5}$",
             required=True,
         ),
         FieldValidation(
-            field_name="email",
-            field_type="string",
-            pattern=r"^[\w.-]+@[\w.-]+\.\w+$",
+            field_name="sector",
+            field_type="enum",
+            enum_values=["Technology", "Finance", "Healthcare", "Energy"],
         ),
     ]
 )
 
-# Pass to grid
-AGGrid.create(
-    column_defs=columns,
-    row_data=data,
-    validation_schema=schema,
-)
+# Pass validation config to grid
+def my_grid():
+    return ag_grid(
+        id="my_grid",
+        row_data=MyState.data,
+        column_defs=columns,
+        validation_schema=schema.to_js_config(),  # Convert to JS-compatible dict
+    )
+```
+
+### Validation Types
+
+| Type | Constraints |
+|------|-------------|
+| `string` | `min_length`, `max_length`, `pattern` |
+| `number` | `min_value`, `max_value` |
+| `integer` | `min_value`, `max_value` |
+| `boolean` | (none) |
+| `enum` | `enum_values` list |
+
+### Server-Side Validation
+
+Use schema for Python-side validation:
+
+```python
+row = {"price": -10, "qty": 0}
+is_valid, errors = schema.validate_row(row)
+# is_valid: False
+# errors: {"price": "must be >= 0", "qty": "must be >= 1"}
 ```
 
 ## Grid Control

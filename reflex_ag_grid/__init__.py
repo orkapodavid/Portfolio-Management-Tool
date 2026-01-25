@@ -16,6 +16,7 @@ from .components.ag_grid import (
     ag_grid,
     size_columns_to_fit,
 )
+from .models.validation import FieldValidation, ValidationSchema
 
 __all__ = [
     # Main component
@@ -32,4 +33,7 @@ __all__ = [
     "AgGridAPI",
     "AgGridNamespace",
     "size_columns_to_fit",
+    # Validation
+    "FieldValidation",
+    "ValidationSchema",
 ]

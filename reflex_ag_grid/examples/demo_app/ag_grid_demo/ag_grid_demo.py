@@ -8,7 +8,55 @@ import random
 
 import reflex as rx
 
-from reflex_ag_grid import ag_grid
+from reflex_ag_grid import ag_grid, FieldValidation, ValidationSchema
+
+
+# =============================================================================
+# VALIDATION SCHEMA
+# =============================================================================
+
+# Validation schema for editable grid (demonstrates Phase 2 validation system)
+EDITABLE_VALIDATION = ValidationSchema(
+    fields=[
+        FieldValidation(
+            field_name="price",
+            field_type="number",
+            min_value=0,
+            max_value=1_000_000,
+            required=True,
+            error_message="Price must be between 0 and 1,000,000",
+        ),
+        FieldValidation(
+            field_name="qty",
+            field_type="integer",
+            min_value=1,
+            max_value=10_000,
+            required=True,
+            error_message="Quantity must be between 1 and 10,000",
+        ),
+        FieldValidation(
+            field_name="change",
+            field_type="number",
+            min_value=-100,
+            max_value=100,
+            error_message="Change must be between -100% and 100%",
+        ),
+        FieldValidation(
+            field_name="symbol",
+            field_type="string",
+            pattern="^[A-Z]{1,5}$",
+            required=True,
+            error_message="Symbol must be 1-5 uppercase letters",
+        ),
+        FieldValidation(
+            field_name="sector",
+            field_type="enum",
+            enum_values=["Technology", "Finance", "Healthcare", "Energy"],
+            required=True,
+            error_message="Invalid sector",
+        ),
+    ]
+)
 
 
 # =============================================================================
@@ -288,6 +336,7 @@ def nav_bar() -> rx.Component:
     return rx.hstack(
         rx.link("Basic", href="/"),
         rx.link("Editable", href="/editable"),
+        rx.link("Validation", href="/validation"),
         rx.link("Grouped", href="/grouped"),
         rx.link("Streaming", href="/streaming"),
         rx.link("Range Select", href="/range"),
@@ -395,8 +444,8 @@ def editable_page() -> rx.Component:
     """Editable Grid page - Req 7 (validation), Req 11 (cell editors), Req 12 (pause on edit)."""
     return rx.vstack(
         nav_bar(),
-        rx.heading("Editable Grid", size="6"),
-        rx.text("Features: Different cell editors, Validation, Pause on edit"),
+        rx.heading("Editable Grid with Validation", size="6"),
+        rx.text("Features: Different cell editors, Validation schema, Pause on edit"),
         rx.hstack(
             status_badge(),
             rx.cond(
@@ -410,10 +459,16 @@ def editable_page() -> rx.Component:
             ),
             rx.text("Pause updates while editing"),
         ),
+        rx.text(
+            "Validation: Price (0-1M), Qty (1-10K), Change (-100 to 100%), Symbol (A-Z), Sector (enum)",
+            color="gray",
+            size="2",
+        ),
         ag_grid(
             id="editable_grid",
             row_data=DemoState.data,
             column_defs=get_editable_columns(),
+            validation_schema=EDITABLE_VALIDATION.to_js_config(),
             on_cell_value_changed=DemoState.on_cell_edit,
             on_cell_editing_started=DemoState.on_editing_started,
             on_cell_editing_stopped=DemoState.on_editing_stopped,
@@ -633,6 +688,144 @@ def search_page() -> rx.Component:
     )
 
 
+def validation_page() -> rx.Component:
+    """Validation Demo page - demonstrates Phase 2 validation system."""
+    # Define column defs for validation demo
+    validation_columns = [
+        {"field": "symbol", "headerName": "Symbol", "editable": True, "width": 100},
+        {
+            "field": "price",
+            "headerName": "Price ($)",
+            "editable": True,
+            "type": "numericColumn",
+            "width": 120,
+        },
+        {
+            "field": "qty",
+            "headerName": "Quantity",
+            "editable": True,
+            "type": "numericColumn",
+            "width": 100,
+        },
+        {
+            "field": "change",
+            "headerName": "Change (%)",
+            "editable": True,
+            "type": "numericColumn",
+            "width": 120,
+        },
+        {
+            "field": "sector",
+            "headerName": "Sector",
+            "editable": True,
+            "cellEditor": "agSelectCellEditor",
+            "cellEditorParams": {
+                "values": ["Technology", "Finance", "Healthcare", "Energy"]
+            },
+            "width": 130,
+        },
+    ]
+
+    return rx.vstack(
+        nav_bar(),
+        rx.heading("Validation Demo", size="6"),
+        rx.text("Phase 2 Feature: Field-level validation with Pydantic models"),
+        # Validation Rules Section
+        rx.box(
+            rx.heading("Validation Rules Applied:", size="4"),
+            rx.table.root(
+                rx.table.header(
+                    rx.table.row(
+                        rx.table.column_header_cell("Field"),
+                        rx.table.column_header_cell("Type"),
+                        rx.table.column_header_cell("Constraints"),
+                    ),
+                ),
+                rx.table.body(
+                    rx.table.row(
+                        rx.table.cell("symbol"),
+                        rx.table.cell("string"),
+                        rx.table.cell("Pattern: A-Z only, 1-5 chars, required"),
+                    ),
+                    rx.table.row(
+                        rx.table.cell("price"),
+                        rx.table.cell("number"),
+                        rx.table.cell("Min: 0, Max: 1,000,000, required"),
+                    ),
+                    rx.table.row(
+                        rx.table.cell("qty"),
+                        rx.table.cell("integer"),
+                        rx.table.cell("Min: 1, Max: 10,000, required"),
+                    ),
+                    rx.table.row(
+                        rx.table.cell("change"),
+                        rx.table.cell("number"),
+                        rx.table.cell("Min: -100, Max: 100"),
+                    ),
+                    rx.table.row(
+                        rx.table.cell("sector"),
+                        rx.table.cell("enum"),
+                        rx.table.cell(
+                            "Values: Technology, Finance, Healthcare, Energy"
+                        ),
+                    ),
+                ),
+            ),
+            padding="4",
+            background="var(--gray-2)",
+            border_radius="8px",
+            margin_bottom="4",
+        ),
+        # Instructions
+        rx.callout(
+            "Double-click a cell to edit. Try entering invalid values to see validation in action.",
+            icon="info",
+        ),
+        # Grid with validation
+        ag_grid(
+            id="validation_grid",
+            row_data=DemoState.data,
+            column_defs=validation_columns,
+            validation_schema=EDITABLE_VALIDATION.to_js_config(),
+            on_cell_value_changed=DemoState.on_cell_edit,
+            theme="quartz",
+            width="90vw",
+            height="50vh",
+        ),
+        # Code Example
+        rx.box(
+            rx.heading("Usage Example:", size="4"),
+            rx.code_block(
+                """from reflex_ag_grid import ag_grid, FieldValidation, ValidationSchema
+
+schema = ValidationSchema(
+    fields=[
+        FieldValidation(
+            field_name="price",
+            field_type="number",
+            min_value=0,
+            max_value=1_000_000,
+            required=True,
+        ),
+    ]
+)
+
+ag_grid(
+    id="my_grid",
+    row_data=data,
+    validation_schema=schema.to_js_config(),
+)""",
+                language="python",
+            ),
+            padding="4",
+            background="var(--gray-2)",
+            border_radius="8px",
+        ),
+        padding="4",
+        spacing="3",
+    )
+
+
 # =============================================================================
 # APP
 # =============================================================================
@@ -645,3 +838,4 @@ app.add_page(streaming_page, route="/streaming", title="Streaming Data")
 app.add_page(range_page, route="/range", title="Range Selection")
 app.add_page(column_state_page, route="/column-state", title="Column State")
 app.add_page(search_page, route="/search", title="Global Search")
+app.add_page(validation_page, route="/validation", title="Validation Demo")
