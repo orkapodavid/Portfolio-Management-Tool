@@ -5,312 +5,168 @@ A generic, reusable AG Grid Enterprise wrapper for Reflex Python applications.
 ## Features
 
 - ✅ **AG Grid Enterprise** - Full feature set (grouping, range selection, Excel export, context menu)
-- ✅ **Type-Safe** - Pydantic models for column definitions and validation
-- ✅ **Registry Pattern** - Formatters and renderers as string keys (no serialization issues)
+- ✅ **Simple API** - Use `ag_grid()` and `ag_grid.column_def()` helpers
+- ✅ **Value Formatters** - Display currency ($175.50) while copying raw (175.5)
 - ✅ **Event Sanitization** - Safe event data without circular references
 - ✅ **Column Persistence** - Auto-save column state to localStorage
-- ✅ **Notifications** - Built-in notification system with jump-to-row
 
 ## Installation
 
-This package is designed as a local package that can be copied between repositories.
+This package is designed as a local package within your Reflex project.
 
-1. Copy the `reflex_ag_grid/` folder to your project root
-2. Add AG Grid dependencies to your `package.json`:
+1. The `reflex_ag_grid/` folder should be at your project root
+2. Dependencies are managed via Reflex's npm integration (no separate package.json needed)
 
-```json
-{
-  "dependencies": {
-    "ag-grid-react": "^31.3.0",
-    "ag-grid-enterprise": "^31.3.0",
-    "ag-grid-community": "^31.3.0"
-  }
-}
-```
-
-3. Set your license key (optional, but removes watermark):
+3. Set your license key (optional, removes watermark):
 
 ```python
-# In your app
 import os
-# Set via environment variable
 os.environ["AG_GRID_LICENSE_KEY"] = "your-license-key"
-
-# Or pass directly to component
-AGGrid.create(..., license_key="your-license-key")
 ```
 
 ## Quick Start
 
 ```python
 import reflex as rx
-from reflex_ag_grid import AGGrid, AGGridStateMixin, ColumnDef
+from reflex_ag_grid import ag_grid
 
-class MyState(rx.State, AGGridStateMixin):
-    """State with AG Grid mixin for notifications and grid control."""
-    
-    items: list[dict] = [
-        {"id": "1", "name": "Apple", "price": 1.50, "quantity": 100},
-        {"id": "2", "name": "Banana", "price": 0.75, "quantity": 200},
-        {"id": "3", "name": "Cherry", "price": 3.00, "quantity": 50},
+class State(rx.State):
+    data: list[dict] = [
+        {"id": "1", "symbol": "AAPL", "price": 175.50, "qty": 100},
+        {"id": "2", "symbol": "GOOGL", "price": 140.25, "qty": 50},
+        {"id": "3", "symbol": "MSFT", "price": 378.91, "qty": 75},
     ]
     
-    def handle_cell_edit(self, data: dict):
-        """Called when user edits a cell."""
+    def on_cell_edit(self, data: dict):
         row_id = data["rowId"]
         field = data["field"]
         new_value = data["newValue"]
-        
-        # Update local state
-        self.update_row_data("items", row_id, {field: new_value})
-        
-        # Add notification
-        self.add_notification(
-            message=f"Updated {field} to {new_value}",
-            row_id=row_id,
-            notification_type="success"
-        )
-
-
-def my_grid():
-    """Grid component."""
-    return AGGrid.create(
-        column_defs=[
-            ColumnDef(field="id", header_name="ID", editable=False, width=80),
-            ColumnDef(field="name", header_name="Name", editable=True),
-            ColumnDef(
-                field="price", 
-                header_name="Price", 
-                type="number",
-                editable=True,
-                formatter="currency",  # Uses registry
-            ),
-            ColumnDef(
-                field="quantity", 
-                header_name="Qty", 
-                type="integer",
-                editable=True,
-                formatter="number",
-            ),
-        ],
-        row_data=MyState.items,
-        on_cell_edit=MyState.handle_cell_edit,
-        on_selection_change=MyState.handle_selection_change,
-        grid_id="products",
-        height="500px",
-    )
+        print(f"Edited {field} to {new_value} in row {row_id}")
 
 
 def index():
-    return rx.box(
-        my_grid(),
-        padding="20px",
+    return ag_grid(
+        id="my_grid",
+        row_data=State.data,
+        column_defs=[
+            ag_grid.column_def(field="symbol", header_name="Symbol"),
+            ag_grid.column_def(
+                field="price",
+                header_name="Price",
+                value_formatter=rx.Var(
+                    "(params) => '$' + params.value.toFixed(2)"
+                ).to(rx.EventChain),
+            ),
+            ag_grid.column_def(field="qty", header_name="Quantity", editable=True),
+        ],
+        on_cell_value_changed=State.on_cell_edit,
+        theme="quartz",
+        width="100%",
+        height="400px",
     )
-
 
 app = rx.App()
 app.add_page(index)
 ```
 
+## Documentation
+
+See the `docs/` directory for detailed documentation on each feature:
+
+| Doc | Feature |
+|-----|---------|
+| [01_context_menu.md](docs/01_context_menu.md) | Right-click context menu |
+| [02_range_selection.md](docs/02_range_selection.md) | Bulk cell selection |
+| [03_cell_flash.md](docs/03_cell_flash.md) | Flashing cell changes |
+| [04_jump_highlight.md](docs/04_jump_highlight.md) | Jump to row & highlight |
+| [05_grouping.md](docs/05_grouping.md) | Row grouping & aggregation |
+| [06_notifications.md](docs/06_notifications.md) | Notification panel |
+| [07_validation.md](docs/07_validation.md) | Data validation |
+| [08_clipboard.md](docs/08_clipboard.md) | Copy with/without formatting |
+| [09_excel_export.md](docs/09_excel_export.md) | Excel/CSV export |
+| [10_websocket.md](docs/10_websocket.md) | Real-time updates |
+| [11_cell_editors.md](docs/11_cell_editors.md) | Cell editor types |
+| [12_edit_pause.md](docs/12_edit_pause.md) | Pause updates while editing |
+| [13_transaction_api.md](docs/13_transaction_api.md) | Efficient delta updates |
+| [14_background_tasks.md](docs/14_background_tasks.md) | Scheduled updates |
+| [15_column_state.md](docs/15_column_state.md) | Save/restore column layout |
+
+## Demo App
+
+Run the demo app to see all features in action:
+
+```bash
+cd reflex_ag_grid/examples/demo_app
+uv run reflex run
+# Open http://localhost:3000
+```
+
 ## Column Definitions
 
-Use the `ColumnDef` Pydantic model for type-safe column configuration:
+Use `ag_grid.column_def()` helper for column configuration:
 
 ```python
-from reflex_ag_grid import ColumnDef, ColumnType
-
 columns = [
-    # Basic text column
-    ColumnDef(field="name", header_name="Name"),
+    # Basic column
+    ag_grid.column_def(field="name", header_name="Name"),
     
-    # Number with formatting
-    ColumnDef(
+    # Sortable + filterable
+    ag_grid.column_def(
         field="price",
         header_name="Price",
-        type=ColumnType.NUMBER,
-        formatter="currency",  # Registry key
-        editable=True,
+        sortable=True,
+        filter="agNumberColumnFilter",
     ),
     
-    # Enum with dropdown editor
-    ColumnDef(
-        field="status",
-        header_name="Status",
-        type=ColumnType.ENUM,
-        enum_values=["Active", "Pending", "Cancelled"],
+    # Dropdown editor
+    ag_grid.column_def(
+        field="sector",
         editable=True,
+        cell_editor="agSelectCellEditor",
+        cell_editor_params={"values": ["Tech", "Finance", "Healthcare"]},
     ),
     
-    # Boolean with checkbox
-    ColumnDef(
-        field="is_active",
-        header_name="Active",
-        type=ColumnType.BOOLEAN,
-        editable=True,
-    ),
-    
-    # Grouped column with aggregation
-    ColumnDef(
-        field="category",
-        header_name="Category",
+    # Grouping with aggregation
+    ag_grid.column_def(
+        field="sector",
         row_group=True,
-        hide=True,  # Hide when grouped
+        hide=True,
     ),
-    ColumnDef(
-        field="total",
-        header_name="Total",
-        type=ColumnType.NUMBER,
-        agg_func="sum",  # Show sum in group rows
-        formatter="currency",
-    ),
-    
-    # Conditional styling
-    ColumnDef(
-        field="change",
-        header_name="Change %",
-        type=ColumnType.FLOAT,
-        formatter="percentage",
-        cell_class_rules="traffic_light",  # Green/red based on value
+    ag_grid.column_def(
+        field="price",
+        agg_func="avg",  # sum, avg, min, max, count
     ),
 ]
 ```
 
-## Formatter Registry
+## Value Formatters
 
-Available formatters (use as string keys):
-
-| Key | Description | Example |
-|-----|-------------|---------|
-| `currency` | USD currency | $1,234.56 |
-| `currency_jpy` | JPY currency | ¥1,234 |
-| `percentage` | Multiply by 100 | 12.34% |
-| `percentage_value` | Already percentage | 12.34% |
-| `number` | Comma-separated | 1,234,567 |
-| `decimal` | Two decimals | 1,234.56 |
-| `date` | ISO date | 2024-01-15 |
-| `datetime` | Local datetime | 1/15/2024, 2:30 PM |
-| `boolean` | Yes/No | Yes |
-| `uppercase` | Uppercase text | HELLO |
-
-### Adding Custom Formatters
-
-Edit `ag_grid_wrapper.js` to add custom formatters:
-
-```javascript
-const FORMATTER_REGISTRY = {
-    // ... existing formatters ...
-    
-    // Add your custom formatter
-    my_custom: (params) => {
-        if (params.value == null) return '';
-        return `Custom: ${params.value}`;
-    },
-};
-```
-
-Then use in Python:
+Display formatted values while copying raw:
 
 ```python
-ColumnDef(field="myfield", formatter="my_custom")
-```
-
-## Cell Class Rules
-
-Available cell styling rules:
-
-| Key | Description |
-|-----|-------------|
-| `traffic_light` | Green for positive, red for negative |
-| `threshold` | Green ≥100, yellow ≥50, red <50 |
-| `bold_nonzero` | Bold for non-zero values |
-
-## Validation
-
-Use Pydantic models for type-safe field validation:
-
-```python
-from reflex_ag_grid import ag_grid, FieldValidation, ValidationSchema
-
-# Define validation rules
-schema = ValidationSchema(
-    fields=[
-        FieldValidation(
-            field_name="price",
-            field_type="number",
-            min_value=0,
-            max_value=1_000_000,
-            required=True,
-            error_message="Price must be between 0 and 1,000,000",
-        ),
-        FieldValidation(
-            field_name="qty",
-            field_type="integer",
-            min_value=1,
-            max_value=10_000,
-        ),
-        FieldValidation(
-            field_name="symbol",
-            field_type="string",
-            pattern=r"^[A-Z]{1,5}$",
-            required=True,
-        ),
-        FieldValidation(
-            field_name="sector",
-            field_type="enum",
-            enum_values=["Technology", "Finance", "Healthcare", "Energy"],
-        ),
-    ]
+ag_grid.column_def(
+    field="price",
+    # Display: $175.50
+    value_formatter=rx.Var(
+        "(params) => '$' + params.value.toFixed(2)"
+    ).to(rx.EventChain),
 )
 
-# Pass validation config to grid
-def my_grid():
-    return ag_grid(
-        id="my_grid",
-        row_data=MyState.data,
-        column_defs=columns,
-        validation_schema=schema.to_js_config(),  # Convert to JS-compatible dict
-    )
+ag_grid.column_def(
+    field="market_cap",
+    # Display: $175bn
+    value_formatter=rx.Var(
+        """(params) => {
+            const val = params.value;
+            if (val >= 1e9) return '$' + (val / 1e9).toFixed(0) + 'bn';
+            return '$' + val;
+        }"""
+    ).to(rx.EventChain),
+)
 ```
 
-### Validation Types
-
-| Type | Constraints |
-|------|-------------|
-| `string` | `min_length`, `max_length`, `pattern` |
-| `number` | `min_value`, `max_value` |
-| `integer` | `min_value`, `max_value` |
-| `boolean` | (none) |
-| `enum` | `enum_values` list |
-
-### Server-Side Validation
-
-Use schema for Python-side validation:
-
-```python
-row = {"price": -10, "qty": 0}
-is_valid, errors = schema.validate_row(row)
-# is_valid: False
-# errors: {"price": "must be >= 0", "qty": "must be >= 1"}
-```
-
-## Grid Control
-
-Use the state mixin methods to control the grid:
-
-```python
-class MyState(rx.State, AGGridStateMixin):
-    def on_button_click(self):
-        # Jump to specific row
-        return self.jump_to_row("row_123", grid_id="my_grid")
-    
-    def export_data(self):
-        # Trigger Excel export
-        return self.export_to_excel(grid_id="my_grid")
-    
-    def reset_view(self):
-        # Reset column positions/widths
-        return self.reset_column_state(grid_id="my_grid")
-```
+When copied (Ctrl+C), only the raw value is copied (175.5, not $175.50).
+See [08_clipboard.md](docs/08_clipboard.md) for details.
 
 ## Events
 
@@ -318,51 +174,22 @@ All events receive sanitized data (no circular references):
 
 | Event | Payload |
 |-------|---------|
-| `on_cell_edit` | `{rowId, field, oldValue, newValue, rowData}` |
-| `on_row_click` | `{rowId, rowData}` |
-| `on_row_double_click` | `{rowId, rowData}` |
-| `on_row_right_click` | `{rowId, rowData, clientX, clientY}` |
-| `on_selection_change` | `{selectedRows, selectedCount}` |
-| `on_grid_ready` | `{gridId}` |
+| `on_cell_value_changed` | `{rowId, field, oldValue, newValue, rowData}` |
+| `on_row_clicked` | `{rowId, rowData}` |
+| `on_row_double_clicked` | `{rowId, rowData}` |
+| `on_selection_changed` | `{selectedRows, selectedCount}` |
+| `on_grid_ready` | Grid API event |
 
-## Notification Panel
+## Enterprise Features
 
-A reusable component for displaying notifications with jump-to-row functionality.
+These require AG Grid Enterprise license:
 
-```python
-from reflex_ag_grid import ag_grid, notification_panel
-
-class MyState(rx.State):
-    notifications: list[dict] = []
-    
-    def add_notification(self, message: str, row_id: str, level: str = "info"):
-        self.notifications.append({
-            "message": message,
-            "row_id": row_id,
-            "level": level,  # "info", "warning", "error", "success"
-        })
-    
-    def clear_notifications(self):
-        self.notifications = []
-
-def my_page():
-    return rx.hstack(
-        ag_grid(
-            id="my_grid",
-            row_data=MyState.data,
-            column_defs=columns,
-        ),
-        notification_panel(
-            notifications=MyState.notifications,
-            grid_id="my_grid",
-            on_clear=MyState.clear_notifications,
-        ),
-    )
-```
-
-Clicking a notification jumps to the associated row and flashes it.
+- Row Grouping & Aggregation
+- Range Selection
+- Excel Export
+- Context Menu
+- Clipboard (copy with headers)
 
 ## License
 
 Requires AG Grid Enterprise license for production use without watermark.
-

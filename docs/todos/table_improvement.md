@@ -599,11 +599,12 @@ Finalize documentation, create migration guide, ensure package is ready for reus
     - [x] Code example
     - [x] How to implement in your app
 
-- [ ] **4.4** Complete `reflex_ag_grid/README.md`
-  - [ ] Installation instructions
-  - [ ] Quick start guide
-  - [ ] API reference
-  - [ ] Configuration examples
+- [x] **4.4** Complete `reflex_ag_grid/README.md` ✅
+  - [x] Installation instructions
+  - [x] Quick start guide
+  - [x] API reference (column definitions, value formatters, events)
+  - [x] Configuration examples
+  - [x] Links to detailed docs
 
 - [ ] **4.5** Create migration guide
   - [ ] Step-by-step migration from `rx.el.table`
@@ -628,6 +629,26 @@ Finalize documentation, create migration guide, ensure package is ready for reus
   - [ ] Remove deprecated code
   - [ ] Consistent code style
   - [ ] Update all imports
+
+- [ ] **4.10** Move notification_panel out of main package
+  > Keep `reflex_ag_grid` focused purely on AG Grid. notification_panel is a demo component.
+  
+  - [ ] Remove from `reflex_ag_grid/components/`:
+    - [ ] Remove `notification_panel.py`
+    - [ ] Remove notification-related code from `ag_grid_state.py` (L57-L93):
+      - `add_notification()`
+      - `clear_notification()`
+      - `clear_all_notifications()`
+      - `notifications` state variable
+  - [ ] Move to `reflex_ag_grid/examples/demo_app/ag_grid_demo/components/`:
+    - [ ] Copy `notification_panel.py` to demo components (already exists there)
+    - [ ] Keep notification state in demo app's `DemoState`
+  - [ ] Update imports:
+    - [ ] Remove from `reflex_ag_grid/__init__.py` exports
+    - [ ] Update demo app imports to use local component
+  - [ ] Update documentation:
+    - [ ] Update `06_notifications.md` to show demo-only pattern
+    - [ ] Remove from main API reference
 
 ### Testing Plan - Phase 4
 
