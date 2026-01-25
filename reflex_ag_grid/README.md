@@ -80,7 +80,7 @@ See the `docs/` directory for detailed documentation on each feature:
 | [03_cell_flash.md](docs/03_cell_flash.md) | Flashing cell changes |
 | [04_jump_highlight.md](docs/04_jump_highlight.md) | Jump to row & highlight |
 | [05_grouping.md](docs/05_grouping.md) | Row grouping & aggregation |
-| [06_notifications.md](docs/06_notifications.md) | Notification panel |
+| [06_notifications.md](docs/06_notifications.md) | Notification panel (demo-only) |
 | [07_validation.md](docs/07_validation.md) | Data validation |
 | [08_clipboard.md](docs/08_clipboard.md) | Copy with/without formatting |
 | [09_excel_export.md](docs/09_excel_export.md) | Excel/CSV export |

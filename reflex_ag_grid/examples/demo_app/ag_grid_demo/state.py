@@ -148,23 +148,25 @@ class DemoState(rx.State):
     # =========================================================================
 
     def jump_to_row(self, row_id: str):
-        """Jump to a row in the streaming grid and flash it."""
+        """Jump to a row and flash it. Tries multiple grids."""
         script = f"""
         (() => {{
-            const gridRef = refs['ref_streaming_grid'];
-            if (gridRef && gridRef.current && gridRef.current.api) {{
-                const api = gridRef.current.api;
-                const node = api.getRowNode('{row_id}');
-                if (node) {{
-                    api.ensureNodeVisible(node, 'middle');
-                    api.flashCells({{rowNodes: [node]}});
-                    console.log('Jumped to row:', '{row_id}');
-                }} else {{
-                    console.warn('Row not found:', '{row_id}');
+            // Try multiple possible grid refs
+            const gridIds = ['notifications_grid', 'streaming_grid', 'flash_grid'];
+            for (const gridId of gridIds) {{
+                const gridRef = refs['ref_' + gridId];
+                if (gridRef && gridRef.current && gridRef.current.api) {{
+                    const api = gridRef.current.api;
+                    const node = api.getRowNode('{row_id}');
+                    if (node) {{
+                        api.ensureNodeVisible(node, 'middle');
+                        api.flashCells({{rowNodes: [node]}});
+                        console.log('Jumped to row:', '{row_id}', 'in grid:', gridId);
+                        return;
+                    }}
                 }}
-            }} else {{
-                console.warn('Grid API not available');
             }}
+            console.warn('Row not found in any grid:', '{row_id}');
         }})()
         """
         return rx.call_script(script)

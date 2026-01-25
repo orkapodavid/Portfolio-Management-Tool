@@ -9,14 +9,13 @@ Usage:
         data: list[dict] = []
 
         def handle_cell_edit(self, data: dict):
-            # Use inherited method to update + notify
+            # Use inherited method to update
             self.on_cell_edited(data)
             # Add custom logic...
 """
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import reflex as rx
@@ -32,64 +31,16 @@ class AGGridStateMixin:
             items: list[dict] = []
 
     Provides:
-    - Notification management (add, clear, jump to row)
     - Grid control methods via rx.call_script
     - Common event handlers you can override
+    - Utility methods for row data management
 
     All grid control methods use the gridId to target specific grids
     when multiple grids are on the same page.
     """
 
-    # ===== Notification State =====
-
-    notifications: List[Dict[str, Any]] = []
-    """
-    List of notifications.
-    Each: { id, message, row_id, type, timestamp }
-    Types: 'info' | 'warning' | 'error' | 'success'
-    """
-
     selected_rows: List[Dict[str, Any]] = []
     """Currently selected rows (updated via on_selection_change)."""
-
-    # ===== Notification Management =====
-
-    def add_notification(
-        self,
-        message: str,
-        row_id: Optional[str] = None,
-        notification_type: str = "info",
-        metadata: Optional[Dict[str, Any]] = None,
-    ) -> None:
-        """
-        Add a notification to the list.
-
-        Args:
-            message: Notification text
-            row_id: Optional row ID for jump-to functionality
-            notification_type: 'info' | 'warning' | 'error' | 'success'
-            metadata: Additional data to include
-        """
-        notification = {
-            "id": f"notif_{datetime.now().timestamp()}",
-            "message": message,
-            "row_id": row_id,
-            "type": notification_type,
-            "timestamp": datetime.now().isoformat(),
-            **(metadata or {}),
-        }
-        # Keep most recent first, limit to 100
-        self.notifications = [notification] + self.notifications[:99]
-
-    def clear_notification(self, notification_id: str) -> None:
-        """Remove a specific notification by ID."""
-        self.notifications = [
-            n for n in self.notifications if n.get("id") != notification_id
-        ]
-
-    def clear_all_notifications(self) -> None:
-        """Clear all notifications."""
-        self.notifications = []
 
     # ===== Grid Control Methods =====
     # These use rx.call_script to call the JavaScript gridController
@@ -221,23 +172,6 @@ class AGGridStateMixin:
         """
         grid_id = data.get("gridId", "default")
         print(f"[AGGrid] Grid ready: {grid_id}")
-
-    def handle_notification_click(
-        self, notification: Dict[str, Any]
-    ) -> Optional[rx.event.EventSpec]:
-        """
-        Handle notification click - jump to associated row.
-
-        Args:
-            notification: The notification dict that was clicked
-
-        Returns:
-            EventSpec to jump to row if row_id exists
-        """
-        row_id = notification.get("row_id")
-        if row_id:
-            return self.jump_to_row(row_id)
-        return None
 
     # ===== Utility Methods =====
 
