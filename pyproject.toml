@@ -12,6 +12,7 @@ dependencies = [
     "pandas",
     "pmt-core",
     "reflex-ag-grid",
+    "plotly>=6.5.2",
 ]
 
 [build-system]
