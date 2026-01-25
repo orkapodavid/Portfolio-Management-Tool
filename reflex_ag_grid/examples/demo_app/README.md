@@ -12,6 +12,7 @@ A multi-page Reflex application demonstrating all 15 AG Grid requirements.
 | **Streaming Data** | `/streaming` | Req 3, 6, 10, 13, 14 (flash, notifications, updates) |
 | **Range Selection** | `/range` | Req 2 (bulk range selection) |
 | **Column State** | `/column-state` | Req 15 (save table format) |
+| **Global Search** | `/search` | Quick filter across all columns |
 
 ## Running the Demo
 
@@ -45,6 +46,34 @@ Open http://localhost:3000 in your browser.
 - ✅ Range selection (Shift+click)
 - ✅ Row grouping with aggregation
 - ✅ Column state persistence (localStorage)
+
+### Global Search / Quick Filter
+- ✅ Filter all columns with a single text input
+- ✅ Reactive filtering via `quick_filter_text` prop
+
+## Usage Examples
+
+### Global Search
+
+```python
+class State(rx.State):
+    search_text: str = ""
+
+def search_grid():
+    return rx.vstack(
+        rx.input(
+            placeholder="Search all columns...",
+            value=State.search_text,
+            on_change=State.set_search_text,
+        ),
+        ag_grid(
+            id="my_grid",
+            row_data=State.data,
+            column_defs=columns,
+            quick_filter_text=State.search_text,  # Reactive filter
+        ),
+    )
+```
 
 ## E2E Testing
 

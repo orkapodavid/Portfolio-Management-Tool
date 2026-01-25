@@ -195,6 +195,7 @@ class DemoState(rx.State):
     is_streaming: bool = False
     pause_on_edit: bool = False
     is_editing: bool = False
+    search_text: str = ""
 
     def on_selection_change(self, rows: list, source: str, event_type: str):
         """Handle row selection changes."""
@@ -298,6 +299,7 @@ def nav_bar() -> rx.Component:
         rx.link("Streaming", href="/streaming"),
         rx.link("Range Select", href="/range"),
         rx.link("Column State", href="/column-state"),
+        rx.link("Search", href="/search"),
         spacing="4",
         padding="3",
         background="var(--gray-2)",
@@ -598,6 +600,46 @@ def column_state_page() -> rx.Component:
     )
 
 
+def search_page() -> rx.Component:
+    """Search/Quick Filter page - Req 1.12 (global search)."""
+    return rx.vstack(
+        nav_bar(),
+        rx.heading("Global Search / Quick Filter", size="6"),
+        rx.text("Features: Filter all columns with a single text input"),
+        rx.hstack(
+            rx.input(
+                placeholder="🔍 Search all columns...",
+                value=DemoState.search_text,
+                on_change=DemoState.set_search_text,
+                width="400px",
+            ),
+            rx.button("Clear", on_click=DemoState.set_search_text(""), size="2"),
+            rx.text("Filtering by: ", color="gray"),
+            rx.cond(
+                DemoState.search_text != "",
+                rx.badge(DemoState.search_text, color_scheme="blue"),
+                rx.text("(none)", color="gray"),
+            ),
+            spacing="3",
+        ),
+        ag_grid(
+            id="search_grid",
+            row_data=DemoState.data,
+            column_defs=get_basic_columns(),
+            quick_filter_text=DemoState.search_text,
+            theme="quartz",
+            width="90vw",
+            height="60vh",
+        ),
+        rx.text(
+            "Type to filter across Symbol, Company, Sector, Price, Quantity, and Change columns.",
+            color="gray",
+        ),
+        padding="4",
+        spacing="3",
+    )
+
+
 # =============================================================================
 # APP
 # =============================================================================
@@ -609,3 +651,4 @@ app.add_page(grouped_page, route="/grouped", title="Grouped Grid")
 app.add_page(streaming_page, route="/streaming", title="Streaming Data")
 app.add_page(range_page, route="/range", title="Range Selection")
 app.add_page(column_state_page, route="/column-state", title="Column State")
+app.add_page(search_page, route="/search", title="Global Search")

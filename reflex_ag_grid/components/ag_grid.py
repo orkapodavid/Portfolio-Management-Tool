@@ -252,6 +252,9 @@ class AgGrid(rx.Component):
     pagination_page_size: rx.Var[int] = rx.Var.create(10)
     pagination_page_size_selector: rx.Var[list[int]] = rx.Var.create([10, 25, 50])
 
+    # ===== Quick Filter (Global Search) =====
+    quick_filter_text: rx.Var[str] = rx.Var.create("")
+
     # ===== Styling =====
     animate_rows: rx.Var[bool] = False
     theme: rx.Var[Literal["quartz", "balham", "alpine", "material"]]

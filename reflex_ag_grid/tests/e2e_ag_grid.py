@@ -183,6 +183,48 @@ def run_tests(base_url: str, headless: bool = True, screenshot_dir: Path | None 
             except Exception as e:
                 log_result("Column State page loads", False, str(e))
 
+            # ========================================
+            # Test Global Search Page (/search)
+            # ========================================
+            print("\n[Page: Global Search /search]")
+            page.goto(f"{base_url}/search", timeout=30000)
+            page.wait_for_load_state("networkidle", timeout=10000)
+
+            try:
+                page.wait_for_selector(".ag-root-wrapper", timeout=10000)
+                # Check search input exists
+                search_input = page.locator("input[placeholder*='Search']")
+                has_search = search_input.count() > 0
+                log_result("Search input visible", has_search)
+
+                # Test filtering functionality
+                if has_search:
+                    # Count rows before filtering
+                    initial_rows = page.locator(".ag-row").count()
+
+                    # Type search text
+                    search_input.fill("Apple")
+                    page.wait_for_timeout(500)
+
+                    # Count rows after filtering
+                    filtered_rows = page.locator(".ag-row").count()
+                    filter_works = filtered_rows < initial_rows and filtered_rows > 0
+                    log_result(
+                        "Quick filter works",
+                        filter_works,
+                        f"{initial_rows} → {filtered_rows} rows",
+                    )
+
+                    # Clear and verify reset
+                    clear_btn = page.locator("button:has-text('Clear')")
+                    if clear_btn.count() > 0:
+                        clear_btn.click()
+                        page.wait_for_timeout(500)
+                        reset_rows = page.locator(".ag-row").count()
+                        log_result("Clear button works", reset_rows >= initial_rows)
+            except Exception as e:
+                log_result("Search page loads", False, str(e))
+
             # Take final screenshot
             page.screenshot(path=str(screenshot_dir / "final_state.png"))
             print(f"\n[Info] Screenshots saved to: {screenshot_dir}")

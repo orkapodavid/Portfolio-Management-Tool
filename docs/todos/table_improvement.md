@@ -247,6 +247,40 @@ Build the foundational AG Grid wrapper component that can render a basic grid wi
   - [ ] 1.11.6 Update `app/components/shared` to use the package
   - [ ] 1.11.7 Update demo_app to use package import
   - [ ] 1.11.8 Run E2E tests to verify no regressions
+- [ ] **1.12** Global Search / Quick Filter Component
+  > Add a `quick_filter_text` prop to the AG Grid component for reactive text filtering
+  
+  **Why:** Users need a quick way to filter grid data across all columns. Using a reactive prop:
+  - Follows Reflex patterns (state-driven)
+  - Gives users full control over the input component (styling, debouncing, placement)
+  - Integrates with AG Grid's built-in `quickFilterText` option
+  
+  **Tasks:**
+  - [x] 1.12.1 Add `quick_filter_text: rx.Var[str]` prop to `ag_grid.py` component
+  - [x] 1.12.2 Add demo page `/search` to demo app showing the feature
+  - [x] 1.12.3 Add E2E test for search functionality
+  - [x] 1.12.4 Update README with usage examples
+  
+  **Usage Example:**
+  ```python
+  class State(rx.State):
+      search_text: str = ""
+
+  def search_grid():
+      return rx.vstack(
+          rx.input(
+              placeholder="Search all columns...",
+              value=State.search_text,
+              on_change=State.set_search_text,
+          ),
+          ag_grid(
+              id="my_grid",
+              row_data=State.data,
+              column_defs=columns,
+              quick_filter_text=State.search_text,  # Reactive filter
+          ),
+      )
+  ```
 
 ### Architectural Constraints Applied (Per Senior Review)
 
@@ -646,6 +680,7 @@ lib_dependencies: list[str] = [
 - [x] 1.9 E2E tests (6/6 passed)
 - [x] 1.10 Demo requirements coverage ✅ (10/10 tasks, 15/15 reqs)
 - [ ] 1.11 Standalone package setup (0/8 tasks)
+- [x] 1.12 Global search / Quick filter ✅ (4/4 tasks)
 
 ### Phase 2: Validation & Editing
 - [ ] 2.1 Validation loader
