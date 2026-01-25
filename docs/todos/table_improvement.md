@@ -541,50 +541,34 @@ Finalize documentation, create migration guide, ensure package is ready for reus
   - [x] Update main app to import from modules
   - [x] E2E tests pass: 21/21 ✅
 
-- [ ] **4.2** Create 15 aligned demo pages (one per requirement)
-  - [ ] Reorganize demo pages to match requirements 1:1
-  - [ ] Current 9 pages → expand to 15 pages:
+- [x] **4.2** Create 15 aligned demo pages (one per requirement) ✅
+  - [x] Reorganize demo pages to match requirements 1:1
+  - [x] All 15 pages created with `req##_` naming convention:
 
     | Req # | Requirement | Demo Page | Route | Status |
     |-------|-------------|-----------|-------|--------|
-    | 1 | Context Menu | `01_context_menu.py` | `/01-context-menu` | 🔄 Refactor from index.py |
-    | 2 | Range Selection | `02_range_selection.py` | `/02-range-selection` | ✅ Exists (range.py) |
-    | 3 | Cell Flash | `03_cell_flash.py` | `/03-cell-flash` | 🔄 Extract from streaming.py |
-    | 4 | Jump & Highlight | `04_jump_highlight.py` | `/04-jump-highlight` | ✅ Exists (jump_demo.py) |
-    | 5 | Grouping & Summary | `05_grouping.py` | `/05-grouping` | ✅ Enhanced with dynamic grouping |
-    | 6 | Notifications | `06_notifications.py` | `/06-notifications` | 🔄 Extract from streaming.py |
-    | 7 | Validation | `07_validation.py` | `/07-validation` | ✅ Exists (validation.py) |
-    | 8 | Clipboard | `08_clipboard.py` | `/08-clipboard` | 🆕 New page |
-    | 9 | Excel Export | `09_excel_export.py` | `/09-excel-export` | 🔄 Extract from index.py |
-    | 10 | WebSocket | `10_websocket.py` | `/10-websocket` | 🔄 Extract from streaming.py |
-    | 11 | Cell Editors | `11_cell_editors.py` | `/11-cell-editors` | ✅ Exists (editable.py) |
-    | 12 | Edit Pause | `12_edit_pause.py` | `/12-edit-pause` | 🔄 Extract from editable.py |
-    | 13 | Transaction API | `13_transaction_api.py` | `/13-transaction-api` | 🆕 New page |
-    | 14 | Background Tasks | `14_background_tasks.py` | `/14-background-tasks` | 🆕 New page |
-    | 15 | Column State | `15_column_state.py` | `/15-column-state` | ✅ Exists (column_state.py) |
+    | 1 | Context Menu | `req01_context_menu.py` | `/01-context-menu` | ✅ Done |
+    | 2 | Range Selection | `req02_range_selection.py` | `/02-range-selection` | ✅ Done |
+    | 3 | Cell Flash | `req03_cell_flash.py` | `/03-cell-flash` | ✅ Done |
+    | 4 | Jump & Highlight | `req04_jump_highlight.py` | `/04-jump-highlight` | ✅ Done |
+    | 5 | Grouping & Summary | `req05_grouping.py` | `/05-grouping` | ✅ Done |
+    | 6 | Notifications | `req06_notifications.py` | `/06-notifications` | ✅ Done |
+    | 7 | Validation | `req07_validation.py` | `/07-validation` | ✅ Done |
+    | 8 | Clipboard | `req08_clipboard.py` | `/08-clipboard` | ✅ Done |
+    | 9 | Excel Export | `req09_excel_export.py` | `/09-excel-export` | ✅ Done |
+    | 10 | WebSocket | `req10_websocket.py` | `/10-websocket` | ✅ Done |
+    | 11 | Cell Editors | `req11_cell_editors.py` | `/11-cell-editors` | ✅ Done |
+    | 12 | Edit Pause | `req12_edit_pause.py` | `/12-edit-pause` | ✅ Done |
+    | 13 | Transaction API | `req13_transaction_api.py` | `/13-transaction-api` | ✅ Done |
+    | 14 | Background Tasks | `req14_background_tasks.py` | `/14-background-tasks` | ✅ Done |
+    | 15 | Column State | `req15_column_state.py` | `/15-column-state` | ✅ Done |
 
-  - [ ] Rename existing pages to match numbering:
-    - [ ] `range.py` → `02_range_selection.py`
-    - [ ] `jump_demo.py` → `04_jump_highlight.py`
-    - [ ] `grouped.py` → `05_grouping.py`
-    - [ ] `validation.py` → `07_validation.py`
-    - [ ] `editable.py` → `11_cell_editors.py`
-    - [ ] `column_state.py` → `15_column_state.py`
-  - [ ] Create new/refactored pages:
-    - [ ] `01_context_menu.py` - Dedicated context menu demo
-    - [ ] `03_cell_flash.py` - Dedicated cell flash demo
-    - [ ] `06_notifications.py` - Dedicated notifications demo
-    - [ ] `08_clipboard.py` - Copy cell with/without header
-    - [ ] `09_excel_export.py` - Excel/CSV export demo
-    - [ ] `10_websocket.py` - Real-time WebSocket updates
-    - [ ] `12_edit_pause.py` - Pause updates while editing
-    - [ ] `13_transaction_api.py` - Delta/transaction updates
-    - [ ] `14_background_tasks.py` - Background task scheduling
-  - [ ] Remove merged pages:
-    - [ ] Remove `index.py` (split into 01, 09)
-    - [ ] Remove `streaming.py` (split into 03, 06, 10)
-    - [ ] Remove `search.py` (merge into relevant pages)
-  - [ ] Update navigation and routes
+  - [x] Pages renamed to `req##_` naming convention (all created fresh)
+  - [x] Old pages removed (index.py, streaming.py, search.py, etc.)
+  - [x] Navigation and routes updated
+
+  **Remaining Enhancements:**
+  - [ ] `req08_clipboard.py` - Enable copying from a single cell (not just range selection)
 
 - [ ] **4.3** Create documentation aligned with demo pages
   - [ ] Create `reflex_ag_grid/docs/` directory
