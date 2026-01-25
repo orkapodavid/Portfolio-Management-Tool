@@ -1,5 +1,5 @@
 """
-Navigation Bar Component - Top navigation for all demo pages.
+Navigation Bar Component - Top navigation for all 15 demo pages.
 """
 
 import reflex as rx
@@ -8,23 +8,39 @@ import reflex as rx
 def nav_bar() -> rx.Component:
     """Navigation bar for demo pages.
 
-    Links to all demo pages:
-    - Basic, Editable, Validation, Grouped
-    - Streaming, Range Select, Column State
-    - Search, Jump Demo
+    Links to all 15 demo pages (one per requirement).
     """
-    return rx.hstack(
-        rx.link("Basic", href="/"),
-        rx.link("Editable", href="/editable"),
-        rx.link("Validation", href="/validation"),
-        rx.link("Grouped", href="/grouped"),
-        rx.link("Streaming", href="/streaming"),
-        rx.link("Range Select", href="/range"),
-        rx.link("Column State", href="/column-state"),
-        rx.link("Search", href="/search"),
-        rx.link("Jump Demo", href="/jump-demo"),
-        spacing="4",
-        padding="3",
+    return rx.box(
+        rx.hstack(
+            rx.text("AG Grid Demo", weight="bold", size="3"),
+            rx.divider(orientation="vertical", size="2"),
+            rx.scroll_area(
+                rx.hstack(
+                    rx.link("01-Menu", href="/01-context-menu", size="1"),
+                    rx.link("02-Range", href="/02-range-selection", size="1"),
+                    rx.link("03-Flash", href="/03-cell-flash", size="1"),
+                    rx.link("04-Jump", href="/04-jump-highlight", size="1"),
+                    rx.link("05-Group", href="/05-grouping", size="1"),
+                    rx.link("06-Notify", href="/06-notifications", size="1"),
+                    rx.link("07-Valid", href="/07-validation", size="1"),
+                    rx.link("08-Copy", href="/08-clipboard", size="1"),
+                    rx.link("09-Export", href="/09-excel-export", size="1"),
+                    rx.link("10-WS", href="/10-websocket", size="1"),
+                    rx.link("11-Edit", href="/11-cell-editors", size="1"),
+                    rx.link("12-Pause", href="/12-edit-pause", size="1"),
+                    rx.link("13-Trans", href="/13-transaction-api", size="1"),
+                    rx.link("14-Tasks", href="/14-background-tasks", size="1"),
+                    rx.link("15-State", href="/15-column-state", size="1"),
+                    spacing="3",
+                ),
+                type="scroll",
+                scrollbars="horizontal",
+            ),
+            spacing="3",
+            align="center",
+            width="100%",
+        ),
+        padding="2",
         background="var(--gray-2)",
         width="100%",
     )

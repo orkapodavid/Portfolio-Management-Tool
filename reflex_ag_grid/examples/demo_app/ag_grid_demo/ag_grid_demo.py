@@ -1,42 +1,64 @@
 """
-AG Grid Demo App - Multi-page demo showcasing all AG Grid features.
+AG Grid Demo App - 15 demo pages showcasing all AG Grid requirements.
 
-This is the main app file that imports from modular components:
-- state.py: DemoState class
-- data.py: Sample data and validation schema
-- columns.py: Column definitions
-- components/: Shared UI components
-- pages/: All demo pages
-
-Demonstrates all 15 requirements from the AG Grid Traceability Matrix.
+One page per requirement from the AG Grid Traceability Matrix.
 """
 
 import reflex as rx
 
 from .pages import (
-    index,
-    editable_page,
-    grouped_page,
-    streaming_page,
-    range_page,
-    column_state_page,
-    search_page,
+    context_menu_page,
+    range_selection_page,
+    cell_flash_page,
+    jump_highlight_page,
+    grouping_page,
+    notifications_page,
     validation_page,
-    jump_demo_page,
+    clipboard_page,
+    excel_export_page,
+    websocket_page,
+    cell_editors_page,
+    edit_pause_page,
+    transaction_api_page,
+    background_tasks_page,
+    column_state_page,
 )
 
 
 # =============================================================================
-# APP
+# APP - 15 Demo Pages (one per requirement)
 # =============================================================================
 
 app = rx.App()
-app.add_page(index, route="/", title="Basic Grid")
-app.add_page(editable_page, route="/editable", title="Editable Grid")
-app.add_page(grouped_page, route="/grouped", title="Grouped Grid")
-app.add_page(streaming_page, route="/streaming", title="Streaming Data")
-app.add_page(range_page, route="/range", title="Range Selection")
-app.add_page(column_state_page, route="/column-state", title="Column State")
-app.add_page(search_page, route="/search", title="Global Search")
-app.add_page(validation_page, route="/validation", title="Validation Demo")
-app.add_page(jump_demo_page, route="/jump-demo", title="Cross-Page Jump")
+
+# Req 1-5
+app.add_page(context_menu_page, route="/01-context-menu", title="01 - Context Menu")
+app.add_page(
+    range_selection_page, route="/02-range-selection", title="02 - Range Selection"
+)
+app.add_page(cell_flash_page, route="/03-cell-flash", title="03 - Cell Flash")
+app.add_page(
+    jump_highlight_page, route="/04-jump-highlight", title="04 - Jump & Highlight"
+)
+app.add_page(grouping_page, route="/05-grouping", title="05 - Grouping & Summary")
+
+# Req 6-10
+app.add_page(notifications_page, route="/06-notifications", title="06 - Notifications")
+app.add_page(validation_page, route="/07-validation", title="07 - Validation")
+app.add_page(clipboard_page, route="/08-clipboard", title="08 - Clipboard")
+app.add_page(excel_export_page, route="/09-excel-export", title="09 - Excel Export")
+app.add_page(websocket_page, route="/10-websocket", title="10 - WebSocket")
+
+# Req 11-15
+app.add_page(cell_editors_page, route="/11-cell-editors", title="11 - Cell Editors")
+app.add_page(edit_pause_page, route="/12-edit-pause", title="12 - Edit Pause")
+app.add_page(
+    transaction_api_page, route="/13-transaction-api", title="13 - Transaction API"
+)
+app.add_page(
+    background_tasks_page, route="/14-background-tasks", title="14 - Background Tasks"
+)
+app.add_page(column_state_page, route="/15-column-state", title="15 - Column State")
+
+# Default route redirects to first page
+app.add_page(context_menu_page, route="/", title="AG Grid Demo")

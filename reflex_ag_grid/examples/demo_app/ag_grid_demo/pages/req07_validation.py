@@ -1,8 +1,8 @@
 """
-Validation Demo Page - Demonstrates Phase 2 validation system.
+07 - Validation Page - Demonstrates data validation.
 
-Requirements:
-- Req 7: Data Validation (.ini)
+Requirement 7: Data Validation (.ini)
+AG Grid Feature: valueParser + Python validation
 """
 
 import reflex as rx
@@ -15,7 +15,7 @@ from ..components import nav_bar
 
 
 def validation_page() -> rx.Component:
-    """Validation Demo page showing Pydantic-based validation.
+    """Validation demo page.
 
     Features:
     - Field-level validation rules
@@ -60,11 +60,14 @@ def validation_page() -> rx.Component:
 
     return rx.vstack(
         nav_bar(),
-        rx.heading("Validation Demo", size="6"),
-        rx.text("Phase 2 Feature: Field-level validation with Pydantic models"),
-        # Validation Rules Section
+        rx.heading("07 - Validation", size="6"),
+        rx.text("Requirement 7: Data Validation"),
+        rx.callout(
+            "Double-click a cell to edit. Try entering invalid values to see validation.",
+            icon="info",
+        ),
         rx.box(
-            rx.heading("Validation Rules Applied:", size="4"),
+            rx.heading("Validation Rules:", size="4"),
             rx.table.root(
                 rx.table.header(
                     rx.table.row(
@@ -77,43 +80,35 @@ def validation_page() -> rx.Component:
                     rx.table.row(
                         rx.table.cell("symbol"),
                         rx.table.cell("string"),
-                        rx.table.cell("Pattern: A-Z only, 1-5 chars, required"),
+                        rx.table.cell("A-Z, 1-5 chars"),
                     ),
                     rx.table.row(
                         rx.table.cell("price"),
                         rx.table.cell("number"),
-                        rx.table.cell("Min: 0, Max: 1,000,000, required"),
+                        rx.table.cell("0 - 1,000,000"),
                     ),
                     rx.table.row(
                         rx.table.cell("qty"),
                         rx.table.cell("integer"),
-                        rx.table.cell("Min: 1, Max: 10,000, required"),
+                        rx.table.cell("1 - 10,000"),
                     ),
                     rx.table.row(
                         rx.table.cell("change"),
                         rx.table.cell("number"),
-                        rx.table.cell("Min: -100, Max: 100"),
+                        rx.table.cell("-100 to 100"),
                     ),
                     rx.table.row(
                         rx.table.cell("sector"),
                         rx.table.cell("enum"),
-                        rx.table.cell(
-                            "Values: Technology, Finance, Healthcare, Energy"
-                        ),
+                        rx.table.cell("4 values"),
                     ),
                 ),
             ),
-            padding="4",
+            padding="3",
             background="var(--gray-2)",
             border_radius="8px",
-            margin_bottom="4",
+            margin_bottom="3",
         ),
-        # Instructions
-        rx.callout(
-            "Double-click a cell to edit. Try entering invalid values to see validation in action.",
-            icon="info",
-        ),
-        # Grid with validation
         ag_grid(
             id="validation_grid",
             row_data=DemoState.data,
@@ -123,35 +118,6 @@ def validation_page() -> rx.Component:
             theme="quartz",
             width="90vw",
             height="50vh",
-        ),
-        # Code Example
-        rx.box(
-            rx.heading("Usage Example:", size="4"),
-            rx.code_block(
-                """from reflex_ag_grid import ag_grid, FieldValidation, ValidationSchema
-
-schema = ValidationSchema(
-    fields=[
-        FieldValidation(
-            field_name="price",
-            field_type="number",
-            min_value=0,
-            max_value=1_000_000,
-            required=True,
-        ),
-    ]
-)
-
-ag_grid(
-    id="my_grid",
-    row_data=data,
-    validation_schema=schema.to_js_config(),
-)""",
-                language="python",
-            ),
-            padding="4",
-            background="var(--gray-2)",
-            border_radius="8px",
         ),
         padding="4",
         spacing="3",
