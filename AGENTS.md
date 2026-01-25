@@ -50,7 +50,7 @@ This is a Portfolio Management Tool built with **Reflex** (Python web framework)
 ## Development
 - **Package Manager**: `uv`
 - **Run Command**: `uv run reflex run`
-- **Frontend**: http://localhost:3001
+- **Frontend**: http://localhost:3001/pmt/
 - **Backend**: http://0.0.0.0:8001
 
 ## pmt_core Package
@@ -153,7 +153,7 @@ The application uses a **Top Navigation Bar** with icons to switch between views
 
 ## Verification
 1. Run the app: `uv run reflex run`.
-2. Browse to `http://localhost:3001/`.
+2. Browse to `http://localhost:3001/pmt/`.
 3. Verify that the Dashboard and Top Navigation load.
 4. Click through the icons to ensure data tables render.
 5. Check the Notifications Sidebar for alerts.
