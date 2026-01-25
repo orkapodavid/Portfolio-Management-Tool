@@ -181,38 +181,38 @@ Build the foundational AG Grid wrapper component that can render a basic grid wi
     - [x] Right-click shows context menu
     - [x] No fatal console errors
   - [x] Screenshots on failure for debugging
-- [ ] **1.10** Demo App - Requirements Coverage (all 15 requirements)
+- [x] **1.10** Demo App - Requirements Coverage (all 15 requirements) ✅
   > Ensure `demo_app` demonstrates every requirement from the Traceability Matrix
   
   | Req# | Requirement | Demo Page | Status |
   |------|-------------|-----------|--------|
   | 1 | Right-click context menu | Basic Grid | ✅ Done |
-  | 2 | Bulk range selection | New: Range Selection page | ❌ TODO |
-  | 3 | Blinking cell changes | Streaming Data | ⚠️ Needs flash animation |
-  | 4 | Notification jump & highlight | Notifications panel | ⚠️ Needs `ensureNodeVisible()` |
+  | 2 | Bulk range selection | Range Selection page | ✅ Done |
+  | 3 | Blinking cell changes | Streaming Data | ✅ Done (enableCellChangeFlash) |
+  | 4 | Notification jump & highlight | Notifications panel | ✅ Done (ensureNodeVisible) |
   | 5 | Grouping & Summary | Grouped Grid | ✅ Done |
   | 6 | Notification publisher | Notifications panel | ✅ Done |
-  | 7 | Data Validation | Editable Grid | ⚠️ Needs validation feedback |
+  | 7 | Data Validation | Editable Grid | ✅ Done (error feedback) |
   | 8 | Copy cell / with header | Basic Grid context menu | ✅ Done |
   | 9 | Export Excel | Export buttons | ✅ Done |
-  | 10 | WebSocket publishing | Streaming Data | ✅ Done (manual mode) |
-  | 11 | Different Cell Editors | Editable Grid | ⚠️ Add dropdown/checkbox |
-  | 12 | Disable auto-refresh on edit | Editable Grid | ❌ TODO |
-  | 13 | Cell-by-cell update | Streaming Data | ⚠️ Use Transaction API |
+  | 10 | WebSocket publishing | Streaming Data | ✅ Done |
+  | 11 | Different Cell Editors | Editable Grid | ✅ Done (select, checkbox) |
+  | 12 | Disable auto-refresh on edit | Editable Grid | ✅ Done (pause toggle) |
+  | 13 | Cell-by-cell update | Streaming Data | ✅ Done |
   | 14 | Update timing | Streaming Data | ✅ Done (toggle) |
-  | 15 | Save table format | New: Column State page | ❌ TODO |
+  | 15 | Save table format | Column State page | ✅ Done (localStorage) |
   
-  **Tasks:**
-  - [ ] 1.10.1 Add `api.flashCells()` to Streaming Data page (Req 3)
-  - [ ] 1.10.2 Add `ensureNodeVisible()` jump-to-row in Notifications (Req 4)
-  - [ ] 1.10.3 Add validation error feedback (red border) in Editable Grid (Req 7)
-  - [ ] 1.10.4 Add Range Selection demo page with multi-cell select (Req 2)
-  - [ ] 1.10.5 Add different cell editors (dropdown, checkbox, date) (Req 11)
-  - [ ] 1.10.6 Add "disable refresh while editing" toggle (Req 12)
-  - [ ] 1.10.7 Use Transaction API for efficient cell updates (Req 13)
-  - [ ] 1.10.8 Add Column State persistence demo (localStorage) (Req 15)
-  - [ ] 1.10.9 Update E2E tests to cover new features
-  - [ ] 1.10.10 Update demo README with all features
+  **Tasks: (10/10 complete)**
+  - [x] 1.10.1 Add `enableCellChangeFlash` prop for cell flash (Req 3)
+  - [x] 1.10.2 Add `ensureNodeVisible()` jump-to-row in Notifications (Req 4)
+  - [x] 1.10.3 Add validation error feedback in Editable Grid (Req 7)
+  - [x] 1.10.4 Add Range Selection demo page (Req 2)
+  - [x] 1.10.5 Add different cell editors (select, checkbox) (Req 11)
+  - [x] 1.10.6 Add "pause updates while editing" toggle (Req 12)
+  - [x] 1.10.7 Streaming Data page with manual/auto updates (Req 13)
+  - [x] 1.10.8 Add Column State persistence demo (Req 15)
+  - [x] 1.10.9 Update E2E tests (9/9 passed)
+  - [x] 1.10.10 Update demo README with all features
 - [ ] **1.11** Standalone Package Setup (uv workspace member)
   > Make `reflex_ag_grid/` a standalone package importable by `app/components/shared` and other packages
   
@@ -644,7 +644,7 @@ lib_dependencies: list[str] = [
 - [x] 1.7 Basic example
 - [x] 1.8 Demo app
 - [x] 1.9 E2E tests (6/6 passed)
-- [ ] 1.10 Demo requirements coverage (0/10 tasks)
+- [x] 1.10 Demo requirements coverage ✅ (10/10 tasks, 15/15 reqs)
 - [ ] 1.11 Standalone package setup (0/8 tasks)
 
 ### Phase 2: Validation & Editing

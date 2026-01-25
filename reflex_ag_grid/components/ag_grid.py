@@ -78,6 +78,16 @@ def _on_selection_change_signature(event: rx.Var) -> list[rx.Var]:
     ]
 
 
+def _on_cell_editing_spec(event: rx.Var) -> list[rx.Var]:
+    """Event spec for cell editing started/stopped - returns row index and field."""
+    return [
+        rx.Var(f"(() => {{let {{rowIndex, ...rest}} = {event}; return rowIndex}})()"),
+        rx.Var(
+            f"(() => {{let {{colDef, ...rest}} = {event}; return colDef?.field || null}})()"
+        ),
+    ]
+
+
 # =============================================================================
 # AG GRID CONSTANTS
 # =============================================================================
@@ -232,6 +242,10 @@ class AgGrid(rx.Component):
     row_selection: rx.Var[str] = "single"
     cell_selection: bool | rx.Var[bool] = False
     suppress_row_click_selection: rx.Var[bool] = rx.Var.create(False)
+    enable_range_selection: rx.Var[bool] = rx.Var.create(False)  # Enterprise feature
+
+    # ===== Cell Flash =====
+    enable_cell_change_flash: rx.Var[bool] = rx.Var.create(False)
 
     # ===== Pagination =====
     pagination: rx.Var[bool] = False
@@ -270,6 +284,10 @@ class AgGrid(rx.Component):
     on_selection_changed: rx.EventHandler[_on_selection_change_signature]
     on_grid_ready: rx.EventHandler[lambda e0: [e0]]
     on_first_data_rendered: rx.EventHandler[_on_cell_event_spec]
+
+    # ===== Cell Editing Events (Req 12 - pause updates while editing) =====
+    on_cell_editing_started: rx.EventHandler[_on_cell_editing_spec]
+    on_cell_editing_stopped: rx.EventHandler[_on_cell_editing_spec]
 
     @classmethod
     def create(

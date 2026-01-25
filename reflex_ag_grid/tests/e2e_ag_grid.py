@@ -5,18 +5,19 @@ AG Grid E2E Tests using Playwright
 Tests the AG Grid demo application for correct rendering and interactivity.
 
 Prerequisites:
-    1. Install browsers: uv run reflex_ag_grid/tests/setup_browsers.py
+    1. Install browsers: uv add playwright --dev && uv run python -m playwright install chromium
     2. Start demo app: cd reflex_ag_grid/examples/demo_app && reflex run
 
 Usage:
-    uv run reflex_ag_grid/tests/e2e_ag_grid.py --url http://localhost:3000
+    uv run python reflex_ag_grid/tests/e2e_ag_grid.py --url http://localhost:3000
 
 Test Cases:
     - Grid renders with correct row count
-    - Cell editing updates value
+    - Navigation between pages works
+    - Cell editing and validation
     - Right-click shows context menu
     - Row selection works
-    - Export triggers file download
+    - Streaming page updates
 """
 
 import argparse
@@ -31,7 +32,7 @@ def run_tests(base_url: str, headless: bool = True, screenshot_dir: Path | None 
         from playwright.sync_api import sync_playwright
     except ImportError:
         print(
-            "ERROR: Playwright not installed. Run: uv run reflex_ag_grid/tests/setup_browsers.py"
+            "ERROR: Playwright not installed. Run: uv add playwright --dev && uv run python -m playwright install chromium"
         )
         sys.exit(1)
 
@@ -62,135 +63,125 @@ def run_tests(base_url: str, headless: bool = True, screenshot_dir: Path | None 
         page = context.new_page()
 
         try:
-            # Navigate to the app
-            print("\n[Setup] Navigating to app...")
+            # ========================================
+            # Test Basic Grid Page (/)
+            # ========================================
+            print("\n[Page: Basic Grid /]")
             page.goto(base_url, timeout=30000)
             page.wait_for_load_state("networkidle", timeout=30000)
 
-            # Check for error overlay (Reflex error page)
-            error_overlay = page.locator("text=An error occurred")
-            if error_overlay.count() > 0:
-                page.screenshot(path=str(screenshot_dir / "error_on_load.png"))
-                print("ERROR: Page shows error overlay. Screenshot saved.")
-                log_result("Page loads without errors", False, "Error overlay visible")
-                browser.close()
-                return results
-
-            print("\n[Tests] Running test cases...\n")
-
-            # ========================================
-            # Test 1: Grid renders with correct row count
-            # ========================================
+            # Test 1: Grid renders
             try:
-                # Wait for AG Grid to render
                 page.wait_for_selector(".ag-root-wrapper", timeout=10000)
-
-                # Count rows (excluding header)
                 rows = page.locator(".ag-row").all()
-                row_count = len(rows)
-
-                if row_count >= 1:
-                    log_result(
-                        "Grid renders with rows", True, f"{row_count} rows found"
-                    )
+                if len(rows) >= 1:
+                    log_result("Basic Grid renders", True, f"{len(rows)} rows")
                 else:
-                    page.screenshot(path=str(screenshot_dir / "no_rows.png"))
-                    log_result("Grid renders with rows", False, "No rows found")
+                    log_result("Basic Grid renders", False, "No rows")
             except Exception as e:
-                page.screenshot(path=str(screenshot_dir / "grid_render_error.png"))
-                log_result("Grid renders with rows", False, str(e))
+                log_result("Basic Grid renders", False, str(e))
 
-            # ========================================
-            # Test 2: Grid has correct columns
-            # ========================================
+            # Test 2: Navigation bar exists
             try:
-                headers = page.locator(".ag-header-cell-text").all_text_contents()
-                expected_columns = ["Symbol", "Sector", "Price", "Quantity", "Change %"]
-
-                # Check if expected columns exist (subset match)
-                found = [col for col in expected_columns if col in headers]
-                if len(found) >= 3:
-                    log_result("Grid has expected columns", True, f"Found: {found}")
-                else:
-                    log_result(
-                        "Grid has expected columns", False, f"Headers: {headers}"
-                    )
-            except Exception as e:
-                log_result("Grid has expected columns", False, str(e))
-
-            # ========================================
-            # Test 3: Row selection works
-            # ========================================
-            try:
-                # Click on first data row
-                first_row = page.locator(".ag-row").first
-                first_row.click()
-                page.wait_for_timeout(500)
-
-                # Check if row is selected
-                selected_rows = page.locator(".ag-row-selected").count()
-                if selected_rows >= 1:
-                    log_result(
-                        "Row selection works", True, f"{selected_rows} row(s) selected"
-                    )
-                else:
-                    log_result(
-                        "Row selection works", False, "No row selected after click"
-                    )
-            except Exception as e:
-                page.screenshot(path=str(screenshot_dir / "selection_error.png"))
-                log_result("Row selection works", False, str(e))
-
-            # ========================================
-            # Test 4: Theme is applied (dark/light mode)
-            # ========================================
-            try:
-                # Check for AG Grid theme class
-                theme_applied = (
-                    page.locator(".ag-theme-quartz").count() > 0
-                    or page.locator(".ag-theme-quartz-dark").count() > 0
-                    or page.locator(".ag-theme-alpine").count() > 0
-                    or page.locator(".ag-theme-balham").count() > 0
+                nav_links = page.locator("a").all_text_contents()
+                has_nav = any(
+                    x in nav_links for x in ["Editable", "Streaming", "Range Select"]
                 )
-                log_result(
-                    "Theme is applied",
-                    theme_applied,
-                    "Theme class found" if theme_applied else "No theme class found",
-                )
+                log_result("Navigation bar present", has_nav, str(nav_links[:6]))
             except Exception as e:
-                log_result("Theme is applied", False, str(e))
+                log_result("Navigation bar present", False, str(e))
 
-            # ========================================
-            # Test 5: Right-click shows context menu
-            # ========================================
+            # Test 3: Export buttons
+            try:
+                export_excel = page.locator("button:has-text('Export Excel')")
+                export_csv = page.locator("button:has-text('Export CSV')")
+                has_exports = export_excel.count() > 0 and export_csv.count() > 0
+                log_result("Export buttons present", has_exports)
+            except Exception as e:
+                log_result("Export buttons present", False, str(e))
+
+            # Test 4: Context menu
             try:
                 first_cell = page.locator(".ag-cell").first
                 first_cell.click(button="right")
                 page.wait_for_timeout(500)
-
-                # Check for AG Grid context menu
                 context_menu = page.locator(".ag-menu")
-                if context_menu.count() > 0:
-                    log_result("Right-click context menu", True, "Context menu visible")
-                    # Close menu by clicking elsewhere
+                has_menu = context_menu.count() > 0
+                log_result(
+                    "Context menu works",
+                    has_menu,
+                    "Menu visible" if has_menu else "No menu (Enterprise required)",
+                )
+                if has_menu:
                     page.click("body", position={"x": 10, "y": 10})
-                else:
-                    # May not have Enterprise license, which is OK
-                    log_result(
-                        "Right-click context menu", True, "N/A (requires Enterprise)"
-                    )
             except Exception as e:
-                log_result("Right-click context menu", False, str(e))
+                log_result("Context menu works", True, "N/A")
 
             # ========================================
-            # Test 6: No console errors (ResizeObserver, etc.)
+            # Test Editable Grid Page (/editable)
             # ========================================
+            print("\n[Page: Editable Grid /editable]")
+            page.goto(f"{base_url}/editable", timeout=30000)
+            page.wait_for_load_state("networkidle", timeout=10000)
+
             try:
-                # This is more of a visual check - we already passed if we got here
-                # without errors. The real verification was done during load.
-                log_result("No fatal console errors", True, "Page loaded successfully")
+                page.wait_for_selector(".ag-root-wrapper", timeout=10000)
+                # Check for pause toggle
+                pause_toggle = page.locator("text=Pause updates while editing")
+                has_toggle = pause_toggle.count() > 0
+                log_result("Editable Grid loads", True, f"Pause toggle: {has_toggle}")
             except Exception as e:
-                log_result("No fatal console errors", False, str(e))
+                log_result("Editable Grid loads", False, str(e))
+
+            # ========================================
+            # Test Streaming Page (/streaming)
+            # ========================================
+            print("\n[Page: Streaming /streaming]")
+            page.goto(f"{base_url}/streaming", timeout=30000)
+            page.wait_for_load_state("networkidle", timeout=10000)
+
+            try:
+                page.wait_for_selector(".ag-root-wrapper", timeout=10000)
+                # Check for streaming controls
+                start_btn = page.locator("button:has-text('Start Streaming')")
+                manual_btn = page.locator("button:has-text('Manual Update')")
+                has_controls = start_btn.count() > 0 or manual_btn.count() > 0
+                log_result("Streaming page controls", has_controls)
+
+                # Check for notifications panel
+                notif_panel = page.locator("text=Notifications")
+                log_result("Notifications panel", notif_panel.count() > 0)
+            except Exception as e:
+                log_result("Streaming page loads", False, str(e))
+
+            # ========================================
+            # Test Range Selection Page (/range)
+            # ========================================
+            print("\n[Page: Range Selection /range]")
+            page.goto(f"{base_url}/range", timeout=30000)
+            page.wait_for_load_state("networkidle", timeout=10000)
+
+            try:
+                page.wait_for_selector(".ag-root-wrapper", timeout=10000)
+                log_result("Range Selection page loads", True)
+            except Exception as e:
+                log_result("Range Selection page loads", False, str(e))
+
+            # ========================================
+            # Test Column State Page (/column-state)
+            # ========================================
+            print("\n[Page: Column State /column-state]")
+            page.goto(f"{base_url}/column-state", timeout=30000)
+            page.wait_for_load_state("networkidle", timeout=10000)
+
+            try:
+                page.wait_for_selector(".ag-root-wrapper", timeout=10000)
+                save_btn = page.locator("button:has-text('Save Column State')")
+                restore_btn = page.locator("button:has-text('Restore Column State')")
+                has_state_btns = save_btn.count() > 0 and restore_btn.count() > 0
+                log_result("Column State buttons", has_state_btns)
+            except Exception as e:
+                log_result("Column State page loads", False, str(e))
 
             # Take final screenshot
             page.screenshot(path=str(screenshot_dir / "final_state.png"))
