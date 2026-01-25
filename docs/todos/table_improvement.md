@@ -468,7 +468,7 @@ notification = {
     "message": "Price alert for AAPL",
     "row_id": "row_3",
     "level": "warning",
-    "route": "/portfolio",           # Navigate to this page first
+    "route": "/portfolio-tools",           # Navigate to this page first
     "grid_id": "holdings_grid",      # Target specific grid
     "highlight_field": "price",      # Highlight specific cell
     "highlight_style": "flash",      # flash | border | bg-color
@@ -691,25 +691,25 @@ mypy reflex_ag_grid/
 
 ---
 
-## Phase 5: Pilot Migration - Holdings Table
+## Phase 5: Pilot Migration - Market Data Table
 
 ### Objective
-Migrate `holdings_table.py` as the first real table to validate the wrapper.
+Migrate `market_data_table.py` as the first real table to validate the wrapper.
 
 ### Checklist
 
-- [ ] **5.1** Analyze current `holdings_table.py`
+- [ ] **5.1** Analyze current `market_data_table.py`
   - [ ] Document current columns and data types
   - [ ] Document current styling/behavior
 - [ ] **5.2** Create column definition config
-  - [ ] Define columns: symbol, shares, price, value, gain_loss, change
+  - [ ] Define columns: ticker, listed_shares, last_volume, last_price, vwap_price, bid, ask, chg_1d_pct, implied_vol_pct, market_status, created_by
   - [ ] Set types, formatters, styles
-- [ ] **5.3** Create `holdings_ag_grid.py` using wrapper
+- [ ] **5.3** Create `market_data_ag_grid.py` using wrapper
   - [ ] Use `AGGrid` component with config
-  - [ ] Wire up to `PortfolioState`
-- [ ] **5.4** Add validation config for holdings
+  - [ ] Wire up to `MarketDataState`
+- [ ] **5.4** Add validation config for market data
   - [ ] Price validation (min 0)
-  - [ ] Shares validation (min 1)
+  - [ ] Volume validation (min 0)
 - [ ] **5.5** Style matching
   - [ ] Match or improve current visual design
   - [ ] Dark/light theme support
@@ -724,19 +724,19 @@ Migrate `holdings_table.py` as the first real table to validate the wrapper.
 | Test Type | Test Case | Expected Result |
 |-----------|-----------|-----------------|
 | Visual | Compare old vs new | Visually equivalent or better |
-| Functional | View holdings | All data displays correctly |
+| Functional | View market data | All data displays correctly |
 | Functional | Sort by column | Sorting works |
 | Functional | Filter by column | Filtering works |
-| E2E | Edit share count | Value updates, state syncs |
+| E2E | Click ticker | Navigate or highlight |
 | E2E | Right-click copy | Cell value copied |
-| Performance | Load 100 holdings | Renders in <1s |
+| Performance | Load 100 rows | Renders in <1s |
 
 **Verification Commands:**
 ```bash
 # Run app
 reflex run
 
-# Navigate to portfolio page
+# Navigate to market data page
 # Compare old table vs new AG Grid table
 # Test all interactive features
 ```
@@ -907,8 +907,8 @@ lib_dependencies: list[str] = [
 - [x] 3.7 Integration tests ✅
 - [x] 3.8 Documentation ✅
 
-### Phase 4: Pilot Migration
-- [ ] 4.1 Analyze holdings_table
+### Phase 4: Pilot Migration (Market Data Table)
+- [ ] 4.1 Analyze market_data_table
 - [ ] 4.2 Column config
 - [ ] 4.3 New AG Grid component
 - [ ] 4.4 Validation config
