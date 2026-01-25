@@ -25,6 +25,7 @@ pmt-core = { path = "./pmt_core_pkg", editable = true }
 
 [dependency-groups]
 dev = [
+    "playwright>=1.57.0",
     "pytest>=8.0",
     "pytest-asyncio>=0.24",
     "pytest-mock>=3.14",

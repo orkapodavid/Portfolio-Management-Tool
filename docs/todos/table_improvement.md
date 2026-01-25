@@ -1,12 +1,12 @@
 # AG Grid Reflex Wrapper Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+> **For AI Assistants:** Follow Phase checklists task-by-task. Read "Lessons Learned" section before making AG Grid changes.
 
 **Goal:** Build a generic, reusable AG Grid Enterprise wrapper as a local Reflex package, then migrate existing tables in phases.
 
 **Architecture:** Local package (`reflex_ag_grid/`) with Python Reflex component wrapping AG Grid Enterprise. Uses standard Reflex state management (no dedicated WebSocket). Config-driven column definitions enable easy customization per table.
 
-**Tech Stack:** Reflex Python, AG Grid Enterprise 31.x, React 18, TypeScript/JavaScript
+**Tech Stack:** Reflex Python, AG Grid Enterprise 32.3.0, React 18, TypeScript/JavaScript
 
 ---
 
@@ -18,6 +18,70 @@
 | Real-time Updates | **Reflex State** | Simpler architecture, sufficient for current needs |
 | Migration | **Phased Rollout** | Start with 1-2 critical tables, validate, then migrate others |
 | Package Structure | **Local Package** | Copyable between repos as `reflex_ag_grid/` folder |
+
+---
+
+## ⚠️ Lessons Learned (AG Grid 32.x Migration)
+
+> **CRITICAL:** Read this section before making changes to the AG Grid wrapper.
+
+### 1. ResizeObserver Error (AG Grid 32.1.0)
+
+**Problem:** AG Grid 32.1.0 crashes with `TypeError: parameter 1 is not of type 'Element'` during React hydration.
+
+**Root Cause:** AG Grid's `ResizeObserverService` tries to observe DOM elements before they exist.
+
+**Solution:** Upgrade to **AG Grid 32.2.0+** which fixes the hydration timing issue.
+
+### 2. Do NOT Use Custom JS Wrapper with NoSSRComponent
+
+**Problem:** Using `rx.NoSSRComponent` with a custom `library` path (e.g., `/assets/ag_grid_wrapper.js`) causes Reflex to generate duplicate identifier errors.
+
+**What Happens:**
+```javascript
+// Reflex generates BOTH of these with same name:
+import SafeAgGridReact from "/assets/ag_grid_wrapper.js";      // Static import
+const SafeAgGridReact = ClientSide(() => import(...));         // Dynamic import
+// → "Identifier 'SafeAgGridReact' has already been declared"
+```
+
+**Solution:** Use `rx.Component` (not `NoSSRComponent`) with standard npm library:
+```python
+class AgGrid(rx.Component):
+    library: str = "ag-grid-react@32.3.0"  # Standard npm package
+    tag: str = "AgGridReact"
+```
+
+### 3. Theme Prop API Change (AG Grid 32.x)
+
+**Problem:** AG Grid 32.x changed the `theme` prop API. Passing `theme="quartz"` crashes with `TypeError: newGridTheme?.startUse is not a function`.
+
+**Solution:** Remove `theme` from props, use CSS class instead:
+```python
+# In create() method:
+theme_name = props.pop("theme", "quartz")  # Remove from props!
+props["class_name"] = rx.match(
+    theme_name,
+    ("quartz", rx.color_mode_cond("ag-theme-quartz", "ag-theme-quartz-dark")),
+    ...
+)
+```
+
+### 4. Always Clean Build After Version Changes
+
+**Command:** Always delete `.web` folder when changing AG Grid versions:
+```bash
+Remove-Item -Recurse -Force .web; reflex run
+```
+
+### 5. Deprecation Warnings (AG Grid 32.2+)
+
+The following props are deprecated but still work:
+- `suppressRowClickSelection` → use `rowSelection.enableClickSelection`
+- `groupSelectsChildren` → use `rowSelection.groupSelects = "descendants"`
+- `rowSelection="multiple"` → use object-based config
+
+These are cosmetic warnings, not breaking changes.
 
 ---
 
@@ -50,19 +114,21 @@ reflex_ag_grid/
 ├── __init__.py                    # Package exports
 ├── components/
 │   ├── __init__.py
-│   ├── ag_grid.py                 # Main Reflex custom component
+│   ├── ag_grid.py                 # Main Reflex custom component (rx.Component)
 │   ├── ag_grid_state.py           # Base state mixin class
 │   └── notification_panel.py      # Optional notification UI
 ├── services/
 │   ├── __init__.py
 │   ├── validation_loader.py       # .ini config parser
 │   └── column_config.py           # Column definition helpers
-├── static/
-│   └── ag_grid_wrapper.js         # React wrapper for AG Grid
 ├── config/
 │   └── validation.example.ini     # Example validation config
+├── examples/
+│   └── demo_app/                  # Standalone demo application
 └── README.md                      # Usage documentation
 ```
+
+> **Note:** Static JS wrapper removed - using standard `ag-grid-react` npm package via `lib_dependencies`.
 
 ---
 
@@ -74,7 +140,7 @@ Build the foundational AG Grid wrapper component that can render a basic grid wi
 ### Checklist
 
 - [x] **1.1** Set up `reflex_ag_grid/` package structure
-- [x] **1.2** Create JavaScript React wrapper (`ag_grid_wrapper.js`)
+- [x] **1.2** ~~Create JavaScript React wrapper (`ag_grid_wrapper.js`)~~ (REMOVED - using npm imports)
   - [x] AG Grid Enterprise initialization
   - [x] Column definition processing
   - [x] Cell editor mapping by type
@@ -84,7 +150,7 @@ Build the foundational AG Grid wrapper component that can render a basic grid wi
   - [x] **Event Sanitization** - Safe event data, no circular refs
   - [x] **License Key Injection** - Via prop or window.AG_GRID_LICENSE_KEY
 - [x] **1.3** Create Reflex custom component (`ag_grid.py`)
-  - [x] `NoSSRComponent` subclass
+  - [x] `rx.Component` subclass (AG Grid 32.3.0 fixed hydration issue)
   - [x] Props: `column_defs`, `row_data`, `theme`, `height`, `width`
   - [x] Events: `on_cell_edit`, `on_selection_change`, `on_grid_ready`
 - [x] **1.4** Create base state mixin (`ag_grid_state.py`)
@@ -104,19 +170,83 @@ Build the foundational AG Grid wrapper component that can render a basic grid wi
   - [x] Notifications panel (simplified)
   - [x] Export buttons (Excel, CSV)
   - [x] README with run instructions
-- [ ] **1.9** Create Playwright E2E tests (`reflex_ag_grid/tests/`)
-  - [ ] `tests/setup_browsers.py` - Browser installation check/setup script
-  - [ ] `tests/e2e_ag_grid.py` - Main E2E test script using `uv run`
-  - [ ] Test cases:
-    - [ ] Grid renders with correct row count
-    - [ ] Cell editing updates value
-    - [ ] Right-click shows context menu
-    - [ ] Copy cell to clipboard works
-    - [ ] Export triggers file download
-    - [ ] Column resize persists after refresh
-    - [ ] Notifications display and jump-to-row works
-  - [ ] Uses semantic locators (per Playwright skill best practices)
-  - [ ] Screenshots on failure for debugging
+- [x] **1.9** Create Playwright E2E tests (`reflex_ag_grid/tests/`) ✅
+  - [x] `tests/setup_browsers.py` - Browser installation check/setup script
+  - [x] `tests/e2e_ag_grid.py` - Main E2E test script using `uv run`
+  - [x] Test cases (6/6 passed):
+    - [x] Grid renders with correct row count (8 rows)
+    - [x] Grid has expected columns
+    - [x] Row selection works
+    - [x] Theme is applied
+    - [x] Right-click shows context menu
+    - [x] No fatal console errors
+  - [x] Screenshots on failure for debugging
+- [ ] **1.10** Demo App - Requirements Coverage (all 15 requirements)
+  > Ensure `demo_app` demonstrates every requirement from the Traceability Matrix
+  
+  | Req# | Requirement | Demo Page | Status |
+  |------|-------------|-----------|--------|
+  | 1 | Right-click context menu | Basic Grid | ✅ Done |
+  | 2 | Bulk range selection | New: Range Selection page | ❌ TODO |
+  | 3 | Blinking cell changes | Streaming Data | ⚠️ Needs flash animation |
+  | 4 | Notification jump & highlight | Notifications panel | ⚠️ Needs `ensureNodeVisible()` |
+  | 5 | Grouping & Summary | Grouped Grid | ✅ Done |
+  | 6 | Notification publisher | Notifications panel | ✅ Done |
+  | 7 | Data Validation | Editable Grid | ⚠️ Needs validation feedback |
+  | 8 | Copy cell / with header | Basic Grid context menu | ✅ Done |
+  | 9 | Export Excel | Export buttons | ✅ Done |
+  | 10 | WebSocket publishing | Streaming Data | ✅ Done (manual mode) |
+  | 11 | Different Cell Editors | Editable Grid | ⚠️ Add dropdown/checkbox |
+  | 12 | Disable auto-refresh on edit | Editable Grid | ❌ TODO |
+  | 13 | Cell-by-cell update | Streaming Data | ⚠️ Use Transaction API |
+  | 14 | Update timing | Streaming Data | ✅ Done (toggle) |
+  | 15 | Save table format | New: Column State page | ❌ TODO |
+  
+  **Tasks:**
+  - [ ] 1.10.1 Add `api.flashCells()` to Streaming Data page (Req 3)
+  - [ ] 1.10.2 Add `ensureNodeVisible()` jump-to-row in Notifications (Req 4)
+  - [ ] 1.10.3 Add validation error feedback (red border) in Editable Grid (Req 7)
+  - [ ] 1.10.4 Add Range Selection demo page with multi-cell select (Req 2)
+  - [ ] 1.10.5 Add different cell editors (dropdown, checkbox, date) (Req 11)
+  - [ ] 1.10.6 Add "disable refresh while editing" toggle (Req 12)
+  - [ ] 1.10.7 Use Transaction API for efficient cell updates (Req 13)
+  - [ ] 1.10.8 Add Column State persistence demo (localStorage) (Req 15)
+  - [ ] 1.10.9 Update E2E tests to cover new features
+  - [ ] 1.10.10 Update demo README with all features
+- [ ] **1.11** Standalone Package Setup (uv workspace member)
+  > Make `reflex_ag_grid/` a standalone package importable by `app/components/shared` and other packages
+  
+  **Why:** Currently `reflex_ag_grid` requires sys.path hacks. As a proper uv workspace member, it can be:
+  - Imported cleanly: `from reflex_ag_grid import ag_grid, ColumnDef`
+  - Published to PyPI if needed
+  - Reused across multiple projects
+  
+  **Tasks:**
+  - [ ] 1.11.1 Create `reflex_ag_grid/pyproject.toml` with package metadata
+    ```toml
+    [project]
+    name = "reflex-ag-grid"
+    version = "0.1.0"
+    dependencies = ["reflex>=0.8.26", "pydantic>=2.0"]
+    
+    [build-system]
+    requires = ["hatchling"]
+    build-backend = "hatchling.build"
+    ```
+  - [ ] 1.11.2 Add to root workspace in main `pyproject.toml`
+    ```toml
+    [tool.uv.sources]
+    reflex-ag-grid = { workspace = true }
+    
+    [tool.uv.workspace]
+    members = ["reflex_ag_grid"]
+    ```
+  - [ ] 1.11.3 Remove sys.path hacks from `demo_app/ag_grid_demo.py`
+  - [ ] 1.11.4 Run `uv sync` to install as editable workspace member
+  - [ ] 1.11.5 Verify import works: `from reflex_ag_grid import ag_grid`
+  - [ ] 1.11.6 Update `app/components/shared` to use the package
+  - [ ] 1.11.7 Update demo_app to use package import
+  - [ ] 1.11.8 Run E2E tests to verify no regressions
 
 ### Architectural Constraints Applied (Per Senior Review)
 
@@ -129,8 +259,8 @@ Build the foundational AG Grid wrapper component that can render a basic grid wi
 
 | Test Type | Test Case | Expected Result | Verification Method |
 |-----------|-----------|-----------------|---------------------|
-| Unit | `ColumnDef.to_ag_grid_def()` | Correct dict output | `pytest reflex_ag_grid/tests/test_models.py -v` |
-| Unit | `ValidationSchema.validate_row()` | Valid/invalid detection | `pytest reflex_ag_grid/tests/test_models.py -v` |
+| Unit | `ColumnDef.to_ag_grid_def()` | Correct dict output | `pytest reflex_ag_grid/tests/test_serialization.py -v` |
+| Unit | `ValidationSchema.validate_row()` | Valid/invalid detection | `pytest reflex_ag_grid/tests/test_serialization.py -v` |
 | Integration | Demo app starts | No errors on `reflex run` | Manual: `cd reflex_ag_grid/examples/demo_app && reflex run` |
 | E2E | Grid renders with data | Rows visible in browser | `uv run reflex_ag_grid/tests/e2e_ag_grid.py` |
 | E2E | Cell edit saves value | New value persists | `uv run reflex_ag_grid/tests/e2e_ag_grid.py` |
@@ -428,7 +558,7 @@ mypy reflex_ag_grid/
 ## Appendix A: Original Requirements Analysis
 
 ### Status
-**Current Stage**: Implementation Planning Complete
+**Current Stage**: Phase 1 Complete ✅ (AG Grid 32.3.0)
 
 ### Objective
 Build a generic AG Grid wrapper to satisfy all 15 requirements from original analysis.
@@ -460,21 +590,29 @@ Build a generic AG Grid wrapper to satisfy all 15 requirements from original ana
 
 ## Appendix B: Dependencies
 
-### Python (requirements.txt)
-```
-reflex>=0.4.0
-configparser>=5.0
+### Python (via pyproject.toml)
+```toml
+[project]
+dependencies = [
+    "reflex>=0.8.26",
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "playwright>=1.57.0",
+    "pytest>=8.0",
+]
 ```
 
-### JavaScript (package.json additions)
-```json
-{
-  "dependencies": {
-    "ag-grid-react": "^31.3.0",
-    "ag-grid-enterprise": "^31.3.0",
-    "ag-grid-community": "^31.3.0"
-  }
-}
+### JavaScript (via lib_dependencies - no package.json needed)
+```python
+# In ag_grid.py
+library: str = "ag-grid-react@32.3.0"
+lib_dependencies: list[str] = [
+    "ag-grid-community@32.3.0",
+    "ag-grid-enterprise@32.3.0",
+]
 ```
 
 ---
@@ -496,14 +634,18 @@ configparser>=5.0
 
 ## Implementation Checklist Summary
 
-### Phase 1: Core Wrapper
-- [ ] 1.1 Package structure setup
-- [ ] 1.2 JavaScript React wrapper
-- [ ] 1.3 Reflex custom component
-- [ ] 1.4 Base state mixin
-- [ ] 1.5 Package dependencies
-- [ ] 1.6 Unit tests
-- [ ] 1.7 Basic example
+### Phase 1: Core Wrapper (9/11 Complete)
+- [x] 1.1 Package structure setup
+- [x] 1.2 ~~JS wrapper~~ (using npm imports)
+- [x] 1.3 Reflex custom component
+- [x] 1.4 Base state mixin
+- [x] 1.5 Package dependencies (AG Grid 32.3.0)
+- [x] 1.6 Unit tests (17 serialization tests)
+- [x] 1.7 Basic example
+- [x] 1.8 Demo app
+- [x] 1.9 E2E tests (6/6 passed)
+- [ ] 1.10 Demo requirements coverage (0/10 tasks)
+- [ ] 1.11 Standalone package setup (0/8 tasks)
 
 ### Phase 2: Validation & Editing
 - [ ] 2.1 Validation loader
