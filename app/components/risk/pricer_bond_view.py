@@ -15,7 +15,10 @@ def pricer_bond_view() -> rx.Component:
                     rx.el.div(
                         rx.el.label("Valuation Date", class_name="font-bold block mb-1"),
                         rx.el.input(
-                            type="date", class_name="border rounded p-1 w-full text-xs"
+                            type="date",
+                            class_name="border rounded p-1 w-full text-xs",
+                            value=PricerBondState.valuation_date,
+                            on_change=PricerBondState.set_valuation_date
                         ),
                     ),
                     rx.el.div(
@@ -23,7 +26,9 @@ def pricer_bond_view() -> rx.Component:
                         rx.el.input(
                             type="number",
                             placeholder="e.g. 5.0",
-                            class_name="border rounded p-1 w-full text-xs"
+                            class_name="border rounded p-1 w-full text-xs",
+                            value=PricerBondState.coupon_rate,
+                            on_change=PricerBondState.set_coupon_rate
                         ),
                     ),
                     class_name="grid grid-cols-1 gap-4 text-xs",
@@ -60,46 +65,52 @@ def pricer_bond_view() -> rx.Component:
             class_name="flex w-full h-1/2 bg-white border-b border-gray-200",
         ),
 
-        # Middle Section: Visualization Controls
-        rx.el.div(
-            rx.el.div(
-                rx.text("X-Axis:", class_name="text-sm font-bold mr-2"),
-                rx.select(
-                    ["Maturity", "Duration"],
-                    value=PricerBondState.x_axis,
-                    on_change=PricerBondState.set_x_axis,
-                    class_name="border rounded p-1 text-xs"
+        # Bottom Section: Chart and Controls
+        rx.card(
+            rx.vstack(
+                rx.hstack(
+                    rx.vstack(
+                        rx.text("X-Axis", font_size="0.8rem", weight="bold"),
+                        rx.select(
+                            ["Maturity", "Duration"],
+                            value=PricerBondState.x_axis,
+                            on_change=PricerBondState.set_x_axis,
+                        ),
+                    ),
+                    rx.vstack(
+                        rx.text("Y-Axis", font_size="0.8rem", weight="bold"),
+                        rx.select(
+                            ["Yield", "Price"],
+                            value=PricerBondState.y_axis,
+                            on_change=PricerBondState.set_y_axis,
+                        ),
+                    ),
+                    rx.vstack(
+                        rx.text("Z-Axis (3D)", font_size="0.8rem", weight="bold", color="blue"),
+                        rx.select(
+                            ["None", "Coupon", "Convexity"],
+                            value=PricerBondState.z_axis,
+                            on_change=PricerBondState.set_z_axis,
+                        ),
+                    ),
+                    spacing="4",
                 ),
-                class_name="flex items-center"
-            ),
-            rx.el.div(
-                rx.text("Y-Axis:", class_name="text-sm font-bold mr-2"),
-                rx.select(
-                    ["Yield", "Price"],
-                    value=PricerBondState.y_axis,
-                    on_change=PricerBondState.set_y_axis,
-                    class_name="border rounded p-1 text-xs"
-                ),
-                class_name="flex items-center"
-            ),
-            rx.el.div(
-                rx.text("Z-Axis:", class_name="text-sm font-bold mr-2"),
-                rx.select(
-                    ["None", "Volatility", "Convexity"],
-                    value=PricerBondState.z_axis,
-                    on_change=PricerBondState.set_z_axis,
-                    class_name="border rounded p-1 text-xs"
-                ),
-                class_name="flex items-center"
-            ),
-            class_name="flex gap-6 p-4 bg-gray-50 border-b border-gray-200"
-        ),
+                rx.divider(my="4"),
 
-        # Bottom Section: Chart
-        rx.el.div(
-            rx.plotly(data=PricerBondState.chart, style={"width": "100%", "height": "100%"}),
-            class_name="w-full h-1/2 p-4"
+                # --- THE CHART ---
+                # Key: Use rx.plotly with the state figure
+                rx.box(
+                    rx.plotly(
+                        data=PricerBondState.figure,
+                        style={"width": "100%", "height": "600px"}
+                    ),
+                    width="100%",
+                    height="600px",
+                ),
+                width="100%",
+            ),
+            width="100%",
         ),
-
-        class_name="flex flex-col w-full h-full bg-white"
+        class_name="flex flex-col w-full h-full bg-white p-4",
+        on_mount=PricerBondState.on_mount, # Ensure graph loads on start
     )
