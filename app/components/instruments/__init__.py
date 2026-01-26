@@ -1,15 +1,13 @@
-from .instrument_views import (
-    ticker_data_table,
-    stock_screener_view,
-    special_term_table,
-    instrument_data_table,
-    instrument_term_table,
-)
+from .ticker_data_ag_grid import ticker_data_ag_grid
+from .stock_screener_ag_grid import stock_screener_ag_grid
+from .special_term_ag_grid import special_term_ag_grid
+from .instrument_data_ag_grid import instrument_data_ag_grid
+from .instrument_term_ag_grid import instrument_term_ag_grid
 
 __all__ = [
-    "ticker_data_table",
-    "stock_screener_view",
-    "special_term_table",
-    "instrument_data_table",
-    "instrument_term_table",
+    "ticker_data_ag_grid",
+    "stock_screener_ag_grid",
+    "special_term_ag_grid",
+    "instrument_data_ag_grid",
+    "instrument_term_ag_grid",
 ]

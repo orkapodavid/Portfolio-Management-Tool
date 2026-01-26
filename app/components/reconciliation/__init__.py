@@ -1,15 +1,13 @@
-from .reconciliation_views import (
-    pps_recon_table,
-    settlement_recon_table,
-    failed_trades_table,
-    pnl_recon_table,
-    risk_input_recon_table,
-)
+from .pps_recon_ag_grid import pps_recon_ag_grid
+from .settlement_recon_ag_grid import settlement_recon_ag_grid
+from .failed_trades_ag_grid import failed_trades_ag_grid
+from .pnl_recon_ag_grid import pnl_recon_ag_grid
+from .risk_input_recon_ag_grid import risk_input_recon_ag_grid
 
 __all__ = [
-    "pps_recon_table",
-    "settlement_recon_table",
-    "failed_trades_table",
-    "pnl_recon_table",
-    "risk_input_recon_table",
+    "pps_recon_ag_grid",
+    "settlement_recon_ag_grid",
+    "failed_trades_ag_grid",
+    "pnl_recon_ag_grid",
+    "risk_input_recon_ag_grid",
 ]
