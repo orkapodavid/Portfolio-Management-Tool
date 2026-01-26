@@ -43,10 +43,10 @@ from app.components.operations import (
 )
 from app.components.market_data import (
     market_data_ag_grid,
-    fx_data_table,
-    historical_data_table,
-    trading_calendar_table,
-    market_hours_table,
+    fx_data_ag_grid,
+    historical_data_ag_grid,
+    trading_calendar_ag_grid,
+    market_hours_ag_grid,
 )
 from app.components.events import (
     event_calendar_view,
@@ -607,10 +607,10 @@ def contextual_workspace() -> rx.Component:
             rx.match(
                 UIState.active_subtab,
                 ("Market Data", market_data_ag_grid()),
-                ("FX Data", fx_data_table()),
-                ("Historical Data", historical_data_table()),
-                ("Trading Calendar", trading_calendar_table()),
-                ("Market Hours", market_hours_table()),
+                ("FX Data", fx_data_ag_grid()),
+                ("Historical Data", historical_data_ag_grid()),
+                ("Trading Calendar", trading_calendar_ag_grid()),
+                ("Market Hours", market_hours_ag_grid()),
                 mock_data_table(),
             ),
         ),

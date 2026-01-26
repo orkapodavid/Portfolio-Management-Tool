@@ -827,52 +827,367 @@ ag_grid.column_def(
 ## Phase 6: Batch Migration
 
 ### Objective
-Migrate remaining tables systematically using patterns from Phase 5.
+Migrate all 46 remaining `rx.el.table` tables to AG-Grid using the pattern established in `market_data_ag_grid.py`.
 
-### Migration Order (by complexity)
+> **Base URL**: `http://localhost:3001/pmt/` - All routes include `/pmt/` prefix.
 
-| Priority | Component | File | Complexity |
-|----------|-----------|------|------------|
-| 1 | Risk Views | `risk/risk_views.py` (5 tables) | Medium |
-| 2 | Positions | `positions/positions_views.py` (5 tables) | Medium |
-| 3 | PnL Views | `pnl/pnl_views.py` (4 tables) | Medium |
-| 4 | Reconciliation | `reconciliation/reconciliation_views.py` (5 tables) | Medium |
-| 5 | Portfolio Tools | `portfolio_tools/portfolio_tools_views.py` (9 tables) | High |
-| 6 | Market Data | `market_data/market_data_views.py` (5 tables) | Medium |
-| 7 | Instruments | `instruments/instrument_views.py` (5 tables) | Medium |
-| 8 | Events | `events/events_views.py` (3 tables) | Low |
-| 9 | Operations | `operations/operations_views.py` (2 tables) | Low |
-| 10 | EMSX | `emsx/emsx_views.py` (2 tables) | Low |
-| 11 | Compliance | `compliance/` (2 tables) | Low |
-| 12 | Others | Remaining tables | Low |
+### Two-Step Migration Approach
 
-### Checklist per Component
+Each component follows a **split-then-migrate** workflow:
 
-For each component migration:
-- [ ] Create column config for all tables
-- [ ] Create validation config if needed
-- [ ] Create new AG Grid-based component
-- [ ] Test feature parity
-- [ ] Remove old implementation
-- [ ] Update imports
+**Step 1: Split** - Extract each table from `*_views.py` into its own file
+```
+positions/positions_views.py → positions/positions_table.py
+                              → positions/stock_position_table.py
+                              → positions/warrant_position_table.py
+                              → etc.
+```
+
+**Step 2: Migrate** - Create AG-Grid version for each table file
+```
+positions/positions_table.py → positions/positions_ag_grid.py
+```
+
+This approach:
+- ✅ Keeps legacy tables working during migration
+- ✅ Allows incremental testing per table
+- ✅ Makes PRs smaller and reviewable
+- ✅ Easy rollback if issues arise
+
+---
+
+### Migration Pattern (from Phase 5)
+
+Each table migration follows this template:
+```python
+# 1. Define cell styles (if needed)
+_LINK_STYLE = rx.Var("""(params) => ({ color: '#2563eb', cursor: 'pointer' })""")
+_CHANGE_STYLE = rx.Var("""(params) => {
+    const val = parseFloat(params.value);
+    return { color: val >= 0 ? '#059669' : '#dc2626' };
+}""")
+
+# 2. Define columns with cell_style
+def _get_column_defs() -> list:
+    return [
+        ag_grid.column_def(field="ticker", header_name="Ticker", cell_style=_LINK_STYLE),
+        ag_grid.column_def(field="change", header_name="Change %", cell_style=_CHANGE_STYLE),
+    ]
+
+# 3. Create component
+def my_table_ag_grid() -> rx.Component:
+    return ag_grid(
+        id="my_table",
+        row_data=State.filtered_data,
+        column_defs=_get_column_defs(),
+        row_id_key="id",
+        theme="quartz",
+        quick_filter_text=State.search,
+        height="calc(100vh - 300px)",
+        width="100%",
+    )
+```
+
+---
+
+### Migration Order (Accurate Inventory)
+
+| Priority | Component | File | Tables | Complexity |
+|----------|-----------|------|--------|------------|
+| 1 | Market Data (remaining) | Already split | 4 | Low |
+| 2 | Operations | `operations_views.py` | 2 | Low |
+| 3 | EMSX | `emsx_views.py` | 2 | Low |
+| 4 | Risk | `risk_views.py` | 3 | Medium |
+| 5 | Events | `events_views.py` | 3 | Low |
+| 6 | Compliance | `compliance_views.py` | 4 | Medium |
+| 7 | PnL | `pnl_views.py` | 4 | Medium |
+| 8 | Positions | `positions_views.py` | 5 | Medium |
+| 9 | Reconciliation | `reconciliation_views.py` | 5 | Medium |
+| 10 | Instruments | `instrument_views.py` | 5 | Medium |
+| 11 | Portfolio Tools | `portfolio_tools_views.py` | 9 | High |
+
+**Total: 46 tables across 11 components**
+
+---
+
+### Phase 6.1: Market Data (Remaining 4 tables) - Already Split
+
+| Table | Legacy File | AG-Grid File |
+|-------|-------------|--------------|
+| `fx_data_table` | `fx_data_table.py` ✅ | `fx_data_ag_grid.py` |
+| `historical_data_table` | `historical_data_table.py` ✅ | `historical_data_ag_grid.py` |
+| `trading_calendar_table` | `trading_calendar_table.py` ✅ | `trading_calendar_ag_grid.py` |
+| `market_hours_table` | `market_hours_table.py` ✅ | `market_hours_ag_grid.py` |
+
+**Checklist:**
+- [x] Tables already in individual files
+- [x] `fx_data_ag_grid.py` - migrate
+- [x] `historical_data_ag_grid.py` - migrate
+- [x] `trading_calendar_ag_grid.py` - migrate
+- [x] `market_hours_ag_grid.py` - migrate
+
+**Step 3: Cleanup (after migration works)**
+- [x] Update `__init__.py` exports
+- [x] Update `shared/contextual_workspace.py` imports and usages
+- [x] Update page files to use AG-Grid versions
+- [x] Test all tables render correctly ✅
+- [x] Delete legacy `*_table.py` files ✅ (fx_data, historical_data, trading_calendar, market_hours)
+- [x] Clean up `table_components.py` ✅ and `market_data_views.py` - deleted
+
+---
+
+### Phase 6.2: Operations (2 tables)
+
+**Step 1: Split from `operations_views.py`**
+- [ ] `daily_procedure_check_table.py`
+- [ ] `operation_process_table.py`
+
+**Step 2: Migrate to AG-Grid**
+- [ ] `daily_procedure_check_ag_grid.py` (10 cols, has `status_badge`)
+- [ ] `operation_process_ag_grid.py` (3 cols)
+
+**Step 3: Cleanup**
+- [ ] Update `operations/__init__.py` exports
+- [ ] Update `shared/contextual_workspace.py` imports and usages
+- [ ] Update page files to use AG-Grid versions
+- [ ] Test all tables render correctly
+- [ ] Delete legacy files
+
+---
+
+### Phase 6.3: EMSX (2 tables)
+
+**Step 1: Split from `emsx_views.py`**
+- [ ] `emsa_order_table.py`
+- [ ] `emsa_route_table.py`
+
+**Step 2: Migrate to AG-Grid**
+- [ ] `emsa_order_ag_grid.py` (11 cols)
+- [ ] `emsa_route_ag_grid.py` (11 cols, shares column defs)
+
+**Step 3: Cleanup**
+- [ ] Update `emsx/__init__.py` exports
+- [ ] Update `shared/contextual_workspace.py` imports and usages
+- [ ] Update page files to use AG-Grid versions
+- [ ] Test all tables render correctly
+- [ ] Delete legacy files
+
+---
+
+### Phase 6.4: Risk (3 tables)
+
+**Step 1: Split from `risk_views.py`**
+- [ ] `delta_change_table.py`
+- [ ] `risk_measures_table.py`
+- [ ] `risk_inputs_table.py`
+
+**Step 2: Migrate to AG-Grid**
+- [ ] `delta_change_ag_grid.py` (5 cols)
+- [ ] `risk_measures_ag_grid.py` (6 cols)
+- [ ] `risk_inputs_ag_grid.py` (6 cols)
+
+**Step 3: Cleanup**
+- [ ] Update `risk/__init__.py` exports
+- [ ] Update `shared/contextual_workspace.py` imports and usages
+- [ ] Update page files to use AG-Grid versions
+- [ ] Test all tables render correctly
+- [ ] Delete legacy files
+
+---
+
+### Phase 6.5: Events (3 tables)
+
+**Step 1: Split from `events_views.py`**
+- [ ] `event_calendar_table.py`
+- [ ] `event_stream_table.py`
+- [ ] `reverse_inquiry_table.py`
+
+**Step 2: Migrate to AG-Grid**
+- [ ] `event_calendar_ag_grid.py` (4 cols)
+- [ ] `event_stream_ag_grid.py` (6 cols)
+- [ ] `reverse_inquiry_ag_grid.py` (5 cols)
+
+**Step 3: Cleanup**
+- [ ] Update `events/__init__.py` exports
+- [ ] Update `shared/contextual_workspace.py` imports and usages
+- [ ] Update page files to use AG-Grid versions
+- [ ] Test all tables render correctly
+- [ ] Delete legacy files
+
+---
+
+### Phase 6.6: Compliance (4 tables)
+
+**Step 1: Split from `compliance_views.py`**
+- [ ] `restricted_list_table.py`
+- [ ] `undertakings_table.py`
+- [ ] `beneficial_ownership_table.py`
+- [ ] `monthly_exercise_limit_table.py`
+
+**Step 2: Migrate to AG-Grid**
+- [ ] `restricted_list_ag_grid.py` (9 cols)
+- [ ] `undertakings_ag_grid.py` (7 cols)
+- [ ] `beneficial_ownership_ag_grid.py` (10 cols)
+- [ ] `monthly_exercise_limit_ag_grid.py` (9 cols)
+
+**Step 3: Cleanup**
+- [ ] Update `compliance/__init__.py` exports
+- [ ] Update `shared/contextual_workspace.py` imports and usages
+- [ ] Update page files to use AG-Grid versions
+- [ ] Test all tables render correctly
+- [ ] Delete legacy files
+
+---
+
+### Phase 6.7: PnL (4 tables)
+
+**Step 1: Split from `pnl_views.py`**
+- [ ] `pnl_full_table.py`
+- [ ] `pnl_change_table.py`
+- [ ] `pnl_summary_table.py`
+- [ ] `pnl_currency_table.py`
+
+**Step 2: Migrate to AG-Grid** (has conditional colors via `value_cell`)
+- [ ] `pnl_full_ag_grid.py` (6 cols)
+- [ ] `pnl_change_ag_grid.py` (5 cols)
+- [ ] `pnl_summary_ag_grid.py` (6 cols)
+- [ ] `pnl_currency_ag_grid.py` (6 cols)
+
+**Step 3: Cleanup**
+- [ ] Update `pnl/__init__.py` exports
+- [ ] Update `shared/contextual_workspace.py` imports and usages
+- [ ] Update page files to use AG-Grid versions
+- [ ] Test all tables render correctly
+- [ ] Delete legacy files
+
+---
+
+### Phase 6.8: Positions (5 tables)
+
+**Step 1: Split from `positions_views.py`**
+- [ ] `positions_table.py`
+- [ ] `stock_position_table.py`
+- [ ] `warrant_position_table.py`
+- [ ] `bond_position_table.py`
+- [ ] `trade_summary_table.py`
+
+**Step 2: Migrate to AG-Grid** (has sorting via `header_cell`)
+- [ ] `positions_ag_grid.py` (5 cols)
+- [ ] `stock_position_ag_grid.py` (6 cols)
+- [ ] `warrant_position_ag_grid.py` (7 cols)
+- [ ] `bond_position_ag_grid.py` (6 cols)
+- [ ] `trade_summary_ag_grid.py` (7 cols)
+
+**Step 3: Cleanup**
+- [ ] Update `positions/__init__.py` exports
+- [ ] Update `shared/contextual_workspace.py` imports and usages
+- [ ] Update page files to use AG-Grid versions
+- [ ] Test all tables render correctly
+- [ ] Delete legacy files
+
+---
+
+### Phase 6.9: Reconciliation (5 tables)
+
+**Step 1: Split from `reconciliation_views.py`**
+- [ ] `pps_recon_table.py`
+- [ ] `settlement_recon_table.py`
+- [ ] `failed_trades_table.py`
+- [ ] `pnl_recon_table.py`
+- [ ] `risk_input_recon_table.py`
+
+**Step 2: Migrate to AG-Grid**
+- [ ] `pps_recon_ag_grid.py` (5 cols)
+- [ ] `settlement_recon_ag_grid.py` (6 cols)
+- [ ] `failed_trades_ag_grid.py` (8 cols)
+- [ ] `pnl_recon_ag_grid.py` (6 cols)
+- [ ] `risk_input_recon_ag_grid.py` (5 cols)
+
+**Step 3: Cleanup**
+- [ ] Update `reconciliation/__init__.py` exports
+- [ ] Update `shared/contextual_workspace.py` imports and usages
+- [ ] Update page files to use AG-Grid versions
+- [ ] Test all tables render correctly
+- [ ] Delete legacy files
+
+---
+
+### Phase 6.10: Instruments (5 tables)
+
+**Step 1: Split from `instrument_views.py`**
+- [ ] `ticker_data_table.py`
+- [ ] `stock_screener_table.py`
+- [ ] `special_term_table.py`
+- [ ] `instrument_data_table.py`
+- [ ] `instrument_term_table.py`
+
+**Step 2: Migrate to AG-Grid**
+- [ ] `ticker_data_ag_grid.py` (6 cols)
+- [ ] `stock_screener_ag_grid.py` (7 cols)
+- [ ] `special_term_ag_grid.py` (5 cols)
+- [ ] `instrument_data_ag_grid.py` (5 cols)
+- [ ] `instrument_term_ag_grid.py` (5 cols)
+
+**Step 3: Cleanup**
+- [ ] Update `instruments/__init__.py` exports
+- [ ] Update `shared/contextual_workspace.py` imports and usages
+- [ ] Update page files to use AG-Grid versions
+- [ ] Test all tables render correctly
+- [ ] Delete legacy files
+
+---
+
+### Phase 6.11: Portfolio Tools (9 tables) - LARGEST
+
+**Step 1: Split from `portfolio_tools_views.py`**
+- [ ] `pay_to_hold_table.py`
+- [ ] `short_ecl_table.py`
+- [ ] `stock_borrow_table.py`
+- [ ] `po_settlement_table.py`
+- [ ] `deal_indication_table.py`
+- [ ] `reset_dates_table.py`
+- [ ] `coming_resets_table.py`
+- [ ] `cb_installments_table.py`
+- [ ] `excess_amount_table.py`
+
+**Step 2: Migrate to AG-Grid**
+- [ ] `pay_to_hold_ag_grid.py` (7 cols)
+- [ ] `short_ecl_ag_grid.py` (6 cols)
+- [ ] `stock_borrow_ag_grid.py` (5 cols)
+- [ ] `po_settlement_ag_grid.py` (6 cols)
+- [ ] `deal_indication_ag_grid.py` (6 cols)
+- [ ] `reset_dates_ag_grid.py` (6 cols)
+- [ ] `coming_resets_ag_grid.py` (5 cols)
+- [ ] `cb_installments_ag_grid.py` (6 cols)
+- [ ] `excess_amount_ag_grid.py` (5 cols)
+
+**Step 3: Cleanup**
+- [ ] Update `portfolio_tools/__init__.py` exports
+- [ ] Update `shared/contextual_workspace.py` imports and usages
+- [ ] Update page files to use AG-Grid versions
+- [ ] Test all tables render correctly
+- [ ] Delete legacy files
+
+---
 
 ### Testing Plan - Phase 6
 
 | Test Type | Test Case | Expected Result |
 |-----------|-----------|-----------------|
 | Regression | All pages load | No errors |
-| Regression | All tables render | Data displays |
-| Regression | All interactions work | Sorting, filtering, editing |
-| Performance | Full app benchmark | No performance regression |
+| Visual | All tables render | Data displays with styling |
+| Functional | Sorting works | Click headers to sort |
+| Functional | Filtering works | Column filters + quick filter |
+| Theme | Dark/light mode | Theme switches correctly |
 
-**Verification Commands:**
-```bash
-# Run full test suite
-pytest tests/ -v
+### Final Cleanup (after all migrations)
 
-# Smoke test all pages
-# Manual navigation through app
-```
+- [ ] Update imports in `app/components/shared/contextual_workspace.py` to use AG-Grid implementations
+- [ ] Update imports in `app/components/shared/performance_header.py` if applicable
+- [ ] Remove all legacy `*_views.py` files (after confirming AG-Grid versions work)
+- [ ] Update `__init__.py` exports in each component folder
+- [ ] Remove unused helper functions (`header_cell`, `text_cell`, `value_cell`)
+- [ ] Run full app smoke test
 
 ---
 
