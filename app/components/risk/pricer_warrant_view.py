@@ -1,10 +1,25 @@
 import reflex as rx
 from app.states.risk.pricer_warrant_state import PricerWarrantState
-from .risk_views import header_cell, text_cell
 
 # Design constants matching performance_header.py
 POSITIVE_GREEN = "#00AA00"
 NEGATIVE_RED = "#DD0000"
+
+
+def header_cell(text: str, align: str = "left") -> rx.Component:
+    """Table header cell helper."""
+    return rx.el.th(
+        text,
+        class_name=f"px-3 py-3 text-{align} text-[10px] font-bold text-gray-700 uppercase tracking-widest border-b-2 border-gray-400 bg-[#E5E7EB] sticky top-0 z-30 shadow-sm h-[44px] whitespace-nowrap",
+    )
+
+
+def text_cell(val: str) -> rx.Component:
+    """Table text cell helper."""
+    return rx.el.td(
+        val,
+        class_name="px-3 py-2 text-[10px] font-medium text-gray-700 border-b border-gray-200 align-middle whitespace-nowrap",
+    )
 
 
 def term_input(
