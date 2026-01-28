@@ -1,57 +1,69 @@
 # 13 - Transaction API
 
 **Requirement**: Efficient cell-by-cell updates  
-**AG Grid Feature**: Transaction API  
+**AG Grid Feature**: Transaction API + State Management  
 **Demo Route**: `/13-transaction-api`
 
 ## Overview
 
-For large datasets with frequent updates, the Transaction API allows updating specific rows without re-rendering the entire grid.
+For large datasets with frequent updates, use state methods to add/update/remove rows. AG Grid's `row_id_key` enables efficient delta updates.
 
 ## AG Grid Features Used
 
 | Feature | Description |
 |---------|-------------|
-| `api.applyTransaction()` | Add/update/remove rows |
-| Row ID | Unique identifier for each row |
-| `getRowId` | Function to return row ID |
+| `row_id_key` | Unique identifier for delta detection |
+| State methods | `add_row()`, `remove_last_row()` |
+| `enable_cell_change_flash` | Visual feedback on changes |
 
-## Code Example
-
-```javascript
-// Add rows
-gridApi.applyTransaction({
-    add: [{ id: 1, symbol: 'AAPL', price: 175.50 }]
-});
-
-// Update rows
-gridApi.applyTransaction({
-    update: [{ id: 1, price: 176.00 }]
-});
-
-// Remove rows
-gridApi.applyTransaction({
-    remove: [{ id: 1 }]
-});
-```
-
-## Python Usage
+## Python State Methods
 
 ```python
-import reflex as rx
+class DemoState(rx.State):
+    data: list[dict] = []
+    
+    def add_row(self):
+        """Add a new row to the grid."""
+        new_id = f"row_{len(self.data) + 1}"
+        new_row = {
+            "id": new_id,
+            "symbol": "NEW",
+            "company": "New Company",
+            "price": 100.0,
+        }
+        self.data = self.data + [new_row]
+    
+    def remove_last_row(self):
+        """Remove the last row from the grid."""
+        if len(self.data) > 0:
+            self.data = self.data[:-1]
+    
+    def simulate_price_update(self):
+        """Update a random row's price."""
+        idx = random.randint(0, len(self.data) - 1)
+        self.data[idx]["price"] = round(self.data[idx]["price"] + random.uniform(-5, 5), 2)
+```
 
-def update_row(grid_id: str, row_data: dict):
-    return rx.call_script(
-        f"refs['ref_{grid_id}'].current.api.applyTransaction({{update: [{row_data}]}})"
-    )
+## Grid Configuration
+
+```python
+ag_grid(
+    id="transaction_api_grid",
+    row_data=DemoState.data,
+    column_defs=columns,
+    row_id_key="id",  # Required for delta updates
+    enable_cell_change_flash=True,  # Flash on change
+)
 ```
 
 ## How to Implement
 
-1. Ensure each row has a unique `id` field
-2. Configure `getRowId` to return the ID
-3. Use `applyTransaction()` for efficient updates
+1. Add `row_id_key="id"` to grid for delta detection
+2. Create state methods for add/update/remove operations
+3. Connect buttons to state methods
+4. Enable `cell_change_flash` for visual feedback
 
 ## Related Documentation
 
 - [AG Grid Transactions](https://www.ag-grid.com/javascript-data-grid/data-update-transactions/)
+

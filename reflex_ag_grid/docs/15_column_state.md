@@ -1,12 +1,12 @@
 # 15 - Column State
 
-**Requirement**: Save and restore table layout  
-**AG Grid Feature**: Column State API + localStorage  
+**Requirement**: Save and restore table layout with AUTO-SAVE  
+**AG Grid Feature**: Column State API + localStorage + Event Handlers  
 **Demo Route**: `/15-column-state`
 
 ## Overview
 
-Column state persistence allows users to customize column order, widths, visibility, and sorting, then save and restore that configuration.
+Column state persistence allows users to customize column order, widths, visibility, and sorting. Changes are AUTO-SAVED using AG Grid event handlers.
 
 ## AG Grid Features Used
 
@@ -14,55 +14,34 @@ Column state persistence allows users to customize column order, widths, visibil
 |---------|-------------|
 | `api.getColumnState()` | Get current column state |
 | `api.applyColumnState()` | Apply saved state |
+| `on_column_resized` | Auto-save on resize |
+| `on_column_moved` | Auto-save on reorder |
+| `on_sort_changed` | Auto-save on sort |
 | `localStorage` | Browser storage for persistence |
 
-## Code Example
-
-```javascript
-// Save column state
-function saveColumnState(gridApi) {
-    const state = gridApi.getColumnState();
-    localStorage.setItem('columnState', JSON.stringify(state));
-}
-
-// Restore column state
-function restoreColumnState(gridApi) {
-    const savedState = localStorage.getItem('columnState');
-    if (savedState) {
-        gridApi.applyColumnState({
-            state: JSON.parse(savedState),
-            applyOrder: true
-        });
-    }
-}
-```
-
-## Python Usage
+## Auto-Save Implementation
 
 ```python
-from reflex_ag_grid import ag_grid
-import reflex as rx
+# Auto-save script (silent save to localStorage)
+AUTO_SAVE_JS = """(function() {
+    const api = getGridApi();  // Helper to get AG Grid API
+    if (api) {
+        const state = api.getColumnState();
+        localStorage.setItem('columnState', JSON.stringify(state));
+        console.log('Auto-saved column state');
+    }
+})()"""
 
 ag_grid(
-    id="stateful_grid",
-    row_data=state.data,
+    id="column_state_grid",
+    row_data=State.data,
     column_defs=columns,
-    on_grid_ready=rx.Var(
-        """(e) => {
-            // Restore on load
-            const saved = localStorage.getItem('gridColumnState');
-            if (saved) {
-                e.api.applyColumnState({state: JSON.parse(saved), applyOrder: true});
-            }
-        }"""
-    ).to(rx.EventChain),
-    on_column_moved=rx.Var(
-        """(e) => {
-            // Save on change
-            const state = e.api.getColumnState();
-            localStorage.setItem('gridColumnState', JSON.stringify(state));
-        }"""
-    ).to(rx.EventChain),
+    # Auto-save on any column change
+    on_column_resized=rx.call_script(AUTO_SAVE_JS),
+    on_column_moved=rx.call_script(AUTO_SAVE_JS),
+    on_sort_changed=rx.call_script(AUTO_SAVE_JS),
+    on_column_visible=rx.call_script(AUTO_SAVE_JS),
+    on_column_pinned=rx.call_script(AUTO_SAVE_JS),
 )
 ```
 
@@ -72,14 +51,16 @@ ag_grid(
 - Column widths
 - Column visibility (hidden/shown)
 - Sort state
-- Filter state (optional)
+- Pinned columns
 
 ## How to Implement
 
-1. On grid ready, check localStorage and apply saved state
-2. On column move/resize/sort, save state to localStorage
-3. Optionally add Reset button to clear saved state
+1. Create auto-save JavaScript that gets column state and saves to localStorage
+2. Attach to column change events: resized, moved, sorted, visible, pinned
+3. On page load, restore state via Restore button
+4. Add Reset button to clear saved state
 
 ## Related Documentation
 
 - [AG Grid Column State](https://www.ag-grid.com/javascript-data-grid/column-state/)
+

@@ -86,10 +86,17 @@ class DemoState(rx.State):
         self.last_event = f"✏️ Editing row {row_index}, field: {field}"
 
     def on_editing_stopped(self, row_index: int, field: str):
-        """Track when editing stops - resumes updates."""
+        """Track when editing stops - keeps updates paused until manual resume."""
         self.is_editing = False
+        # DON'T auto-resume: pause_on_edit stays True until user clicks Resume
+        self.last_event = (
+            f"✅ Finished editing row {row_index}. Click Resume to continue updates."
+        )
+
+    def resume_updates(self):
+        """Manually resume updates after editing (Req 12)."""
         self.pause_on_edit = False
-        self.last_event = f"✅ Finished editing row {row_index}"
+        self.last_event = "▶️ Updates resumed"
 
     # =========================================================================
     # Notifications
@@ -116,8 +123,8 @@ class DemoState(rx.State):
 
     def simulate_price_update(self):
         """Simulate streaming price update (Req 10, 14)."""
-        if self.pause_on_edit and self.is_editing:
-            return  # Skip update while editing (Req 12)
+        if self.pause_on_edit:
+            return  # Skip update while paused (Req 12 - manual resume)
 
         idx = random.randint(0, len(self.data) - 1)
         old_price = self.data[idx]["price"]
@@ -142,6 +149,35 @@ class DemoState(rx.State):
     def toggle_pause_on_edit(self):
         """Toggle pause on edit mode."""
         self.pause_on_edit = not self.pause_on_edit
+
+    # =========================================================================
+    # Row Manipulation (Req 13 - Transaction API)
+    # =========================================================================
+
+    def add_row(self):
+        """Add a new row to the grid (Req 13)."""
+        new_id = f"row_{len(self.data) + 1}"
+        new_row = {
+            "id": new_id,
+            "symbol": "NEW",
+            "company": "New Company",
+            "sector": "Technology",
+            "price": 100.0,
+            "qty": 0,
+            "change": 0.0,
+            "active": True,
+        }
+        self.data = self.data + [new_row]
+        self.last_event = f"➕ Added new row: {new_id}"
+
+    def remove_last_row(self):
+        """Remove the last row from the grid (Req 13)."""
+        if len(self.data) > 0:
+            removed = self.data[-1]
+            self.data = self.data[:-1]
+            self.last_event = f"➖ Removed row: {removed.get('id', 'unknown')}"
+        else:
+            self.last_event = "⚠️ No rows to remove"
 
     # =========================================================================
     # Jump to Row / Cross-Page Navigation

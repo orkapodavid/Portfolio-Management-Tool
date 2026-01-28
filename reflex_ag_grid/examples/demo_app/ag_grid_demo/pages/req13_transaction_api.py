@@ -35,7 +35,7 @@ def transaction_api_page() -> rx.Component:
         rx.hstack(
             rx.button(
                 "➕ Add Row",
-                on_click=DemoState.simulate_price_update,  # Placeholder
+                on_click=DemoState.add_row,
                 color_scheme="green",
             ),
             rx.button(
@@ -45,7 +45,7 @@ def transaction_api_page() -> rx.Component:
             ),
             rx.button(
                 "➖ Remove Last",
-                on_click=DemoState.simulate_price_update,  # Placeholder
+                on_click=DemoState.remove_last_row,
                 color_scheme="red",
             ),
         ),

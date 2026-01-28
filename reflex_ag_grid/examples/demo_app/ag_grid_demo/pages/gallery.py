@@ -171,6 +171,46 @@ def gallery_page() -> rx.Component:
                 "palette",
                 "fuchsia",
             ),
+            # Req 17: Tree Data
+            feature_card(
+                "17 - Tree Data",
+                "Hierarchical data with expand/collapse.",
+                "/17-tree-data",
+                "folder-tree",
+                "teal",
+            ),
+            # Req 18: Performance Testing
+            feature_card(
+                "18 - Performance",
+                "1000+ row stress test with virtual scroll.",
+                "/18-perf-test",
+                "gauge",
+                "orange",
+            ),
+            # Req 19: Status Bar
+            feature_card(
+                "19 - Status Bar",
+                "Row counts and aggregations.",
+                "/19-status-bar",
+                "bar-chart-2",
+                "cyan",
+            ),
+            # Req 20: Overlays
+            feature_card(
+                "20 - Overlays",
+                "Loading and no-rows overlays.",
+                "/20-overlays",
+                "loader-2",
+                "pink",
+            ),
+            # Req 21: CRUD Data Source
+            feature_card(
+                "21 - CRUD",
+                "Create, Read, Update, Delete operations.",
+                "/21-crud",
+                "database",
+                "lime",
+            ),
             columns="3",  # 3 columns layout
             spacing="4",
             width="100%",

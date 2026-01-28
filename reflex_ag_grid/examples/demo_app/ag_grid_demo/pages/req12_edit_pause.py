@@ -29,21 +29,32 @@ def edit_pause_page() -> rx.Component:
         rx.text("Requirement 12: Disable auto-refresh on edit"),
         rx.callout(
             "Start editing a cell while streaming is active. "
-            "Updates will pause automatically until you finish editing.",
+            "Updates will pause automatically and stay paused until you click Resume.",
             icon="info",
         ),
         rx.hstack(
+            # Single button with 3 states: Resume (paused) > Stop (streaming) > Start (stopped)
             rx.cond(
-                DemoState.is_streaming,
+                DemoState.pause_on_edit,
+                # Paused - show Resume button
                 rx.button(
-                    "⏹️ Stop Updates",
-                    color_scheme="red",
-                    on_click=DemoState.toggle_streaming,
+                    "▶️ Resume Updates",
+                    color_scheme="blue",
+                    on_click=DemoState.resume_updates,
                 ),
-                rx.button(
-                    "▶️ Start Updates",
-                    color_scheme="green",
-                    on_click=DemoState.toggle_streaming,
+                # Not paused - show Start/Stop based on streaming state
+                rx.cond(
+                    DemoState.is_streaming,
+                    rx.button(
+                        "⏹️ Stop Updates",
+                        color_scheme="red",
+                        on_click=DemoState.toggle_streaming,
+                    ),
+                    rx.button(
+                        "▶️ Start Updates",
+                        color_scheme="green",
+                        on_click=DemoState.toggle_streaming,
+                    ),
                 ),
             ),
             rx.text("Edit State:", weight="bold"),
