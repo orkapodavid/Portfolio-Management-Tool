@@ -1197,6 +1197,44 @@ def my_table_ag_grid() -> rx.Component:
 
 ---
 
+## Phase 8: AG-Grid UX Improvements
+
+> **Goal:** Improve the visual and UX quality of all AG-Grid tables.
+
+### 8.1 Fix White Space at Bottom ✅
+
+**Problem:** All 47 AG-Grid components use `height="calc(100vh - 300px)"` which creates a fixed height that doesn't fill the container, leaving white space at the bottom.
+
+**Solution:** Change to `height="100%"` so grids fill their container.
+
+**Files to Update:** 47 files across all component folders:
+- `compliance/` (4 files)
+- `emsx/` (2 files)
+- `events/` (3 files)
+- `instruments/` (5 files)
+- `market_data/` (5 files)
+- `operations/` (2 files)
+- `pnl/` (4 files)
+- `portfolio_tools/` (9 files)
+- `positions/` (5 files)
+- `reconciliation/` (5 files)
+- `risk/` (3 files)
+
+**Checklist:**
+- [x] Batch update all 47 AG-Grid files: `height="calc(100vh - 300px)"` → `height="100%"`
+
+### 8.2 Future UX Enhancements (Planned)
+
+| Enhancement | Priority | Description |
+|-------------|----------|-------------|
+| Custom row height | Medium | Denser rows for data-heavy tables |
+| Column pinning | Medium | Pin first column (e.g., Ticker) for horizontal scroll |
+| Row count display | Low | Show total rows in grid footer |
+| Export buttons | Low | Add visible CSV/Excel export buttons |
+| Column state persistence | Low | Remember column widths/order in localStorage |
+
+---
+
 ## Appendix A: Original Requirements Analysis
 
 ### Status

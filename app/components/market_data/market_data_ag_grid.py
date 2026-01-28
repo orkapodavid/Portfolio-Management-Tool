@@ -159,6 +159,6 @@ def market_data_ag_grid() -> rx.Component:
             "filter": True,
         },
         quick_filter_text=MarketDataState.market_data_search,
-        height="calc(100vh - 300px)",
+        height="100%",
         width="100%",
     )

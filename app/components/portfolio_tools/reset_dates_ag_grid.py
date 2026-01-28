@@ -81,6 +81,6 @@ def reset_dates_ag_grid() -> rx.Component:
         row_id_key="id",
         theme="quartz",
         default_col_def={"sortable": True, "resizable": True, "filter": True},
-        height="calc(100vh - 300px)",
+        height="100%",
         width="100%",
     )

@@ -120,6 +120,6 @@ def risk_inputs_ag_grid() -> rx.Component:
             "resizable": True,
             "filter": True,
         },
-        height="calc(100vh - 300px)",
+        height="100%",
         width="100%",
     )
