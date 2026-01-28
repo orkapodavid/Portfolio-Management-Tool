@@ -90,6 +90,13 @@ See the `docs/` directory for detailed documentation on each feature:
 | [13_transaction_api.md](docs/13_transaction_api.md) | Efficient delta updates |
 | [14_background_tasks.md](docs/14_background_tasks.md) | Scheduled updates |
 | [15_column_state.md](docs/15_column_state.md) | Save/restore column layout |
+| [16_cell_renderers.md](docs/16_cell_renderers.md) | Custom cell rendering |
+| [17_tree_data.md](docs/17_tree_data.md) | Hierarchical tree structure |
+| [18_performance.md](docs/18_performance.md) | Large dataset performance |
+| [19_status_bar.md](docs/19_status_bar.md) | Row counts & aggregations |
+| [20_overlays.md](docs/20_overlays.md) | Loading/no-rows overlays |
+| [21_crud_data_source.md](docs/21_crud_data_source.md) | CRUD operations |
+
 
 ## Demo App
 
