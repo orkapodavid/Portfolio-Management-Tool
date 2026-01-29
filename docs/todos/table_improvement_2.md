@@ -23,6 +23,7 @@
 | 7 | ✅ Complete | Created status bar demo page |
 | 8 | ✅ Complete | Created overlays demo page |
 | 9 | ✅ Complete | Created CRUD data source page |
+| 10 | ✅ Complete | Continuous CRUD perf testing |
 
 ---
 
@@ -39,6 +40,7 @@
 | 7 | NEW: Status Bar | Footer with aggregations | 🟢 New Feature |
 | 8 | NEW: Overlays | Loading/No-Rows overlays | 🟢 New Feature |
 | 9 | NEW: CRUD Data Source | Pandas-backed CRUD operations | 🟢 New Feature |
+| 10 | ENHANCE: Perf Test | Continuous random CRUD operations | 🟡 Enhancement |
 
 ---
 
@@ -419,6 +421,109 @@ class CRUDState(rx.State):
 
 ---
 
+## Requirement 10: Enhanced Performance Testing with Continuous CRUD
+
+**Goal:** Extend the performance test page to demonstrate constant random updates including CRUD operations (create, update, delete rows) running automatically.
+
+**Current State:** Page generates 1000 rows but only loads them once statically.
+
+**Expected Behavior:** 
+- Start/Stop button for continuous updates
+- Randomly update 10-50 cells per tick
+- Randomly add 1-3 new rows per tick  
+- Randomly delete 1-2 rows per tick
+- Show update statistics (rows added/updated/deleted per second)
+- Cell flashing for all changes
+
+### Files to Modify
+
+#### [MODIFY] [req18_perf_testing.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/reflex_ag_grid/examples/demo_app/ag_grid_demo/pages/req18_perf_testing.py)
+
+Add continuous CRUD update mode:
+```python
+class PerfTestState(rx.State):
+    data: list[dict] = []
+    row_count: int = 1000
+    is_running: bool = False
+    update_count: int = 0
+    rows_added: int = 0
+    rows_deleted: int = 0
+    cells_updated: int = 0
+    next_id: int = 1000
+    
+    @rx.background
+    async def run_continuous_updates(self):
+        """Run continuous CRUD operations."""
+        while self.is_running and len(self.data) > 10:
+            async with self:
+                # UPDATE: Randomly update 10-50 cells
+                num_updates = random.randint(10, 50)
+                for _ in range(num_updates):
+                    if len(self.data) == 0:
+                        break
+                    idx = random.randint(0, len(self.data) - 1)
+                    self.data[idx]["price"] = round(random.uniform(50, 500), 2)
+                    self.data[idx]["change"] = round(random.uniform(-10, 10), 2)
+                self.cells_updated += num_updates
+                
+                # CREATE: Randomly add 1-3 rows (10% chance)
+                if random.random() < 0.1:
+                    for _ in range(random.randint(1, 3)):
+                        self.next_id += 1
+                        self.data = self.data + [{
+                            "id": f"row_{self.next_id}",
+                            "symbol": random.choice(["AAPL", "GOOGL", "MSFT"]),
+                            "price": round(random.uniform(50, 500), 2),
+                        }]
+                        self.rows_added += 1
+                
+                # DELETE: Randomly delete 1-2 rows (5% chance)
+                if random.random() < 0.05 and len(self.data) > 100:
+                    for _ in range(random.randint(1, 2)):
+                        idx = random.randint(0, len(self.data) - 1)
+                        self.data = self.data[:idx] + self.data[idx+1:]
+                        self.rows_deleted += 1
+                
+                self.update_count += 1
+            
+            await asyncio.sleep(0.1)  # 10 updates per second
+    
+    def start_updates(self):
+        self.is_running = True
+        return PerfTestState.run_continuous_updates
+    
+    def stop_updates(self):
+        self.is_running = False
+```
+
+Add UI controls:
+```python
+rx.hstack(
+    rx.button(
+        rx.cond(PerfTestState.is_running, "⏹️ Stop", "▶️ Start CRUD"),
+        on_click=rx.cond(
+            PerfTestState.is_running,
+            PerfTestState.stop_updates,
+            PerfTestState.start_updates,
+        ),
+        color_scheme=rx.cond(PerfTestState.is_running, "red", "green"),
+    ),
+    rx.badge(f"Updates: {PerfTestState.update_count}"),
+    rx.badge(f"Added: {PerfTestState.rows_added}", color_scheme="green"),
+    rx.badge(f"Deleted: {PerfTestState.rows_deleted}", color_scheme="red"),
+    rx.badge(f"Updated: {PerfTestState.cells_updated}", color_scheme="blue"),
+)
+```
+
+#### [MODIFY] [18_performance.md](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/reflex_ag_grid/docs/18_performance.md)
+
+Update documentation to include:
+- Continuous CRUD operations demo
+- Background task pattern for updates
+- Performance tips for high-frequency updates
+
+---
+
 ## Verification Plan
 
 ### Automated Tests
@@ -438,6 +543,7 @@ uv run python ../../tests/e2e_ag_grid.py --url http://localhost:3000
 | 3. Background Tasks | 1. Go to `/14-background-tasks`<br>2. Start Tasks<br>3. Watch grid | Cells flash when values change |
 | 4. Column State | 1. Go to `/15-column-state`<br>2. Resize a column<br>3. Refresh page<br>4. Click Restore State | Column width is restored |
 | 5-9. New Pages | 1. Go to gallery<br>2. Click each new feature card<br>3. Verify page loads and works | Feature demonstrated correctly |
+| 10. Perf CRUD | 1. Go to `/18-perf-test`<br>2. Generate 1000 rows<br>3. Click Start CRUD<br>4. Watch grid | Cells flash, rows added/deleted, counters update |
 
 ---
 
@@ -446,5 +552,6 @@ uv run python ../../tests/e2e_ag_grid.py --url http://localhost:3000
 1. **Fix bugs first (Req 1-3)** - Quick wins, improve existing pages
 2. **Enhancement (Req 4)** - Auto-save column state
 3. **New features (Req 5-9)** - Add new pages with new AG Grid features
+4. **Enhanced perf test (Req 10)** - Add continuous CRUD to performance page
 
-**Estimated Total Time:** 16-24 hours
+**Estimated Total Time:** 20-28 hours
