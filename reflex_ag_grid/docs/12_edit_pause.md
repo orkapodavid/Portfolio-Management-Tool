@@ -74,7 +74,33 @@ ag_grid(
 5. Check `pause_on_edit` flag before applying updates
 6. Use single button with 3 states: Resume/Stop/Start
 
+## Undo/Redo Cell Editing (v35+)
+
+Enable undo/redo for cell edits:
+
+```python
+ag_grid(
+    id="edit_grid",
+    row_data=state.data,
+    column_defs=columns,
+    undo_redo_cell_editing=True,
+    undo_redo_cell_editing_limit=20,  # Max undo stack size
+)
+
+# Undo/Redo buttons
+rx.button("↩️ Undo", on_click=rx.call_script(
+    "refs['ref_edit_grid']?.current?.api?.undoCellEditing()"
+))
+rx.button("↪️ Redo", on_click=rx.call_script(
+    "refs['ref_edit_grid']?.current?.api?.redoCellEditing()"
+))
+```
+
+Keyboard shortcuts: `Ctrl+Z` (Undo), `Ctrl+Y` (Redo)
+
 ## Related Documentation
 
 - [AG Grid Cell Editing Events](https://www.ag-grid.com/javascript-data-grid/cell-editing/)
+- [AG Grid Undo/Redo](https://www.ag-grid.com/javascript-data-grid/undo-redo-edits/)
+
 

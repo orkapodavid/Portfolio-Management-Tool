@@ -1,8 +1,8 @@
 """
-05 - Grouping & Summary Page - Demonstrates row grouping and aggregation.
+05 - Grouping & Summary Page - Demonstrates row grouping, aggregation, and grand total pinning.
 
-Requirement 5: Grouping & Summary
-AG Grid Feature: rowGroup + aggFunc + rowGroupPanelShow
+Requirement 5: Grouping & Summary + Grand Total Pinning
+AG Grid Feature: rowGroup + aggFunc + rowGroupPanelShow + grandTotalRow
 """
 
 import reflex as rx
@@ -68,21 +68,22 @@ def grouping_page() -> rx.Component:
     - Aggregation functions (sum, avg)
     - Expandable/collapsible group rows
     - Group summaries with totals
+    - Grand Total Pinning at bottom (Phase 3)
     """
     return rx.vstack(
         nav_bar(),
         rx.heading("05 - Grouping & Summary", size="6"),
-        rx.text("Requirement 5: Grouping & Summary"),
+        rx.text("Requirement 5: Grouping & Summary + Grand Total Pinning"),
         rx.callout(
             "DRAG column headers to the 'Row Groups' panel at top to group by that column. "
-            "You can group by multiple columns! "
-            "Currently grouped by Sector.",
+            "Grand total is pinned at the bottom!",
             icon="info",
         ),
         rx.hstack(
             rx.text("Currently grouped by:", weight="bold"),
             rx.badge("Sector", color_scheme="blue"),
             rx.text("(drag more columns to panel above grid)"),
+            rx.badge("Grand Total: Bottom", color_scheme="green"),
             spacing="2",
         ),
         status_badge(),
@@ -93,6 +94,8 @@ def grouping_page() -> rx.Component:
             # Show row group panel for drag-drop grouping
             row_group_panel_show="always",
             group_default_expanded=-1,  # -1 = all expanded
+            # Grand Total Pinning (Phase 3)
+            grand_total_row="bottom",
             # Enable sidebar with columns tool
             side_bar=True,
             # Enable grouping for all columns via defaultColDef
@@ -111,13 +114,13 @@ def grouping_page() -> rx.Component:
             rx.text("1. Drag any column header to the 'Row Groups' bar at the top"),
             rx.text("2. Drop multiple columns for nested grouping"),
             rx.text("3. Remove a group by dragging it back out"),
-            rx.text("4. Aggregation (avg/sum) shows in group rows"),
+            rx.text("4. Grand Total row is pinned at the bottom (v33.3+ feature)"),
             padding="3",
             background="var(--gray-2)",
             border_radius="8px",
         ),
         rx.text(
-            "Enterprise feature: Row grouping with drag-drop panel and aggregation.",
+            "Enterprise feature: Row grouping with drag-drop panel, aggregation, and grand total pinning.",
             color="gray",
             size="2",
         ),

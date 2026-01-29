@@ -1,8 +1,8 @@
 """
-12 - Edit Pause Page - Demonstrates disabling auto-refresh on edit.
+12 - Edit Pause Page - Demonstrates disabling auto-refresh on edit + Undo/Redo.
 
 Requirement 12: Disable auto-refresh on edit
-AG Grid Feature: Edit tracking in State
+AG Grid Feature: Edit tracking in State, undoRedoCellEditing
 """
 
 import reflex as rx
@@ -22,14 +22,15 @@ def edit_pause_page() -> rx.Component:
     - Resume updates when editing stops
     - Visual indicator of edit state
     - Manual pause toggle
+    - Undo/Redo cell editing (Phase 3)
     """
     return rx.vstack(
         nav_bar(),
-        rx.heading("12 - Edit Pause", size="6"),
-        rx.text("Requirement 12: Disable auto-refresh on edit"),
+        rx.heading("12 - Edit Pause + Undo/Redo", size="6"),
+        rx.text("Requirement 12: Disable auto-refresh on edit with Undo/Redo support"),
         rx.callout(
             "Start editing a cell while streaming is active. "
-            "Updates will pause automatically and stay paused until you click Resume.",
+            "Updates will pause automatically. Use Undo/Redo to revert changes.",
             icon="info",
         ),
         rx.hstack(
@@ -57,6 +58,23 @@ def edit_pause_page() -> rx.Component:
                     ),
                 ),
             ),
+            # Undo/Redo buttons (Phase 3)
+            rx.button(
+                "↩️ Undo",
+                on_click=rx.call_script(
+                    "refs['ref_edit_pause_grid']?.current?.api?.undoCellEditing()"
+                ),
+                color_scheme="gray",
+                variant="outline",
+            ),
+            rx.button(
+                "↪️ Redo",
+                on_click=rx.call_script(
+                    "refs['ref_edit_pause_grid']?.current?.api?.redoCellEditing()"
+                ),
+                color_scheme="gray",
+                variant="outline",
+            ),
             rx.text("Edit State:", weight="bold"),
             rx.cond(
                 DemoState.is_editing,
@@ -78,6 +96,8 @@ def edit_pause_page() -> rx.Component:
             column_defs=get_editable_columns(),
             row_id_key="id",
             enable_cell_change_flash=True,
+            undo_redo_cell_editing=True,
+            undo_redo_cell_editing_limit=20,
             on_cell_value_changed=DemoState.on_cell_edit,
             on_cell_editing_started=DemoState.on_editing_started,
             on_cell_editing_stopped=DemoState.on_editing_stopped,
@@ -91,7 +111,7 @@ def edit_pause_page() -> rx.Component:
             rx.fragment(),
         ),
         rx.text(
-            "on_cell_editing_started and on_cell_editing_stopped events track edit state.",
+            "Undo/Redo: Ctrl+Z / Ctrl+Y or use buttons. Limit: 20 actions.",
             color="gray",
             size="2",
         ),

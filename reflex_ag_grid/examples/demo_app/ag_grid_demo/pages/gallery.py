@@ -211,6 +211,35 @@ def gallery_page() -> rx.Component:
                 "database",
                 "lime",
             ),
+            # Phase 3 Features (v35)
+            feature_card(
+                "22 - Advanced Filter",
+                "Enterprise filter builder UI.",
+                "/22-advanced-filter",
+                "filter",
+                "violet",
+            ),
+            feature_card(
+                "23 - Set Filter",
+                "Multi-select checkbox filtering.",
+                "/23-set-filter",
+                "check-square",
+                "emerald",
+            ),
+            feature_card(
+                "24 - Multi Filter",
+                "Combined filter types.",
+                "/24-multi-filter",
+                "list-filter",
+                "amber",
+            ),
+            feature_card(
+                "25 - Row Numbers",
+                "Automatic row numbering column.",
+                "/25-row-numbers",
+                "hash",
+                "slate",
+            ),
             columns="3",  # 3 columns layout
             spacing="4",
             width="100%",

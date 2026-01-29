@@ -1,5 +1,5 @@
 """
-Navigation Bar Component - Top navigation for all 21 demo pages.
+Navigation Bar Component - Top navigation for all 25 demo pages.
 """
 
 import reflex as rx
@@ -8,7 +8,7 @@ import reflex as rx
 def nav_bar() -> rx.Component:
     """Navigation bar for demo pages.
 
-    Links to all 21 demo pages (one per requirement).
+    Links to all 25 demo pages (one per requirement).
     """
     return rx.box(
         rx.hstack(
@@ -38,6 +38,11 @@ def nav_bar() -> rx.Component:
                     rx.link("19-Status", href="/19-status-bar", size="1"),
                     rx.link("20-Overlay", href="/20-overlays", size="1"),
                     rx.link("21-CRUD", href="/21-crud", size="1"),
+                    # Phase 3 (v35)
+                    rx.link("22-Filter", href="/22-advanced-filter", size="1"),
+                    rx.link("23-Set", href="/23-set-filter", size="1"),
+                    rx.link("24-Multi", href="/24-multi-filter", size="1"),
+                    rx.link("25-RowNum", href="/25-row-numbers", size="1"),
                     spacing="3",
                 ),
                 type="scroll",

@@ -71,13 +71,32 @@ Enable the row group panel to allow users to drag columns for grouping:
 2. Set `default_col_def={"enableRowGroup": True}`
 3. Users can drag column headers to the grouping panel
 
+## Grand Total Pinning (v33.3+)
+
+Pin a grand total row at the top or bottom of the grid:
+
+```python
+ag_grid(
+    id="grouped_grid",
+    row_data=state.data,
+    column_defs=columns,
+    grand_total_row="bottom",  # or "pinnedBottom", "top", "pinnedTop"
+)
+```
+
+> [!NOTE]
+> Requires aggregation functions to be set on columns.
+
 ## How to Implement
 
 1. Add `row_group=True` to grouping column
 2. Add `agg_func="sum"` (or avg, min, max) to value columns
 3. Enable row group panel with `row_group_panel_show="always"`
+4. Optionally add `grand_total_row="bottom"` for pinned totals
 
 ## Related Documentation
 
 - [AG Grid Row Grouping](https://www.ag-grid.com/javascript-data-grid/grouping/)
 - [AG Grid Aggregation](https://www.ag-grid.com/javascript-data-grid/aggregation/)
+- [AG Grid Grand Total Row](https://www.ag-grid.com/javascript-data-grid/aggregation-total-rows/)
+

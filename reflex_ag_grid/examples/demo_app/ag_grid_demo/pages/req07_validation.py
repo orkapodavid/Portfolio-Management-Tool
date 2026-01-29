@@ -1,8 +1,8 @@
 """
 07 - Validation Page - Demonstrates data validation.
 
-Requirement 7: Data Validation (.ini)
-AG Grid Feature: valueParser + Python validation
+Requirement 7: Data Validation
+AG Grid Feature: valueParser + Python validation + cellEditorParams.validation (v34+)
 """
 
 import reflex as rx
@@ -18,10 +18,11 @@ def validation_page() -> rx.Component:
     """Validation demo page.
 
     Features:
-    - Field-level validation rules
+    - Field-level validation rules (Python-based via validation_schema)
     - Multiple validation types (string, number, integer, enum)
     - Pattern matching for strings
     - Min/max constraints for numbers
+    - Note: AG Grid v34+ also supports cellEditorParams.validation for number editors
     """
     validation_columns = [
         {"field": "symbol", "headerName": "Symbol", "editable": True, "width": 100},

@@ -1,5 +1,5 @@
 """
-Demo App Pages - All 17 demo pages (one per requirement).
+Demo App Pages - All demo pages (one per requirement).
 
 Exports all page functions for app registration.
 """
@@ -25,6 +25,10 @@ from .req18_perf_testing import perf_test_page
 from .req19_status_bar import status_bar_page
 from .req20_overlays import overlays_page
 from .req21_crud_data_source import crud_data_source_page
+from .req22_advanced_filter import advanced_filter_page
+from .req23_set_filter import set_filter_page
+from .req24_multi_filter import multi_filter_page
+from .req25_row_numbers import row_numbers_page
 from .gallery import gallery_page
 
 __all__ = [
@@ -50,4 +54,8 @@ __all__ = [
     "status_bar_page",
     "overlays_page",
     "crud_data_source_page",
+    "advanced_filter_page",
+    "set_filter_page",
+    "multi_filter_page",
+    "row_numbers_page",
 ]

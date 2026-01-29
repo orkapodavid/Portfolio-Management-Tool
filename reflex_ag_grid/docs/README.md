@@ -1,6 +1,8 @@
 # AG Grid Demo Documentation
 
-This directory contains documentation for each of the 15 AG Grid demo pages in the `demo_app`. Each document explains the requirement, AG Grid features used, and includes code examples.
+This directory contains documentation for each of the 25 AG Grid demo pages in the `demo_app`. Each document explains the requirement, AG Grid features used, and includes code examples.
+
+**AG Grid Version:** 35.0.1 (Enterprise)
 
 ## Quick Links
 
@@ -22,6 +24,15 @@ This directory contains documentation for each of the 15 AG Grid demo pages in t
 | 14 | Background Tasks | [14_background_tasks.md](14_background_tasks.md) | `/14-background-tasks` |
 | 15 | Column State | [15_column_state.md](15_column_state.md) | `/15-column-state` |
 | 16 | Cell Renderers | [16_cell_renderers.md](16_cell_renderers.md) | `/16-cell-renderers` |
+| 17 | Tree Data | [17_tree_data.md](17_tree_data.md) | `/17-tree-data` |
+| 18 | Performance | [18_performance.md](18_performance.md) | `/18-perf-test` |
+| 19 | Status Bar | [19_status_bar.md](19_status_bar.md) | `/19-status-bar` |
+| 20 | Overlays | [20_overlays.md](20_overlays.md) | `/20-overlays` |
+| 21 | CRUD Data Source | [21_crud_data_source.md](21_crud_data_source.md) | `/21-crud` |
+| 22 | Advanced Filter | [22_advanced_filter.md](22_advanced_filter.md) | `/22-advanced-filter` |
+| 23 | Set Filter | [23_set_filter.md](23_set_filter.md) | `/23-set-filter` |
+| 24 | Multi Filter | [24_multi_filter.md](24_multi_filter.md) | `/24-multi-filter` |
+| 25 | Row Numbers | [25_row_numbers.md](25_row_numbers.md) | `/25-row-numbers` |
 
 ## Running the Demo
 
@@ -39,3 +50,4 @@ Each documentation file includes:
 - **Live Demo Link**: Link to the demo page route
 - **Code Example**: Key code snippets from the implementation
 - **How to Implement**: Step-by-step guide for your own app
+

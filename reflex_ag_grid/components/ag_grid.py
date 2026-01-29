@@ -396,11 +396,11 @@ class AgGrid(rx.Component):
     """
 
     # Library configuration
-    library: str = "ag-grid-react@32.3.0"
+    library: str = "ag-grid-react@35.0.1"
     tag: str = "AgGridReact"
     lib_dependencies: list[str] = [
-        "ag-grid-community@32.3.0",
-        "ag-grid-enterprise@32.3.0",
+        "ag-grid-community@35.0.1",
+        "ag-grid-enterprise@35.0.1",
     ]
 
     # -------------------------------------------------------------------------
@@ -471,6 +471,43 @@ class AgGrid(rx.Component):
     # Validation
     # -------------------------------------------------------------------------
     validation_schema: rx.Var[dict[str, Any]] = rx.Var.create({})
+
+    # -------------------------------------------------------------------------
+    # Advanced Filter (Enterprise) - v35
+    # -------------------------------------------------------------------------
+    enable_advanced_filter: rx.Var[bool] = rx.Var.create(False)
+    advanced_filter_model: rx.Var[dict[str, Any]] = rx.Var.create({})
+    advanced_filter_params: rx.Var[dict[str, Any]] = rx.Var.create({})
+    include_hidden_columns_in_advanced_filter: rx.Var[bool] = rx.Var.create(False)
+
+    # -------------------------------------------------------------------------
+    # Row Numbers (v33.1+)
+    # -------------------------------------------------------------------------
+    row_numbers: rx.Var[bool | dict[str, Any]] = rx.Var.create(False)
+
+    # -------------------------------------------------------------------------
+    # Grand Total Pinning (v33.3+)
+    # -------------------------------------------------------------------------
+    grand_total_row: (
+        rx.Var[Literal["top", "bottom", "pinnedTop", "pinnedBottom"]] | None
+    ) = None
+    group_total_row: rx.Var[Literal["top", "bottom"]] | None = None
+
+    # -------------------------------------------------------------------------
+    # Undo/Redo Cell Editing
+    # -------------------------------------------------------------------------
+    undo_redo_cell_editing: rx.Var[bool] = rx.Var.create(False)
+    undo_redo_cell_editing_limit: rx.Var[int] = rx.Var.create(10)
+
+    # -------------------------------------------------------------------------
+    # Suppress Events (fine-grained control)
+    # -------------------------------------------------------------------------
+    suppress_click_edit: rx.Var[bool] = rx.Var.create(False)
+    suppress_cell_focus: rx.Var[bool] = rx.Var.create(False)
+    suppress_header_focus: rx.Var[bool] = rx.Var.create(False)
+    suppress_scroll_on_new_data: rx.Var[bool] = rx.Var.create(False)
+    suppress_maintain_unsorted_order: rx.Var[bool] = rx.Var.create(False)
+    suppress_row_hover_highlight: rx.Var[bool] = rx.Var.create(False)
 
     # -------------------------------------------------------------------------
     # Row ID

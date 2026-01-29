@@ -1,5 +1,5 @@
 """
-AG Grid Demo App - 17 demo pages showcasing all AG Grid requirements.
+AG Grid Demo App - Demo pages showcasing all AG Grid requirements.
 
 One page per requirement from the AG Grid Traceability Matrix.
 """
@@ -28,12 +28,16 @@ from .pages import (
     status_bar_page,
     overlays_page,
     crud_data_source_page,
+    advanced_filter_page,
+    set_filter_page,
+    multi_filter_page,
+    row_numbers_page,
     gallery_page,
 )
 
 
 # =============================================================================
-# APP - 17 Demo Pages (one per requirement)
+# APP - Demo Pages (one per requirement)
 # =============================================================================
 
 app = rx.App()
@@ -70,7 +74,7 @@ app.add_page(
 )
 app.add_page(column_state_page, route="/15-column-state", title="15 - Column State")
 
-# Req 16-17
+# Req 16-21
 app.add_page(
     cell_renderers_page, route="/16-cell-renderers", title="16 - Cell Renderers"
 )
@@ -79,3 +83,11 @@ app.add_page(perf_test_page, route="/18-perf-test", title="18 - Performance")
 app.add_page(status_bar_page, route="/19-status-bar", title="19 - Status Bar")
 app.add_page(overlays_page, route="/20-overlays", title="20 - Overlays")
 app.add_page(crud_data_source_page, route="/21-crud", title="21 - CRUD")
+
+# Req 22-25 (Phase 3 - v35 Features)
+app.add_page(
+    advanced_filter_page, route="/22-advanced-filter", title="22 - Advanced Filter"
+)
+app.add_page(set_filter_page, route="/23-set-filter", title="23 - Set Filter")
+app.add_page(multi_filter_page, route="/24-multi-filter", title="24 - Multi Filter")
+app.add_page(row_numbers_page, route="/25-row-numbers", title="25 - Row Numbers")

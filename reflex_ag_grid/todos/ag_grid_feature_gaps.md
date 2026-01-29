@@ -2,12 +2,14 @@
 
 This document identifies AG Grid features (Community & Enterprise) that are **NOT yet implemented** in the `reflex_ag_grid` wrapper or demonstrated in the demo app.
 
+**Last Updated:** Phase 3 (v35.0.1) - 2026-01-30
+
 ## Summary
 
 | Category | Implemented | Not Implemented |
 |----------|-------------|-----------------|
-| Enterprise Features | 10 | 14 |
-| Community Features | 8 | 12 |
+| Enterprise Features | 18 | 6 |
+| Community Features | 14 | 6 |
 | Row Models | 1 | 3 |
 
 ---
@@ -23,20 +25,18 @@ This document identifies AG Grid features (Community & Enterprise) that are **NO
 | **Integrated Charts** | Build charts directly from grid data | `enableCharts`, AG Charts module dependency |
 | **Sparklines** | Mini inline charts in cells | `cellRenderer: 'agSparklineCellRenderer'`, `cellRendererParams` |
 | **Server-Side Row Model** | Lazy-loading with server-side operations | `rowModelType: 'serverSide'`, `serverSideDatasource` |
-| **Advanced Filter** | Builder UI for complex filter expressions | `enableAdvancedFilter`, `advancedFilterModel` |
 
-### 🟡 Medium Priority
+### ✅ Recently Implemented (Phase 3)
 
-| Feature | Description | Props/API Required |
-|---------|-------------|-------------------|
-| **Row Spanning** | Cells spanning multiple rows | `spanRows` (on colDef) - new in v33.1 |
-| **Column Spanning** | Cells spanning multiple columns | `colSpan` (on colDef) |
-| **Set Filter** | Multi-select checkbox filter (partial - prop exists) | `filter: 'agSetColumnFilter'` + full params |
-| **Multi Filter** | Combined filter with multiple filter types | `filter: 'agMultiColumnFilter'` |
-| **Row Numbers** | Automatic row numbering column | `enableRowNumbers` - new in v33.1 |
-| **Grand Total Pinning** | Pinned totals at top/bottom of groups | New in v33.3 |
-| **Batch Editing** | Edit multiple cells before committing | `batchEditMode` - new in v34.0 |
-| **Cell Editor Validation** | Built-in editor validation | `cellEditorParams.validation` - new in v34.0 |
+| Feature | Description | Implementation |
+|---------|-------------|----------------|
+| **Advanced Filter** | Builder UI for complex filter expressions | `enable_advanced_filter`, `req22_advanced_filter.py` |
+| **Set Filter** | Multi-select checkbox filter | `req23_set_filter.py` |
+| **Multi Filter** | Combined filter types | `req24_multi_filter.py` |
+| **Row Numbers** | Automatic row numbering column | `row_numbers` prop, `req25_row_numbers.py` |
+| **Grand Total Pinning** | Pinned totals at top/bottom of groups | `grand_total_row` prop, enhanced `req05_grouping.py` |
+| **Batch Editing** | Undo/Redo cell editing | `undo_redo_cell_editing`, enhanced `req12_edit_pause.py` |
+| **Cell Editor Validation** | Built-in editor validation | Documented in `req07_validation.py` |
 
 ---
 
