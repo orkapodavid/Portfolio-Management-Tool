@@ -181,8 +181,7 @@ def clipboard_page() -> rx.Component:
             row_data=CLIPBOARD_DATA,
             column_defs=get_clipboard_columns(),
             row_selection="multiple",
-            cell_selection=True,
-            enable_range_selection=True,
+            cell_selection=True,  # v35 API for range selection
             # Configure clipboard to copy raw values, not formatted values
             on_grid_ready=rx.Var(
                 """(e) => {

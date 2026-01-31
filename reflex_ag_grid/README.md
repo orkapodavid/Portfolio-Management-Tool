@@ -197,6 +197,162 @@ These require AG Grid Enterprise license:
 - Context Menu
 - Clipboard (copy with headers)
 
+## AG Grid v35 Theming
+
+This wrapper uses AG Grid v35's **Theming API** which replaces the legacy CSS-based theming.
+
+### Available Themes
+
+| Theme | Description |
+|-------|-------------|
+| `quartz` | Modern, clean theme (default) |
+| `balham` | Compact, professional theme |
+| `alpine` | Material-inspired theme |
+| `material` | Google Material Design theme |
+
+### Usage
+
+```python
+ag_grid(
+    row_data=State.data,
+    column_defs=columns,
+    theme="quartz",  # "quartz" | "balham" | "alpine" | "material"
+)
+```
+
+### How It Works (Implementation)
+
+AG Grid v35 changed from CSS classes to JavaScript theme objects:
+
+```python
+# Legacy (v32) - CSS imports + className
+# New (v35) - JS imports + theme prop
+```
+
+The wrapper handles this by:
+1. **Importing theme objects** from `ag-grid-community` (`themeQuartz`, `themeBalham`, etc.)
+2. **Passing raw JS references** using `rx.Var(theme_name)` which renders as unquoted JavaScript
+3. **Automatic mapping** from friendly names ("quartz") to JS objects (`themeQuartz`)
+
+```python
+# Internal implementation
+_THEME_OBJECTS = {
+    "quartz": "themeQuartz",
+    "balham": "themeBalham",
+    "alpine": "themeAlpine", 
+    "material": "themeMaterial",
+}
+
+def _get_theme_object(theme_name: str) -> rx.Var:
+    theme_obj = _THEME_OBJECTS.get(theme_name, "themeQuartz")
+    # rx.Var() creates _js_expr which renders as raw JS (unquoted)
+    return rx.Var(theme_obj)
+```
+
+### Key Insight: Raw JS Variable References in Reflex
+
+To pass a raw JavaScript variable (not a quoted string) to a component prop:
+
+```python
+# ❌ Wrong - renders as "themeQuartz" (quoted string)
+props["theme"] = "themeQuartz"
+
+# ❌ Wrong - also renders as quoted string  
+props["theme"] = rx.Var.create("themeQuartz")
+
+# ✅ Correct - renders as themeQuartz (raw JS reference)
+props["theme"] = rx.Var("themeQuartz")
+```
+
+`rx.Var("name")` creates a Var with `_js_expr="name"` which outputs the literal JavaScript identifier.
+
+## AG Grid v35 API Migration
+
+This wrapper handles the migration of deprecated AG Grid v32 props to the v35 API automatically.
+
+### Deprecated Props Transformation
+
+| v32 (Legacy) | v35 (Current) | Handled By |
+|--------------|---------------|------------|
+| `row_selection="multiple"` | `rowSelection={mode: "multiRow"}` | `create()` transforms automatically |
+| `row_selection="single"` | `rowSelection={mode: "singleRow"}` | `create()` transforms automatically |
+| `enable_cell_change_flash=True` | `defaultColDef.enableCellChangeFlash` | Moved to column-level |
+| `suppress_row_click_selection` | `rowSelection.enableClickSelection` | Merged into rowSelection object |
+| `group_selects_children` | `rowSelection.groupSelects` | Merged into rowSelection object |
+| `enable_range_selection` | `cell_selection=True` | Removed, use `cell_selection` |
+| `checkboxSelection` (colDef) | `rowSelection.checkboxes` | Removed from ColumnDef |
+
+### Row Selection (v35 Object Format)
+
+The wrapper transforms legacy string values to v35 objects:
+
+```python
+# What you write (Python)
+ag_grid(row_selection="multiple", ...)
+
+# What gets rendered (JavaScript)
+{
+  rowSelection: {
+    mode: "multiRow",
+    checkboxes: true
+  }
+}
+```
+
+### Cell Flashing
+
+Cell flash must be enabled at **column level** in v35:
+
+```python
+# Option 1: Via default_col_def
+ag_grid(
+    default_col_def={"enableCellChangeFlash": True},
+    ...
+)
+
+# Option 2: Via wrapper (auto-transforms)
+ag_grid(
+    enable_cell_change_flash=True,  # Automatically moves to defaultColDef
+    ...
+)
+```
+
+### Range/Cell Selection
+
+```python
+# v32 (deprecated)
+ag_grid(enable_range_selection=True, ...)
+
+# v35 (current)
+ag_grid(cell_selection=True, ...)
+```
+
+### Runtime Verification
+
+To verify v35 config in browser console:
+
+```javascript
+// Check rowSelection object in React Fiber
+const fiber = document.querySelector('.ag-root-wrapper').__reactFiber$;
+let node = fiber;
+while (node) {
+  if (node.memoizedProps?.rowSelection) {
+    console.log("rowSelection:", node.memoizedProps.rowSelection);
+    break;
+  }
+  node = node.return;
+}
+```
+
+Expected output for `row_selection="multiple"`:
+```javascript
+{
+  mode: "multiRow",      // NOT "multiple"
+  checkboxes: true
+}
+```
+
 ## License
 
 Requires AG Grid Enterprise license for production use without watermark.
+

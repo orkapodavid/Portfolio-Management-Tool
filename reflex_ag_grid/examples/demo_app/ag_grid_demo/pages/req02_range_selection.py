@@ -2,7 +2,7 @@
 02 - Range Selection Page - Demonstrates bulk range selection.
 
 Requirement 2: Bulk state changes (Range)
-AG Grid Feature: enableRangeSelection
+AG Grid Feature: cellSelection (v35 API, replaces deprecated enableRangeSelection)
 """
 
 import reflex as rx
@@ -18,7 +18,7 @@ def range_selection_page() -> rx.Component:
     """Range Selection page for bulk updates.
 
     Features:
-    - Multi-cell range selection
+    - Multi-cell range selection (cellSelection)
     - Shift+click to select range
     - Multiple row selection
     - Drag to select cells
@@ -28,8 +28,8 @@ def range_selection_page() -> rx.Component:
         rx.heading("02 - Range Selection", size="6"),
         rx.text("Requirement 2: Bulk state changes (Range)"),
         rx.callout(
-            "Hold Shift and drag to select a range of cells. "
-            "Use Ctrl+Click to add to selection.",
+            "Click and drag to select a range of cells. "
+            "Use Shift+Click to extend selection.",
             icon="info",
         ),
         status_badge(),
@@ -37,7 +37,7 @@ def range_selection_page() -> rx.Component:
             id="range_selection_grid",
             row_data=DemoState.data,
             column_defs=get_basic_columns(),
-            enable_range_selection=True,
+            cell_selection=True,  # v35 API (replaces deprecated enableRangeSelection)
             row_selection="multiple",
             theme="quartz",
             width="90vw",

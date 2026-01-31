@@ -236,7 +236,7 @@ class ColumnDef(PropsBase):
     # Rendering
     value_formatter: rx.Var | None = None
     cell_renderer: rx.Var | None = None
-    checkbox_selection: bool | rx.Var[bool] = False
+    # NOTE: checkbox_selection removed - use rowSelection.checkboxes in GridOptions (v35)
 
     # Styling (conditional cell styling)
     # cell_style: JS function returning CSS style object, e.g., (params) => ({ color: 'red' })
@@ -335,36 +335,36 @@ class AgGridAPI(BaseModel):
 
 
 # =============================================================================
-# THEME HELPER
+# THEME HELPER (v35 Theming API)
 # =============================================================================
 
-# Mapping of theme names to their CSS classes (light/dark variants)
-_THEME_CLASSES = {
-    "quartz": ("ag-theme-quartz", "ag-theme-quartz-dark"),
-    "balham": ("ag-theme-balham", "ag-theme-balham-dark"),
-    "alpine": ("ag-theme-alpine", "ag-theme-alpine-dark"),
-    "material": ("ag-theme-material", "ag-theme-material-dark"),
+# Mapping of theme names to their v35 theme objects.
+# In v35, themes are JS objects imported from ag-grid-community.
+_THEME_OBJECTS = {
+    "quartz": "themeQuartz",
+    "balham": "themeBalham",
+    "alpine": "themeAlpine",
+    "material": "themeMaterial",
 }
 
 
-def _get_theme_class_name(theme_name: str) -> rx.Var:
+def _get_theme_object(theme_name: str) -> rx.Var:
     """
-    Get the CSS class name for a theme, respecting color mode.
+    Get the v35 theme object for a theme.
 
     Args:
         theme_name: One of "quartz", "balham", "alpine", "material"
 
     Returns:
-        rx.Var that resolves to the correct class based on light/dark mode
+        rx.Var that references the JavaScript theme object
+
+    Note:
+        AG Grid v35 uses the Theming API where themes are JS objects.
+        The theme object (e.g., themeQuartz) is passed directly to the theme prop.
     """
-    return rx.match(
-        theme_name,
-        *[
-            (name, rx.color_mode_cond(light, dark))
-            for name, (light, dark) in _THEME_CLASSES.items()
-        ],
-        "",  # default
-    )
+    theme_obj = _THEME_OBJECTS.get(theme_name, "themeQuartz")
+    # rx.Var(name) creates a Var with _js_expr=name, which renders as-is in JS (unquoted)
+    return rx.Var(theme_obj)
 
 
 # =============================================================================
@@ -410,17 +410,18 @@ class AgGrid(rx.Component):
     row_data: rx.Var[list[dict[str, Any]]]
 
     # -------------------------------------------------------------------------
-    # Selection
+    # Selection (v35 API - object-based config)
     # -------------------------------------------------------------------------
-    row_selection: rx.Var[str] = "single"  # "single" | "multiple"
+    # row_selection accepts: "single", "multiple", or v35 object config
+    # The create() method transforms deprecated string values to v35 object format
+    row_selection: rx.Var[str | dict[str, Any]] = "single"
+    # cell_selection: v35 API for range selection (replaces deprecated enableRangeSelection)
     cell_selection: bool | rx.Var[bool] = False
-    suppress_row_click_selection: rx.Var[bool] = rx.Var.create(False)
-    enable_range_selection: rx.Var[bool] = rx.Var.create(False)  # Enterprise
+    # NOTE: suppress_row_click_selection and group_selects_children are handled
+    # in create() and merged into rowSelection object for v35 compatibility
 
-    # -------------------------------------------------------------------------
-    # Cell Flash (highlight changes)
-    # -------------------------------------------------------------------------
-    enable_cell_change_flash: rx.Var[bool] = rx.Var.create(False)
+    # NOTE: enable_cell_change_flash removed - use column-level enableCellChangeFlash
+    # in columnDefs instead of grid-level option
 
     # -------------------------------------------------------------------------
     # Pagination
@@ -435,10 +436,12 @@ class AgGrid(rx.Component):
     quick_filter_text: rx.Var[str] = rx.Var.create("")
 
     # -------------------------------------------------------------------------
-    # Styling
+    # Styling (v35 Theming API)
     # -------------------------------------------------------------------------
     animate_rows: rx.Var[bool] = False
-    theme: rx.Var[Literal["quartz", "balham", "alpine", "material"]]
+    # Note: theme is passed as a JS theme object (themeQuartz, themeBalham, etc.)
+    # The wrapper automatically maps these based on the css class name
+    theme: rx.Var[Any] = "quartz"  # "quartz" | "balham" | "alpine" | "material"
 
     # -------------------------------------------------------------------------
     # Column Defaults
@@ -450,7 +453,7 @@ class AgGrid(rx.Component):
     # Grouping (Enterprise)
     # -------------------------------------------------------------------------
     group_default_expanded: rx.Var[int] | None = rx.Var.create(-1)  # -1 = all expanded
-    group_selects_children: rx.Var[bool] = rx.Var.create(False)
+    # NOTE: group_selects_children moved to Selection section for v35 migration
     auto_group_column_def: rx.Var[Any] = rx.Var.create({})
     row_group_panel_show: rx.Var[Literal["always", "onlyWhenGrouping", "never"]] = (
         "never"
@@ -467,37 +470,32 @@ class AgGrid(rx.Component):
     # -------------------------------------------------------------------------
     side_bar: rx.Var[str | dict[str, Any] | bool | list[str]] = rx.Var.create("")
 
-    # -------------------------------------------------------------------------
-    # Validation
-    # -------------------------------------------------------------------------
-    validation_schema: rx.Var[dict[str, Any]] = rx.Var.create({})
+    # NOTE: validation_schema removed - not a valid AG Grid option
 
     # -------------------------------------------------------------------------
     # Advanced Filter (Enterprise) - v35
     # -------------------------------------------------------------------------
-    enable_advanced_filter: rx.Var[bool] = rx.Var.create(False)
+    enable_advanced_filter: rx.Var[bool] = False
     advanced_filter_model: rx.Var[dict[str, Any]] = rx.Var.create({})
     advanced_filter_params: rx.Var[dict[str, Any]] = rx.Var.create({})
-    include_hidden_columns_in_advanced_filter: rx.Var[bool] = rx.Var.create(False)
+    include_hidden_columns_in_advanced_filter: rx.Var[bool] = False
 
     # -------------------------------------------------------------------------
     # Row Numbers (v33.1+)
     # -------------------------------------------------------------------------
-    row_numbers: rx.Var[bool | dict[str, Any]] = rx.Var.create(False)
+    row_numbers: rx.Var[bool] = False
 
     # -------------------------------------------------------------------------
     # Grand Total Pinning (v33.3+)
     # -------------------------------------------------------------------------
-    grand_total_row: (
-        rx.Var[Literal["top", "bottom", "pinnedTop", "pinnedBottom"]] | None
-    ) = None
-    group_total_row: rx.Var[Literal["top", "bottom"]] | None = None
+    grand_total_row: rx.Var[str] = ""
+    group_total_row: rx.Var[str] = ""
 
     # -------------------------------------------------------------------------
     # Undo/Redo Cell Editing
     # -------------------------------------------------------------------------
-    undo_redo_cell_editing: rx.Var[bool] = rx.Var.create(False)
-    undo_redo_cell_editing_limit: rx.Var[int] = rx.Var.create(10)
+    undo_redo_cell_editing: rx.Var[bool] = False
+    undo_redo_cell_editing_limit: rx.Var[int] = 10
 
     # -------------------------------------------------------------------------
     # Suppress Events (fine-grained control)
@@ -559,9 +557,46 @@ class AgGrid(rx.Component):
                 rx.EventChain
             )
 
-        # Set theme class based on color mode
+        # Set theme using v35 Theming API (theme object, not CSS class)
         theme_name = props.pop("theme", "quartz")
-        props["class_name"] = _get_theme_class_name(theme_name)
+        props["theme"] = _get_theme_object(theme_name)
+
+        # =====================================================================
+        # v35 Deprecated Props Migration
+        # Transform/remove deprecated props to prevent AG Grid warnings
+        # =====================================================================
+
+        # Pop deprecated props to prevent them from being passed to gridOptions
+        suppress_row_click = props.pop("suppress_row_click_selection", False)
+        group_selects = props.pop("group_selects_children", False)
+
+        # enable_cell_change_flash: in v35, this should be set at column level
+        # We move it to defaultColDef to maintain functionality
+        enable_cell_flash = props.pop("enable_cell_change_flash", False)
+        if enable_cell_flash:
+            # Merge into defaultColDef
+            default_col_def = props.get("default_col_def", {})
+            if isinstance(default_col_def, dict):
+                default_col_def["enableCellChangeFlash"] = True
+                props["default_col_def"] = default_col_def
+
+        # Transform deprecated row_selection string format to v35 object format
+        row_selection = props.get("row_selection", "single")
+        if isinstance(row_selection, str) and row_selection in ("single", "multiple"):
+            row_selection_config = {
+                "mode": "singleRow" if row_selection == "single" else "multiRow",
+            }
+            # For multiRow, enable checkboxes (v35 replacement for colDef.checkboxSelection)
+            if row_selection == "multiple":
+                row_selection_config["checkboxes"] = True
+            # Merge suppress_row_click_selection into enableClickSelection
+            if suppress_row_click:
+                row_selection_config["enableClickSelection"] = False
+            # Merge group_selects_children into groupSelects
+            if group_selects:
+                row_selection_config["groupSelects"] = "descendants"
+            # Pass as JS object using rx.Var
+            props["row_selection"] = rx.Var.create(row_selection_config)
 
         # Auto-size columns on grid ready if auto_size_strategy is set
         if "auto_size_strategy" in props:
@@ -573,27 +608,47 @@ class AgGrid(rx.Component):
         return super().create(*children, **props)
 
     def add_imports(self) -> dict:
-        """Import AG Grid CSS and Enterprise modules."""
+        """Import AG Grid v35 theme objects and Enterprise modules.
+
+        AG Grid v35 uses the Theming API which requires importing theme objects
+        from ag-grid-community instead of CSS files. The theme object is passed
+        to the `theme` grid option.
+        """
         return {
             "": [
-                "ag-grid-community/styles/ag-grid.css",
-                "ag-grid-community/styles/ag-theme-quartz.css",
-                "ag-grid-community/styles/ag-theme-balham.css",
-                "ag-grid-community/styles/ag-theme-material.css",
-                "ag-grid-community/styles/ag-theme-alpine.css",
                 "ag-grid-enterprise",
             ],
-            "ag-grid-enterprise": ["LicenseManager"],
+            "ag-grid-community": [
+                "ModuleRegistry",
+                "themeQuartz",
+                "themeBalham",
+                "themeAlpine",
+                "themeMaterial",
+            ],
+            "ag-grid-enterprise": ["LicenseManager", "AllEnterpriseModule"],
         }
 
     def add_custom_code(self) -> list[str]:
-        """Inject license key from environment variable."""
+        """Register AG Grid modules and inject license key.
+
+        AG Grid v35 requires explicit module registration via ModuleRegistry.
+        AllEnterpriseModule includes all Enterprise features: RowNumbersModule,
+        RowGroupingModule, UndoRedoEditModule, etc.
+        """
         import os
+
+        # Module registration MUST happen before any grid is created
+        code = [
+            "ModuleRegistry.registerModules([AllEnterpriseModule]);",
+        ]
 
         ag_grid_license_key = os.getenv("AG_GRID_LICENSE_KEY")
         if ag_grid_license_key is not None:
-            return [f"LicenseManager.setLicenseKey('{ag_grid_license_key}');"]
-        return ["LicenseManager.setLicenseKey(null);"]
+            code.append(f"LicenseManager.setLicenseKey('{ag_grid_license_key}');")
+        else:
+            code.append("LicenseManager.setLicenseKey(null);")
+
+        return code
 
     # -------------------------------------------------------------------------
     # API Access

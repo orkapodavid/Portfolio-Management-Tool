@@ -307,3 +307,337 @@ uv run reflex run
 5. **Documentation** - Update README and feature gaps
 
 **Estimated Total Time:** 12-16 hours
+
+---
+
+## Phase 3.1: Fix AG Grid v35 Module Registration
+
+> [!IMPORTANT]
+> **Problem:** Row Numbers, Grand Total, and Undo/Redo features are not working despite props being exposed. This is because AG Grid v35 requires explicit module registration via `ModuleRegistry.registerModules()`.
+
+### Root Cause Analysis
+
+AG Grid v35 uses a modular architecture. Features require their modules to be registered:
+- `RowNumbersModule` → `rowNumbers` prop
+- `RowGroupingModule` → `grandTotalRow`, `groupTotalRow` props
+- `UndoRedoEditModule` → `undoCellEditing()`, `redoCellEditing()` API
+- `AllEnterpriseModule` → Contains all Enterprise modules (including above)
+
+The current wrapper imports `ag-grid-enterprise` but does NOT register modules.
+
+### Required Changes
+
+#### [MODIFY] [ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/reflex_ag_grid/components/ag_grid.py#L575-L596)
+
+**Step 1: Update `add_imports()` (line 575)**
+
+Add imports for `ModuleRegistry` and `AllEnterpriseModule`:
+
+```python
+def add_imports(self) -> dict:
+    """Import AG Grid CSS and Enterprise modules."""
+    return {
+        "": [
+            "ag-grid-community/styles/ag-grid.css",
+            "ag-grid-community/styles/ag-theme-quartz.css",
+            "ag-grid-community/styles/ag-theme-balham.css",
+            "ag-grid-community/styles/ag-theme-material.css",
+            "ag-grid-community/styles/ag-theme-alpine.css",
+            "ag-grid-enterprise",
+        ],
+        "ag-grid-community": ["ModuleRegistry"],  # NEW
+        "ag-grid-enterprise": ["LicenseManager", "AllEnterpriseModule"],  # MODIFIED
+    }
+```
+
+**Step 2: Update `add_custom_code()` (line 589)**
+
+Register all Enterprise modules BEFORE setting license key:
+
+```python
+def add_custom_code(self) -> list[str]:
+    """Register AG Grid modules and inject license key."""
+    import os
+
+    # Module registration MUST happen before any grid is created
+    code = [
+        "ModuleRegistry.registerModules([AllEnterpriseModule]);",
+    ]
+
+    ag_grid_license_key = os.getenv("AG_GRID_LICENSE_KEY")
+    if ag_grid_license_key is not None:
+        code.append(f"LicenseManager.setLicenseKey('{ag_grid_license_key}');")
+    else:
+        code.append("LicenseManager.setLicenseKey(null);")
+    
+    return code
+```
+
+### Verification Plan
+
+#### Automated Verification
+```bash
+cd reflex_ag_grid/examples/demo_app
+uv run reflex run
+# App should compile without errors
+```
+
+#### Browser Tests (use browser subagent)
+
+| Route | Test | Expected |
+|-------|------|----------|
+| `/25-row-numbers` | View left column | Row numbers (1, 2, 3...) visible |
+| `/05-grouping` | Scroll to bottom | Grand Total row at bottom |
+| `/12-edit-pause` | Edit cell, click Undo | Value reverts |
+
+#### Console Check
+- No "Module not registered" warnings
+- `AG Grid Enterprise License` log confirms Enterprise is active
+
+### Rollback Plan
+
+If issues occur, revert to original `add_imports()` and `add_custom_code()`.
+
+---
+
+## Implementation Checklist for Phase 3.1
+
+- [x] Modify `add_imports()` to import `ModuleRegistry` from `ag-grid-community`
+- [x] Modify `add_imports()` to import `AllEnterpriseModule` from `ag-grid-enterprise`
+- [x] Modify `add_custom_code()` to call `ModuleRegistry.registerModules([AllEnterpriseModule])`
+- [x] Run demo app and verify compilation
+- [x] Browser test: Row Numbers visible on `/25-row-numbers`
+- [x] Browser test: Grand Total row at bottom on `/05-grouping`
+- [x] Browser test: Undo/Redo works on `/12-edit-pause`
+- [x] Check console for warnings/errors
+
+---
+
+## Phase 3.2: Fix AG Grid v35 Theming API
+
+> [!IMPORTANT]
+> **Problem:** After v35 upgrade, grids appeared unstyled (plain HTML tables without theme styling). This was due to AG Grid v35 replacing CSS-based theming with the JavaScript Theming API.
+
+### Root Cause Analysis
+
+AG Grid v35 changed from CSS imports to JavaScript theme objects:
+- **Old (v32)**: Import `ag-grid.css` + `ag-theme-quartz.css`, apply via `className` prop
+- **New (v35)**: Import `themeQuartz` from `ag-grid-community`, pass directly to `theme` prop
+
+### Required Changes
+
+#### [MODIFY] [ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/reflex_ag_grid/components/ag_grid.py)
+
+**Step 1: Update `add_imports()` - Remove CSS, add theme objects:**
+
+```python
+def add_imports(self) -> dict:
+    return {
+        "": ["ag-grid-enterprise"],
+        "ag-grid-community": [
+            "ModuleRegistry",
+            "themeQuartz",    # v35 theme object
+            "themeBalham",
+            "themeAlpine",
+            "themeMaterial",
+        ],
+        "ag-grid-enterprise": ["LicenseManager", "AllEnterpriseModule"],
+    }
+```
+
+**Step 2: Add `_get_theme_object()` helper:**
+
+```python
+_THEME_OBJECTS = {
+    "quartz": "themeQuartz",
+    "balham": "themeBalham",
+    "alpine": "themeAlpine",
+    "material": "themeMaterial",
+}
+
+def _get_theme_object(theme_name: str) -> rx.Var:
+    theme_obj = _THEME_OBJECTS.get(theme_name, "themeQuartz")
+    # rx.Var() creates _js_expr which renders as raw JS (unquoted)
+    return rx.Var(theme_obj)
+```
+
+**Step 3: Update `create()` to use theme object:**
+
+```python
+# Set theme using v35 Theming API (theme object, not CSS class)
+theme_name = props.pop("theme", "quartz")
+props["theme"] = _get_theme_object(theme_name)
+```
+
+**Step 4: Change `theme` prop type to `Any`:**
+
+```python
+theme: rx.Var[Any] = "quartz"  # Accepts raw JS object reference
+```
+
+### Key Insight
+
+To pass a raw JavaScript variable (not a quoted string) to a Reflex component prop:
+
+```python
+# ❌ Wrong - renders as "themeQuartz" (quoted string)
+props["theme"] = "themeQuartz"
+
+# ✅ Correct - renders as themeQuartz (raw JS reference)
+props["theme"] = rx.Var("themeQuartz")
+```
+
+`rx.Var("name")` creates a Var with `_js_expr="name"` which outputs the literal JavaScript identifier.
+
+### Implementation Checklist for Phase 3.2
+
+- [x] Remove legacy CSS imports from `add_imports()`
+- [x] Import v35 theme objects (`themeQuartz`, etc.) from `ag-grid-community`
+- [x] Create `_get_theme_object()` helper using `rx.Var()` for raw JS reference
+- [x] Update `create()` to pass theme object to `theme` prop
+- [x] Change `theme` prop type from `str` to `Any`
+- [x] Verify Quartz theme styling in browser
+
+### Verification Results (2026-01-31)
+
+All 25+ demo pages tested with browser subagent:
+
+| Page | Feature | Status |
+|------|---------|--------|
+| `/01-context-menu` | Right-click menu | ✅ Working |
+| `/02-range-selection` | Multi-cell drag select | ✅ Working |
+| `/03-cell-flash` | Cell change animation | ✅ Working |
+| `/05-grouping` | Row grouping + Grand Total | ✅ Working |
+| `/10-websocket` | Live streaming | ✅ Working |
+| `/12-edit-pause` | Undo/Redo buttons | ✅ Working |
+| `/22-advanced-filter` | Filter builder UI | ✅ Working |
+| `/25-row-numbers` | Row number column | ✅ Working |
+
+**All pages display with proper Quartz theme styling. No breaking changes detected.**
+
+---
+
+## Phase 3.3: API Modernization (Deprecated Props)
+
+> [!IMPORTANT]
+> **Date:** 2026-01-31  
+> AG Grid v35 deprecated several gridOptions and colDef properties. This phase migrates them using a **Component Transformation Layer** in `AgGrid.create()`.
+
+### Breaking Changes Addressed
+
+| Deprecated Prop | v35 Migration | Implementation |
+|-----------------|---------------|----------------|
+| `row_selection` (string) | `rowSelection` (object) | Transform in `create()` |
+| `enableCellChangeFlash` | `defaultColDef.enableCellChangeFlash` | Move to column-level |
+| `suppressRowClickSelection` | `rowSelection.enableClickSelection` | Merge into rowSelection object |
+| `groupSelectsChildren` | `rowSelection.groupSelects` | Merge into rowSelection object |
+| `checkboxSelection` (colDef) | `rowSelection.checkboxes` | Remove from ColumnDef class |
+| `enableRangeSelection` | `cellSelection` | Renamed prop |
+
+### Implementation Details
+
+#### [MODIFY] [ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/reflex_ag_grid/components/ag_grid.py#L564-L608)
+
+Added **Component Transformation Layer** in `create()`:
+
+```python
+@classmethod
+def create(cls, *children, id: str, row_id_key: str | None = None, **props):
+    # =====================================================================
+    # v35 Deprecated Props Migration
+    # Transform/remove deprecated props to prevent AG Grid warnings
+    # =====================================================================
+    
+    # Pop deprecated props
+    suppress_row_click = props.pop("suppress_row_click_selection", False)
+    group_selects = props.pop("group_selects_children", False)
+    enable_cell_flash = props.pop("enable_cell_change_flash", False)
+    
+    # Move enable_cell_change_flash to defaultColDef
+    if enable_cell_flash:
+        default_col_def = props.get("default_col_def", {})
+        if isinstance(default_col_def, dict):
+            default_col_def["enableCellChangeFlash"] = True
+            props["default_col_def"] = default_col_def
+    
+    # Transform row_selection string to v35 object format
+    row_selection = props.get("row_selection", "single")
+    if isinstance(row_selection, str) and row_selection in ("single", "multiple"):
+        row_selection_config = {
+            "mode": "singleRow" if row_selection == "single" else "multiRow",
+        }
+        if row_selection == "multiple":
+            row_selection_config["checkboxes"] = True
+        if suppress_row_click:
+            row_selection_config["enableClickSelection"] = False
+        if group_selects:
+            row_selection_config["groupSelects"] = "descendants"
+        props["row_selection"] = rx.Var.create(row_selection_config)
+```
+
+#### [MODIFY] [ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/reflex_ag_grid/components/ag_grid.py#L239)
+
+Removed `checkbox_selection` from `ColumnDef`:
+
+```python
+# Before
+checkbox_selection: bool | rx.Var[bool] = False
+
+# After
+# NOTE: checkbox_selection removed - use rowSelection.checkboxes in GridOptions (v35)
+```
+
+### Verification Results (2026-01-31)
+
+#### Static Analysis (4 Pillars Audit)
+
+| Pillar | Check | Result |
+|--------|-------|--------|
+| 1. Column Definition Integrity | `cellDataType` | ✅ PASS (not used) |
+| 2. Integrated Charting Logic | `enableCharts` + Grouping | ✅ PASS (not exposed) |
+| 3. Theming & CSS Variables | Legacy themes | ✅ PASS (v35 API) |
+| 4. Event & Callback Signatures | Legacy event names | ✅ PASS (all v35 valid) |
+
+#### Runtime Smoke Test
+
+Verified via JavaScript Fiber inspection on `/02-range-selection`:
+
+```javascript
+// AgGridReact.memoizedProps.rowSelection:
+{
+  "mode": "multiRow",      // ✅ v35 syntax (not "multiple")
+  "checkboxes": true       // ✅ Grid-level checkboxes
+}
+```
+
+### Implementation Checklist for Phase 3.3
+
+- [x] Remove `suppress_row_click_selection` class attribute
+- [x] Remove `group_selects_children` class attribute
+- [x] Remove `enable_cell_change_flash` class attribute
+- [x] Add `props.pop()` in `create()` for deprecated gridOptions props
+- [x] Transform `enable_cell_change_flash` → `defaultColDef.enableCellChangeFlash`
+- [x] Transform `row_selection` string → `rowSelection` object
+- [x] Add `checkboxes: true` for `multiRow` mode
+- [x] Merge `suppress_row_click_selection` → `enableClickSelection: false`
+- [x] Merge `group_selects_children` → `groupSelects: "descendants"`
+- [x] Remove `checkbox_selection` from `ColumnDef` class
+- [x] Static analysis: 4 pillars audit PASS
+- [x] Runtime smoke test: rowSelection object verified
+- [x] Update README.md with migration guide
+
+---
+
+## Summary: v35 Migration Complete
+
+All three phases of the AG Grid v35 migration have been completed:
+
+| Phase | Description | Status |
+|-------|-------------|--------|
+| 3.1 | Module Registration | ✅ Complete |
+| 3.2 | Theming API | ✅ Complete |
+| 3.3 | API Modernization | ✅ Complete |
+
+**The wrapper now has a "clean console" for all target grid options.**
+
+
