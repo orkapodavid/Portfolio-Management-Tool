@@ -640,4 +640,98 @@ All three phases of the AG Grid v35 migration have been completed:
 
 **The wrapper now has a "clean console" for all target grid options.**
 
+---
+
+## Phase 3.4: Console Warning Cleanup
+
+> [!IMPORTANT]
+> **Date:** 2026-02-02  
+> AG Grid v35 produces console warnings for invalid gridOptions properties and non-string getRowId returns. This phase eliminates these warnings through targeted fixes.
+
+### Warnings Addressed
+
+| Warning | Root Cause | Fix Applied |
+|---------|------------|-------------|
+| `invalid gridOptions property 'id'` | `id` prop passed to AG Grid (it's for wrapper, not grid) | Pop `id` from props in `create()` |
+| `invalid gridOptions property 'advancedFilterModel'` | Default `{}` always passed even when unused | Changed default to `None` |
+| `Invalid Auto-size strategy` | Default `{}` always passed even when unused | Changed default to `None` |
+| `getRowId callback must return a string` | `params.data.{row_id_key}` returns number if ID is numeric | Wrapped in `String()` |
+
+### Implementation Details
+
+#### [MODIFY] [ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/reflex_ag_grid/components/ag_grid.py)
+
+**Step 1: Change default values from `{}` to `None`:**
+
+```python
+# Before
+auto_size_strategy: rx.Var[dict] = rx.Var.create({})
+advanced_filter_model: rx.Var[dict[str, Any]] = rx.Var.create({})
+advanced_filter_params: rx.Var[dict[str, Any]] = rx.Var.create({})
+
+# After
+auto_size_strategy: rx.Var[dict] | None = None
+advanced_filter_model: rx.Var[dict[str, Any]] | None = None
+advanced_filter_params: rx.Var[dict[str, Any]] | None = None
+```
+
+**Step 2: Wrap getRowId return in `String()`:**
+
+```python
+# Before
+props["get_row_id"] = rx.Var(f"(params) => params.data.{row_id_key}")
+
+# After
+props["get_row_id"] = rx.Var(f"(params) => String(params.data.{row_id_key})")
+```
+
+**Step 3: Remove `id` and `None` values from props:**
+
+```python
+# In create(), before return:
+props.pop("id", None)  # 'id' is for container element, not grid
+props = {k: v for k, v in props.items() if v is not None}
+```
+
+### Key Insight
+
+The Reflex component system serializes **all class attributes** with default values to props, even if unused. Setting defaults to `None` and filtering before `super().create()` prevents passing invalid props to AG Grid.
+
+### Implementation Checklist for Phase 3.4
+
+- [x] Changed `auto_size_strategy` default from `rx.Var.create({})` to `None`
+- [x] Changed `advanced_filter_model` default to `None`
+- [x] Changed `advanced_filter_params` default to `None`
+- [x] Wrapped `getRowId` return value in `String()`
+- [x] Pop `id` from props before passing to AG Grid
+- [x] Filter out `None` values from props dict
+- [x] Browser verified: All 4 warnings eliminated
+
+### Verification Results (2026-02-02)
+
+Tested on `http://localhost:3002/pmt/market-data` and `http://localhost:3002/pmt/positions`:
+
+| Warning | Status |
+|---------|--------|
+| `invalid gridOptions property 'advancedFilterModel'` | ✅ FIXED |
+| `invalid gridOptions property 'id'` | ✅ FIXED |
+| `Invalid Auto-size strategy` | ✅ FIXED |
+| `getRowId callback must return a string` | ✅ FIXED |
+
+**Console is now clean with only the expected Enterprise trial notice.**
+
+---
+
+## Summary: v35 Migration Complete
+
+All four phases of the AG Grid v35 migration have been completed:
+
+| Phase | Description | Status |
+|-------|-------------|--------|
+| 3.1 | Module Registration | ✅ Complete |
+| 3.2 | Theming API | ✅ Complete |
+| 3.3 | API Modernization | ✅ Complete |
+| 3.4 | Console Warning Cleanup | ✅ Complete |
+
+**The wrapper now has a "clean console" for all grid options with no warnings or errors.**
 

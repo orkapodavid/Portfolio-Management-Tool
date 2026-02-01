@@ -447,7 +447,8 @@ class AgGrid(rx.Component):
     # Column Defaults
     # -------------------------------------------------------------------------
     default_col_def: rx.Var[dict[str, Any]] = rx.Var.create({})
-    auto_size_strategy: rx.Var[dict] = rx.Var.create({})
+    # NOTE: auto_size_strategy should NOT have a default value - only pass when explicitly set
+    auto_size_strategy: rx.Var[dict] | None = None
 
     # -------------------------------------------------------------------------
     # Grouping (Enterprise)
@@ -476,8 +477,9 @@ class AgGrid(rx.Component):
     # Advanced Filter (Enterprise) - v35
     # -------------------------------------------------------------------------
     enable_advanced_filter: rx.Var[bool] = False
-    advanced_filter_model: rx.Var[dict[str, Any]] = rx.Var.create({})
-    advanced_filter_params: rx.Var[dict[str, Any]] = rx.Var.create({})
+    # NOTE: advanced_filter_model should NOT have a default value - only pass when explicitly set
+    advanced_filter_model: rx.Var[dict[str, Any]] | None = None
+    advanced_filter_params: rx.Var[dict[str, Any]] | None = None
     include_hidden_columns_in_advanced_filter: rx.Var[bool] = False
 
     # -------------------------------------------------------------------------
@@ -552,10 +554,11 @@ class AgGrid(rx.Component):
         props.setdefault("id", id)
 
         # Configure row ID getter from row_id_key
+        # IMPORTANT: AG Grid v35 requires getRowId to return a STRING
         if row_id_key is not None:
-            props["get_row_id"] = rx.Var(f"(params) => params.data.{row_id_key}").to(
-                rx.EventChain
-            )
+            props["get_row_id"] = rx.Var(
+                f"(params) => String(params.data.{row_id_key})"
+            ).to(rx.EventChain)
 
         # Set theme using v35 Theming API (theme object, not CSS class)
         theme_name = props.pop("theme", "quartz")
@@ -599,11 +602,21 @@ class AgGrid(rx.Component):
             props["row_selection"] = rx.Var.create(row_selection_config)
 
         # Auto-size columns on grid ready if auto_size_strategy is set
-        if "auto_size_strategy" in props:
+        if props.get("auto_size_strategy") is not None:
             props["on_grid_ready"] = size_columns_to_fit
 
         # Set default for row group panel
         props.setdefault("row_group_panel_show", "never")
+
+        # =================================================================
+        # Remove invalid gridOptions properties
+        # These are consumed by the wrapper but not valid AG Grid options
+        # =================================================================
+        props.pop("id", None)  # 'id' is for container element, not grid
+
+        # Remove None valued props to avoid passing "undefined" to AG Grid
+        # (class attributes with None default should not be passed if not set)
+        props = {k: v for k, v in props.items() if v is not None}
 
         return super().create(*children, **props)
 
