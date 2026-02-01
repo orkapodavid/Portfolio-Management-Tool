@@ -352,6 +352,49 @@ Expected output for `row_selection="multiple"`:
 }
 ```
 
+## Row ID Best Practices
+
+AG Grid v35 requires `getRowId` to return a **string**. The wrapper handles this automatically:
+
+```python
+# Using row_id_key (recommended)
+ag_grid(
+    row_data=State.data,
+    row_id_key="id",  # Automatically converted to String(params.data.id)
+    ...
+)
+```
+
+The wrapper generates:
+```javascript
+getRowId: (params) => String(params.data.id)  // Always returns string
+```
+
+This prevents the console warning: `getRowId callback must return a string`.
+
+## Console Warning Prevention
+
+The wrapper is designed for a **clean console** with no AG Grid warnings. Here's what's handled automatically:
+
+| Warning | Root Cause | How Wrapper Prevents It |
+|---------|------------|------------------------|
+| `invalid gridOptions property 'id'` | `id` is for container, not grid | Removed from props before passing |
+| `invalid gridOptions property 'advancedFilterModel'` | Empty `{}` passed when unused | Default is `None`, filtered out |
+| `Invalid Auto-size strategy` | Empty `{}` passed when unused | Default is `None`, filtered out |
+| `getRowId must return string` | Numeric IDs | Wrapped in `String()` |
+
+### Implementation
+
+Props with `None` defaults are filtered before passing to AG Grid:
+
+```python
+# In AgGrid.create()
+props.pop("id", None)  # Container prop, not grid prop
+props = {k: v for k, v in props.items() if v is not None}
+```
+
+This ensures only explicitly set props are passed to the grid.
+
 ## License
 
 Requires AG Grid Enterprise license for production use without watermark.
