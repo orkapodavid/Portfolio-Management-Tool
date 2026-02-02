@@ -21,10 +21,20 @@ def set_filter_page() -> rx.Component:
     - Search within filter values
     - Select All / Deselect All
     """
-    # Define columns with Set Filter
+    # Define columns with Set Filter and other filter types
     set_filter_columns = [
-        {"field": "id", "headerName": "ID", "width": 80},
-        {"field": "symbol", "headerName": "Symbol", "width": 100},
+        {
+            "field": "id", 
+            "headerName": "ID", 
+            "width": 80,
+            "filter": "agTextColumnFilter",
+        },
+        {
+            "field": "symbol", 
+            "headerName": "Symbol", 
+            "width": 100,
+            "filter": "agTextColumnFilter",
+        },
         {
             "field": "sector",
             "headerName": "Sector",
@@ -35,8 +45,8 @@ def set_filter_page() -> rx.Component:
             "width": 150,
         },
         {
-            "field": "currency",
-            "headerName": "Currency",
+            "field": "status",
+            "headerName": "Status",
             "filter": "agSetColumnFilter",
             "width": 100,
         },
@@ -45,8 +55,15 @@ def set_filter_page() -> rx.Component:
             "headerName": "Price",
             "type": "numericColumn",
             "width": 120,
+            "filter": "agNumberColumnFilter",
         },
-        {"field": "qty", "headerName": "Qty", "type": "numericColumn", "width": 100},
+        {
+            "field": "qty", 
+            "headerName": "Qty", 
+            "type": "numericColumn", 
+            "width": 100,
+            "filter": "agNumberColumnFilter",
+        },
     ]
 
     return rx.vstack(
@@ -54,8 +71,8 @@ def set_filter_page() -> rx.Component:
         rx.heading("23 - Set Filter", size="6"),
         rx.text("Requirement 23: AG Grid Enterprise Set Filter"),
         rx.callout(
-            "Click the filter icon in Sector or Currency columns to see the Set Filter. "
-            "Use checkboxes to select multiple values.",
+            "Use the checkboxes on the left for row selection. "
+            "Click the filter icon in headers to filter data (Set Filter available for Sector/Status).",
             icon="info",
         ),
         ag_grid(
@@ -67,6 +84,7 @@ def set_filter_page() -> rx.Component:
             theme="quartz",
             width="90vw",
             height="55vh",
+            auto_size_strategy={"type": "fitCellContents"},
         ),
         rx.text(
             "Enterprise feature: filter='agSetColumnFilter' enables multi-select checkbox filtering.",
