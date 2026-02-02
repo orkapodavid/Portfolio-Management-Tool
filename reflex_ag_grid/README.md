@@ -73,29 +73,33 @@ app.add_page(index)
 
 See the `docs/` directory for detailed documentation on each feature:
 
-| Doc | Feature |
-|-----|---------|
-| [01_context_menu.md](docs/01_context_menu.md) | Right-click context menu |
-| [02_range_selection.md](docs/02_range_selection.md) | Bulk cell selection |
-| [03_cell_flash.md](docs/03_cell_flash.md) | Flashing cell changes |
-| [04_jump_highlight.md](docs/04_jump_highlight.md) | Jump to row & highlight |
-| [05_grouping.md](docs/05_grouping.md) | Row grouping & aggregation |
-| [06_notifications.md](docs/06_notifications.md) | Notification panel (demo-only) |
-| [07_validation.md](docs/07_validation.md) | Data validation |
-| [08_clipboard.md](docs/08_clipboard.md) | Copy with/without formatting |
-| [09_excel_export.md](docs/09_excel_export.md) | Excel/CSV export |
-| [10_websocket.md](docs/10_websocket.md) | Real-time updates |
-| [11_cell_editors.md](docs/11_cell_editors.md) | Cell editor types |
-| [12_edit_pause.md](docs/12_edit_pause.md) | Pause updates while editing |
-| [13_transaction_api.md](docs/13_transaction_api.md) | Efficient delta updates |
-| [14_background_tasks.md](docs/14_background_tasks.md) | Scheduled updates |
-| [15_column_state.md](docs/15_column_state.md) | Save/restore column layout |
-| [16_cell_renderers.md](docs/16_cell_renderers.md) | Custom cell rendering |
-| [17_tree_data.md](docs/17_tree_data.md) | Hierarchical tree structure |
-| [18_performance.md](docs/18_performance.md) | Large dataset performance |
-| [19_status_bar.md](docs/19_status_bar.md) | Row counts & aggregations |
-| [20_overlays.md](docs/20_overlays.md) | Loading/no-rows overlays |
-| [21_crud_data_source.md](docs/21_crud_data_source.md) | CRUD operations |
+| Doc | Feature | Demo Route |
+|-----|---------|------------|
+| [01_context_menu.md](docs/01_context_menu.md) | Right-click context menu | `/01-context-menu` |
+| [02_range_selection.md](docs/02_range_selection.md) | Bulk cell selection | `/02-range-selection` |
+| [03_cell_flash.md](docs/03_cell_flash.md) | Flashing cell changes | `/03-cell-flash` |
+| [04_jump_highlight.md](docs/04_jump_highlight.md) | Jump to row & highlight | `/04-jump-highlight` |
+| [05_grouping.md](docs/05_grouping.md) | Row grouping & aggregation | `/05-grouping` |
+| [06_notifications.md](docs/06_notifications.md) | Notification panel (demo-only) | `/06-notifications` |
+| [07_validation.md](docs/07_validation.md) | Data validation | `/07-validation` |
+| [08_clipboard.md](docs/08_clipboard.md) | Copy with/without formatting | `/08-clipboard` |
+| [09_excel_export.md](docs/09_excel_export.md) | Excel/CSV export | `/09-excel-export` |
+| [10_websocket.md](docs/10_websocket.md) | Real-time updates | `/10-websocket` |
+| [11_cell_editors.md](docs/11_cell_editors.md) | Cell editor types | `/11-cell-editors` |
+| [12_edit_pause.md](docs/12_edit_pause.md) | Pause updates + Undo/Redo | `/12-edit-pause` |
+| [13_transaction_api.md](docs/13_transaction_api.md) | Efficient delta updates | `/13-transaction-api` |
+| [14_background_tasks.md](docs/14_background_tasks.md) | Scheduled updates | `/14-background-tasks` |
+| [15_column_state.md](docs/15_column_state.md) | Save/restore column layout | `/15-column-state` |
+| [16_cell_renderers.md](docs/16_cell_renderers.md) | Custom cell rendering | `/16-cell-renderers` |
+| [17_tree_data.md](docs/17_tree_data.md) | Hierarchical tree structure | `/17-tree-data` |
+| [18_performance.md](docs/18_performance.md) | Large dataset performance | `/18-perf-test` |
+| [19_status_bar.md](docs/19_status_bar.md) | Row counts & aggregations | `/19-status-bar` |
+| [20_overlays.md](docs/20_overlays.md) | Loading/no-rows overlays | `/20-overlays` |
+| [21_crud_data_source.md](docs/21_crud_data_source.md) | CRUD operations | `/21-crud` |
+| [22_advanced_filter.md](docs/22_advanced_filter.md) | Advanced Filter builder | `/22-advanced-filter` |
+| [23_set_filter.md](docs/23_set_filter.md) | Multi-select checkbox filter | `/23-set-filter` |
+| [24_multi_filter.md](docs/24_multi_filter.md) | Combined filter types | `/24-multi-filter` |
+| [25_row_numbers.md](docs/25_row_numbers.md) | Automatic row numbers | `/25-row-numbers` |
 
 
 ## Demo App
