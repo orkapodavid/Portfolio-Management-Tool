@@ -510,6 +510,14 @@ class AgGrid(rx.Component):
     suppress_row_hover_highlight: rx.Var[bool] = rx.Var.create(False)
 
     # -------------------------------------------------------------------------
+    # Overlays
+    # -------------------------------------------------------------------------
+    loading: rx.Var[bool] = False
+    overlay_loading_template: rx.Var[str] | None = None
+    overlay_no_rows_template: rx.Var[str] | None = None
+    suppress_no_rows_overlay: rx.Var[bool] = False
+
+    # -------------------------------------------------------------------------
     # Row ID
     # -------------------------------------------------------------------------
     get_row_id: rx.EventHandler[lambda e0: [e0]]
