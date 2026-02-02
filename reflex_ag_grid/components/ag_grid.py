@@ -461,6 +461,14 @@ class AgGrid(rx.Component):
     )
 
     # -------------------------------------------------------------------------
+    # Tree Data (Enterprise)
+    # -------------------------------------------------------------------------
+    # IMPORTANT: Using rx.Var.create() for defaults ensures Reflex properly
+    # registers these as component props instead of misplacing them in css:{}
+    tree_data: rx.Var[bool] = rx.Var.create(False)
+    get_data_path: rx.Var | None = None  # JS function: (data) => data.path
+
+    # -------------------------------------------------------------------------
     # Pinned Rows
     # -------------------------------------------------------------------------
     pinned_top_row_data: rx.Var[list[dict[str, Any]]] = rx.Var.create([])
@@ -615,6 +623,26 @@ class AgGrid(rx.Component):
 
         # Set default for row group panel
         props.setdefault("row_group_panel_show", "never")
+
+        # =================================================================
+        # Tree Data Props - Explicit conversion to ensure proper serialization
+        # These props are incorrectly placed in css:{} by Reflex if not
+        # explicitly converted to rx.Var. This forces them to be recognized
+        # as component props rather than styling props.
+        # =================================================================
+        if "tree_data" in props and props["tree_data"] is True:
+            # Convert to rx.Var to ensure it's serialized as a component prop
+            props["tree_data"] = rx.Var.create(True)
+        
+        if "get_data_path" in props and props["get_data_path"] is not None:
+            # Ensure the callback is properly wrapped
+            get_data_path_val = props["get_data_path"]
+            if isinstance(get_data_path_val, rx.Var):
+                # Already a Var, ensure it's typed correctly
+                props["get_data_path"] = get_data_path_val
+            elif isinstance(get_data_path_val, str):
+                # Convert string JS function to Var
+                props["get_data_path"] = rx.Var(get_data_path_val)
 
         # =================================================================
         # Remove invalid gridOptions properties
