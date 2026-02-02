@@ -30,8 +30,16 @@ def multi_filter_page() -> rx.Component:
             "filter": "agMultiColumnFilter",
             "filterParams": {
                 "filters": [
-                    {"filter": "agTextColumnFilter"},
-                    {"filter": "agSetColumnFilter"},
+                    {
+                        "filter": "agTextColumnFilter",
+                        "display": "accordion",
+                        "title": "Text Filter",
+                    },
+                    {
+                        "filter": "agSetColumnFilter",
+                        "display": "accordion",
+                        "title": "Set Filter",
+                    },
                 ],
             },
             "width": 120,
@@ -44,9 +52,15 @@ def multi_filter_page() -> rx.Component:
                 "filters": [
                     {
                         "filter": "agTextColumnFilter",
+                        "display": "accordion",
+                        "title": "Text Filter",
                         "filterParams": {"buttons": ["reset"]},
                     },
-                    {"filter": "agSetColumnFilter"},
+                    {
+                        "filter": "agSetColumnFilter",
+                        "display": "accordion",
+                        "title": "Set Filter",
+                    },
                 ],
             },
             "width": 150,
@@ -58,8 +72,16 @@ def multi_filter_page() -> rx.Component:
             "filter": "agMultiColumnFilter",
             "filterParams": {
                 "filters": [
-                    {"filter": "agNumberColumnFilter"},
-                    {"filter": "agSetColumnFilter"},
+                    {
+                        "filter": "agNumberColumnFilter",
+                        "display": "accordion",
+                        "title": "Number Filter",
+                    },
+                    {
+                        "filter": "agSetColumnFilter",
+                        "display": "accordion",
+                        "title": "Set Filter",
+                    },
                 ],
             },
             "width": 120,
@@ -79,7 +101,7 @@ def multi_filter_page() -> rx.Component:
         rx.text("Requirement 24: AG Grid Enterprise Multi Filter"),
         rx.callout(
             "Click the filter icon in Symbol, Sector, or Price columns. "
-            "Switch between Text/Number and Set filter tabs.",
+            "Expand the accordion sections to switch between filter types.",
             icon="info",
         ),
         ag_grid(

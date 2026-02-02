@@ -13,8 +13,16 @@ Enterprise combined filter with multiple filter types in one column.
     "filter": "agMultiColumnFilter",
     "filterParams": {
         "filters": [
-            {"filter": "agTextColumnFilter"},
-            {"filter": "agSetColumnFilter"},
+            {
+                "filter": "agTextColumnFilter",
+                "display": "accordion",  # Show as expandable section
+                "title": "Text Filter",
+            },
+            {
+                "filter": "agSetColumnFilter",
+                "display": "accordion",
+                "title": "Set Filter",
+            },
         ],
     },
 }
@@ -22,8 +30,9 @@ Enterprise combined filter with multiple filter types in one column.
 
 ## Features
 - Combines multiple filter types (Text + Set, Number + Set)
-- Tabbed interface for switching between filters
+- **Accordion interface** for switching between filters
 - Each filter operates independently
+- Display options: `'inline'`, `'accordion'`, `'subMenu'`
 
 ## Demo Code
 ```python
@@ -33,8 +42,8 @@ columns = [
         "filter": "agMultiColumnFilter",
         "filterParams": {
             "filters": [
-                {"filter": "agTextColumnFilter"},
-                {"filter": "agSetColumnFilter"},
+                {"filter": "agTextColumnFilter", "display": "accordion", "title": "Text"},
+                {"filter": "agSetColumnFilter", "display": "accordion", "title": "Set"},
             ],
         },
     },
