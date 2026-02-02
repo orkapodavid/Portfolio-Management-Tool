@@ -231,7 +231,9 @@ class ColumnDef(PropsBase):
 
     # Filtering
     filter: str | rx.Var[str] | None = None
-    floating_filter: bool | rx.Var[bool] = False
+    # NOTE: floating_filter defaults to None so defaultColDef.floatingFilter takes effect
+    # Setting to True/False at column level overrides the grid-level default
+    floating_filter: bool | rx.Var[bool] | None = None
 
     # Rendering
     value_formatter: rx.Var | None = None
@@ -643,7 +645,7 @@ class AgGrid(rx.Component):
         if "tree_data" in props and props["tree_data"] is True:
             # Convert to rx.Var to ensure it's serialized as a component prop
             props["tree_data"] = rx.Var.create(True)
-        
+
         if "get_data_path" in props and props["get_data_path"] is not None:
             # Ensure the callback is properly wrapped
             get_data_path_val = props["get_data_path"]

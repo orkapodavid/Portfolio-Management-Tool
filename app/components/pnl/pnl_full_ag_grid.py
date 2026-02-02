@@ -7,6 +7,7 @@ AG-Grid based implementation for PnL full table, replacing legacy rx.el.table.
 import reflex as rx
 from reflex_ag_grid import ag_grid, AGFilters
 from app.states.pnl.pnl_state import PnLState
+from app.components.shared.ag_grid_config import create_standard_grid
 
 
 # =============================================================================
@@ -109,24 +110,48 @@ def _get_column_defs() -> list:
 # MAIN COMPONENT
 # =============================================================================
 
+# Storage key for column state persistence
+_STORAGE_KEY = "pnl_full_column_state"
+
 
 def pnl_full_ag_grid() -> rx.Component:
     """
     PnL Full AG-Grid component.
 
-    Displays full PnL data with color-coded values.
+    Displays full PnL data with Tier 1 + Tier 2 enhancements:
+    - Excel export button
+    - Column state persistence (auto-save + restore/reset)
+    - Status bar with row counts and aggregation
+    - Range selection
+    - Floating filters
+    - Cell flash for real-time updates
     """
-    return ag_grid(
-        id="pnl_full_grid",
-        row_data=PnLState.filtered_pnl_full,
-        column_defs=_get_column_defs(),
-        row_id_key="id",
-        theme="quartz",
-        default_col_def={
-            "sortable": True,
-            "resizable": True,
-            "filter": True,
-        },
-        height="100%",
+    from app.components.shared.ag_grid_config import (
+        export_button,
+        column_state_buttons,
+    )
+
+    return rx.vstack(
+        # Toolbar
+        rx.hstack(
+            export_button(),
+            column_state_buttons(
+                _STORAGE_KEY, show_save=True
+            ),  # Manual save since auto-save not supported
+            justify="end",
+            width="100%",
+            padding_bottom="2",
+            gap="4",
+        ),
+        # Grid
+        create_standard_grid(
+            grid_id="pnl_full_grid",
+            row_data=PnLState.filtered_pnl_full,
+            column_defs=_get_column_defs(),
+            enable_cell_flash=True,  # Tier 2: Real-time grid
+            enable_row_numbers=True,  # Tier 2: Row numbering
+        ),
         width="100%",
+        height="100%",
+        spacing="0",
     )
