@@ -18,11 +18,15 @@ side_bar=True  # Shows filter panel
 
 ## API Methods
 ```python
-# Show the filter builder
-rx.call_script("refs['ref_grid_id']?.current?.api?.showAdvancedFilterBuilder()")
+# Helper to find Grid API
+GET_API_JS = """(function() {
+    const wrapper = document.querySelector('.ag-root-wrapper');
+    // ... logic to find api from __reactFiber ...
+    return fiber?.stateNode?.api;
+})()"""
 
-# Clear filters
-rx.call_script("refs['ref_grid_id']?.current?.api?.setAdvancedFilterModel(null)")
+# Use API in event handlers
+rx.call_script(f"const api = {GET_API_JS}; api?.showAdvancedFilterBuilder()")
 ```
 
 ## Demo Code

@@ -108,6 +108,18 @@ uv run reflex run
 # Open http://localhost:3000
 ```
 
+> [!TIP]
+> **Troubleshooting startup crashes**
+>
+> If the app fails to start with a `SIGSEGV` or "Address boundary error", it is likely due to a corrupted environment or binary incompatibility.
+>
+> Fix it by performing a clean reinstall of dependencies:
+> ```bash
+> cd reflex_ag_grid/examples/demo_app
+> uv sync --reinstall
+> uv run reflex run
+> ```
+
 ## Column Definitions
 
 Use `ag_grid.column_def()` helper for column configuration:

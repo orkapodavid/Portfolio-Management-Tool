@@ -85,5 +85,63 @@ Expected behavior:
 | Phase | Description | Status |
 |-------|-------------|--------|
 | 4.1 | Overlay Props | ✅ Complete |
+| 4.2 | Tree Data Props | ✅ Complete |
+| 4.3 | Status Bar Props | ✅ Complete |
+
+---
+
+## Requirement 2: Tree Data Props Fix
+
+**Problem:** Tree data on `/17-tree-data` rendered as flat list instead of hierarchy.
+
+**Root Cause:** The `tree_data` and `get_data_path` props were not recognized, causing Reflex to serialize them into `css:{}` instead of top-level props.
+
+### Solution
+1. Props were already defined in `ag_grid.py`:
+```python
+tree_data: rx.Var[bool] = rx.Var.create(False)
+get_data_path: rx.Var | None = None
+```
+
+2. **Critical Step:** Must reinstall package in demo_app after modifying component attributes:
+```bash
+cd reflex_ag_grid/examples/demo_app
+uv sync --reinstall-package reflex-ag-grid
+```
+
+### Key Learning
+When modifying `rx.Component` class attributes in an editable package, the consuming project's venv may have a stale version. Always run `uv sync --reinstall-package` after changes.
+
+### Verification
+Check props are recognized:
+```python
+from reflex_ag_grid.components.ag_grid import AgGrid
+print('tree_data in props:', 'tree_data' in AgGrid.get_props())  # Should be True
+```
+
+---
+
+## Requirement 3: Status Bar Props Fix
+
+**Problem:** Status bar not visible on `/19-status-bar` page.
+
+**Root Cause:** The `status_bar` prop was NOT defined in `ag_grid.py`.
+
+### Solution
+Added to `ag_grid.py`:
+```python
+# Status Bar (Enterprise)
+status_bar: rx.Var[dict[str, Any]] | None = None
+```
+
+### Built-in Status Panel Components
+
+| Panel | Description |
+|-------|-------------|
+| `agTotalRowCountComponent` | Total row count |
+| `agFilteredRowCountComponent` | Filtered row count |
+| `agSelectedRowCountComponent` | Selected row count |
+| `agAggregationComponent` | Sum/Avg/Min/Max of selected cells |
+| `agTotalAndFilteredRowCountComponent` | Combined total and filtered count |
 
 **Estimated Time:** 1-2 hours

@@ -14,6 +14,21 @@ from ..columns import get_basic_columns
 from ..components import nav_bar
 
 
+# JavaScript to access grid API
+GET_API_JS = """(function() {
+    const wrapper = document.querySelector('.ag-root-wrapper');
+    if (!wrapper) return null;
+    const key = Object.keys(wrapper).find(k => k.startsWith('__reactFiber'));
+    if (!key) return null;
+    let fiber = wrapper[key];
+    while (fiber) {
+        if (fiber.stateNode && fiber.stateNode.api) return fiber.stateNode.api;
+        fiber = fiber.return;
+    }
+    return null;
+})()"""
+
+
 def advanced_filter_page() -> rx.Component:
     """Advanced Filter demo page.
 
@@ -35,14 +50,18 @@ def advanced_filter_page() -> rx.Component:
             rx.button(
                 "🔍 Show Filter Builder",
                 on_click=rx.call_script(
-                    "refs['ref_advanced_filter_grid']?.current?.api?.showAdvancedFilterBuilder()"
+                    f"const api = {GET_API_JS}; "
+                    "if (api) { api.showAdvancedFilterBuilder(); } "
+                    "else { alert('Grid API not ready'); }"
                 ),
                 color_scheme="blue",
             ),
             rx.button(
                 "🗑️ Clear Filters",
                 on_click=rx.call_script(
-                    "refs['ref_advanced_filter_grid']?.current?.api?.setAdvancedFilterModel(null)"
+                    f"const api = {GET_API_JS}; "
+                    "if (api) { api.setAdvancedFilterModel(null); } "
+                    "else { alert('Grid API not ready'); }"
                 ),
                 color_scheme="gray",
             ),

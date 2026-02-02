@@ -479,6 +479,16 @@ class AgGrid(rx.Component):
     # -------------------------------------------------------------------------
     side_bar: rx.Var[str | dict[str, Any] | bool | list[str]] = rx.Var.create("")
 
+    # -------------------------------------------------------------------------
+    # Status Bar (Enterprise)
+    # Displays row counts, aggregations, and selection info at grid bottom
+    # -------------------------------------------------------------------------
+    # status_bar config: {"statusPanels": [...]}
+    # Built-in panels: agTotalRowCountComponent, agFilteredRowCountComponent,
+    #                  agSelectedRowCountComponent, agAggregationComponent,
+    #                  agTotalAndFilteredRowCountComponent
+    status_bar: rx.Var[dict[str, Any]] | None = None
+
     # NOTE: validation_schema removed - not a valid AG Grid option
 
     # -------------------------------------------------------------------------
