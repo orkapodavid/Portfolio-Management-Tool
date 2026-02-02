@@ -166,6 +166,7 @@ class DemoState(rx.State):
             "qty": 0,
             "change": 0.0,
             "active": True,
+            "status": "Active",
         }
         self.data = self.data + [new_row]
         self.last_event = f"➕ Added new row: {new_id}"

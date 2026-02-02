@@ -71,6 +71,7 @@ SAMPLE_DATA = [
         "qty": 100,
         "change": 2.5,
         "active": True,
+        "status": "Active",
     },
     {
         "id": "1",
@@ -81,6 +82,7 @@ SAMPLE_DATA = [
         "qty": 50,
         "change": -1.2,
         "active": True,
+        "status": "Pending",
     },
     {
         "id": "2",
@@ -91,6 +93,7 @@ SAMPLE_DATA = [
         "qty": 75,
         "change": 0.8,
         "active": True,
+        "status": "Active",
     },
     {
         "id": "3",
@@ -101,6 +104,7 @@ SAMPLE_DATA = [
         "qty": 200,
         "change": 1.5,
         "active": False,
+        "status": "Inactive",
     },
     {
         "id": "4",
@@ -111,6 +115,7 @@ SAMPLE_DATA = [
         "qty": 30,
         "change": -0.5,
         "active": True,
+        "status": "Active",
     },
     {
         "id": "5",
@@ -121,6 +126,7 @@ SAMPLE_DATA = [
         "qty": 120,
         "change": 0.3,
         "active": True,
+        "status": "Pending",
     },
     {
         "id": "6",
@@ -131,6 +137,7 @@ SAMPLE_DATA = [
         "qty": 500,
         "change": -2.1,
         "active": False,
+        "status": "Inactive",
     },
     {
         "id": "7",
@@ -141,6 +148,7 @@ SAMPLE_DATA = [
         "qty": 150,
         "change": 3.2,
         "active": True,
+        "status": "Active",
     },
 ]
 
