@@ -29,6 +29,7 @@ from .req22_advanced_filter import advanced_filter_page
 from .req23_set_filter import set_filter_page
 from .req24_multi_filter import multi_filter_page
 from .req25_row_numbers import row_numbers_page
+from .req26_quick_filter import quick_filter_page
 from .gallery import gallery_page
 
 __all__ = [
@@ -58,4 +59,5 @@ __all__ = [
     "set_filter_page",
     "multi_filter_page",
     "row_numbers_page",
+    "quick_filter_page",
 ]

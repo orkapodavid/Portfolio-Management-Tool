@@ -32,6 +32,7 @@ from .pages import (
     set_filter_page,
     multi_filter_page,
     row_numbers_page,
+    quick_filter_page,
     gallery_page,
 )
 
@@ -91,3 +92,4 @@ app.add_page(
 app.add_page(set_filter_page, route="/23-set-filter", title="23 - Set Filter")
 app.add_page(multi_filter_page, route="/24-multi-filter", title="24 - Multi Filter")
 app.add_page(row_numbers_page, route="/25-row-numbers", title="25 - Row Numbers")
+app.add_page(quick_filter_page, route="/26-quick-filter", title="26 - Quick Filter")

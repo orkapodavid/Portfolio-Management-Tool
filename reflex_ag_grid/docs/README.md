@@ -33,6 +33,7 @@ This directory contains documentation for each of the 25 AG Grid demo pages in t
 | 23 | Set Filter | [23_set_filter.md](23_set_filter.md) | `/23-set-filter` |
 | 24 | Multi Filter | [24_multi_filter.md](24_multi_filter.md) | `/24-multi-filter` |
 | 25 | Row Numbers | [25_row_numbers.md](25_row_numbers.md) | `/25-row-numbers` |
+| 26 | Quick Filter | [26_quick_filter.md](26_quick_filter.md) | `/26-quick-filter` |
 
 ## Running the Demo
 

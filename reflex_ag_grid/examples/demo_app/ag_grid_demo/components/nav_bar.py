@@ -43,6 +43,7 @@ def nav_bar() -> rx.Component:
                     rx.link("23-Set", href="/23-set-filter", size="1"),
                     rx.link("24-Multi", href="/24-multi-filter", size="1"),
                     rx.link("25-RowNum", href="/25-row-numbers", size="1"),
+                    rx.link("26-Search", href="/26-quick-filter", size="1"),
                     spacing="3",
                 ),
                 type="scroll",

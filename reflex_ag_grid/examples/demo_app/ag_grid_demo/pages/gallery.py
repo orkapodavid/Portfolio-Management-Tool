@@ -240,6 +240,13 @@ def gallery_page() -> rx.Component:
                 "hash",
                 "slate",
             ),
+            feature_card(
+                "26 - Quick Filter",
+                "Search text to filter all columns.",
+                "/26-quick-filter",
+                "search",
+                "blue",
+            ),
             columns="3",  # 3 columns layout
             spacing="4",
             width="100%",

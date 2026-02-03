@@ -100,6 +100,7 @@ See the `docs/` directory for detailed documentation on each feature:
 | [23_set_filter.md](docs/23_set_filter.md) | Multi-select checkbox filter | `/23-set-filter` |
 | [24_multi_filter.md](docs/24_multi_filter.md) | Combined filter types | `/24-multi-filter` |
 | [25_row_numbers.md](docs/25_row_numbers.md) | Automatic row numbers | `/25-row-numbers` |
+| [26_quick_filter.md](docs/26_quick_filter.md) | Quick Filter text search | `/26-quick-filter` |
 
 
 ## Demo App

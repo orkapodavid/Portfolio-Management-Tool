@@ -1,31 +1,35 @@
-# AG Grid Reflex Wrapper - Phase 4 Implementation Plan
+# AG Grid Reflex Wrapper - Phase 4 Documentation
 
-> **For AI Assistants:** Follow task checklists in order. Test demo pages in browser after changes. Use `uv run reflex run` from `reflex_ag_grid/examples/demo_app`.
-
-**Goal:** Fix overlay props and implement additional improvements to the AG Grid wrapper.
+> **Reference documentation for completed Phase 4 improvements to the AG Grid wrapper.**
 
 **Tech Stack:** Reflex Python, AG Grid Enterprise 35.0.1, React 18
 
 ---
 
-## Implementation Status
+## Implementation Summary
 
-| # | Requirement | Status | Notes |
-|---|-------------|--------|-------|
-| 1 | Overlay Props | ✅ Complete | Fixed `loading`, `overlay_loading_template`, `overlay_no_rows_template` |
+| # | Feature | Status | Demo Route |
+|---|---------|--------|------------|
+| 1 | Overlay Props | ✅ Complete | `/20-overlays` |
+| 2 | Tree Data Props | ✅ Complete | `/17-tree-data` |
+| 3 | Status Bar Props | ✅ Complete | `/19-status-bar` |
+| 4 | Quick Filter Search | ✅ Complete | `/26-quick-filter` |
 
 ---
 
-## Requirement 1: Fix Overlay Props
+## Feature 1: Overlay Props
 
-**Problem:** Overlays don't work on `/20-overlays` demo page.
+**Demo:** [/20-overlays](http://localhost:3000/20-overlays)
 
-**Root Cause:** The `ag_grid.py` component does NOT define the following props:
-- `loading: bool` - Shows/hides loading overlay
-- `overlay_loading_template: str` - Custom loading message HTML
-- `overlay_no_rows_template: str` - Custom no-rows message HTML
+### Props Added to `ag_grid.py`
 
-The demo page passes these props but they are silently ignored.
+```python
+# Overlays
+loading: rx.Var[bool] = False
+overlay_loading_template: rx.Var[str] | None = None
+overlay_no_rows_template: rx.Var[str] | None = None
+suppress_no_rows_overlay: rx.Var[bool] = False
+```
 
 ### AG Grid v35 Overlay API
 
@@ -35,85 +39,42 @@ The demo page passes these props but they are silently ignored.
 | `overlayLoadingTemplate` | `string` | HTML template for loading overlay |
 | `overlayNoRowsTemplate` | `string` | HTML template for no-rows overlay |
 
-### Files to Modify
-
-#### [MODIFY] [ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/reflex_ag_grid/components/ag_grid.py)
-
-Add new props after the "Suppress Events" section (~line 510):
+### Usage Example
 
 ```python
-# -------------------------------------------------------------------------
-# Overlays
-# -------------------------------------------------------------------------
-loading: rx.Var[bool] = False
-overlay_loading_template: rx.Var[str] | None = None
-overlay_no_rows_template: rx.Var[str] | None = None
-suppress_no_rows_overlay: rx.Var[bool] = False
+ag_grid(
+    row_data=State.data,
+    column_defs=columns,
+    loading=State.is_loading,
+    overlay_loading_template="<span>Loading data...</span>",
+    overlay_no_rows_template="<span>No rows to display</span>",
+)
 ```
-
-**No changes needed in `create()` method** - these props are passed through normally.
-
-### Verification Plan
-
-#### Automated Verification (Browser Subagent)
-
-1. Navigate to `http://localhost:3000/20-overlays`
-2. Click "Load Data" button
-3. Verify loading overlay with "Loading data..." text appears during 2-second delay
-4. Verify 3 rows appear after loading
-5. Click "Clear" button
-6. Verify no-rows overlay with custom message appears
-
-#### Manual Verification
-
-```bash
-cd reflex_ag_grid/examples/demo_app
-uv run reflex run
-# Open http://localhost:3000/20-overlays
-```
-
-Expected behavior:
-- Initial state: "No Rows To Show" overlay visible
-- Load Data clicked: "Loading data..." overlay visible for 2s
-- Data loaded: 3 rows displayed, no overlay
-- Clear clicked: Custom "No rows to display..." message
 
 ---
 
-## Summary
+## Feature 2: Tree Data Props
 
-| Phase | Description | Status |
-|-------|-------------|--------|
-| 4.1 | Overlay Props | ✅ Complete |
-| 4.2 | Tree Data Props | ✅ Complete |
-| 4.3 | Status Bar Props | ✅ Complete |
+**Demo:** [/17-tree-data](http://localhost:3000/17-tree-data)
 
----
+### Props in `ag_grid.py`
 
-## Requirement 2: Tree Data Props Fix
-
-**Problem:** Tree data on `/17-tree-data` rendered as flat list instead of hierarchy.
-
-**Root Cause:** The `tree_data` and `get_data_path` props were not recognized, causing Reflex to serialize them into `css:{}` instead of top-level props.
-
-### Solution
-1. Props were already defined in `ag_grid.py`:
 ```python
 tree_data: rx.Var[bool] = rx.Var.create(False)
 get_data_path: rx.Var | None = None
 ```
 
-2. **Critical Step:** Must reinstall package in demo_app after modifying component attributes:
-```bash
-cd reflex_ag_grid/examples/demo_app
-uv sync --reinstall-package reflex-ag-grid
-```
-
 ### Key Learning
-When modifying `rx.Component` class attributes in an editable package, the consuming project's venv may have a stale version. Always run `uv sync --reinstall-package` after changes.
+
+> [!IMPORTANT]
+> When modifying `rx.Component` class attributes in an editable package, the consuming project's venv may have a stale version. Always run:
+> ```bash
+> cd reflex_ag_grid/examples/demo_app
+> uv sync --reinstall-package reflex-ag-grid
+> ```
 
 ### Verification
-Check props are recognized:
+
 ```python
 from reflex_ag_grid.components.ag_grid import AgGrid
 print('tree_data in props:', 'tree_data' in AgGrid.get_props())  # Should be True
@@ -121,14 +82,12 @@ print('tree_data in props:', 'tree_data' in AgGrid.get_props())  # Should be Tru
 
 ---
 
-## Requirement 3: Status Bar Props Fix
+## Feature 3: Status Bar Props
 
-**Problem:** Status bar not visible on `/19-status-bar` page.
+**Demo:** [/19-status-bar](http://localhost:3000/19-status-bar)
 
-**Root Cause:** The `status_bar` prop was NOT defined in `ag_grid.py`.
+### Props Added to `ag_grid.py`
 
-### Solution
-Added to `ag_grid.py`:
 ```python
 # Status Bar (Enterprise)
 status_bar: rx.Var[dict[str, Any]] | None = None
@@ -144,4 +103,106 @@ status_bar: rx.Var[dict[str, Any]] | None = None
 | `agAggregationComponent` | Sum/Avg/Min/Max of selected cells |
 | `agTotalAndFilteredRowCountComponent` | Combined total and filtered count |
 
-**Estimated Time:** 1-2 hours
+### Usage Example
+
+```python
+ag_grid(
+    row_data=State.data,
+    column_defs=columns,
+    status_bar={
+        "statusPanels": [
+            {"statusPanel": "agTotalRowCountComponent", "align": "left"},
+            {"statusPanel": "agSelectedRowCountComponent", "align": "center"},
+            {"statusPanel": "agAggregationComponent", "align": "right"},
+        ]
+    },
+)
+```
+
+---
+
+## Feature 4: Quick Filter Search
+
+**Demo:** [/26-quick-filter](http://localhost:3000/26-quick-filter)
+
+### Props in `ag_grid.py`
+
+```python
+quick_filter_text: rx.Var[str] = rx.Var.create("")
+```
+
+### Usage Example
+
+```python
+class SearchState(rx.State):
+    search_text: str = ""
+
+    def set_search(self, value: str):
+        self.search_text = value
+
+
+def page():
+    return rx.vstack(
+        rx.input(
+            placeholder="Search...",
+            value=SearchState.search_text,
+            on_change=SearchState.set_search,
+        ),
+        ag_grid(
+            row_data=State.data,
+            column_defs=columns,
+            quick_filter_text=SearchState.search_text,
+        ),
+    )
+```
+
+### Files Created/Modified
+
+| File | Change |
+|------|--------|
+| `pages/req26_quick_filter.py` | **[NEW]** Demo page |
+| `pages/__init__.py` | Added import/export |
+| `pages/gallery.py` | Added feature card |
+| `components/nav_bar.py` | Added navigation link |
+| `ag_grid_demo.py` | Added route `/26-quick-filter` |
+| `docs/26_quick_filter.md` | **[NEW]** Documentation |
+| `docs/README.md` | Added to index |
+| `reflex_ag_grid/README.md` | Added to docs table |
+
+---
+
+## Key Learnings
+
+### 1. Package Reinstall After Component Changes
+
+When modifying `rx.Component` class attributes in an editable package, the consuming project may have a stale version. Always reinstall:
+
+```bash
+uv sync --reinstall-package reflex-ag-grid
+```
+
+### 2. Complete Checklist for Adding Demo Pages
+
+> [!IMPORTANT]
+> **When adding a new demo page, update ALL of these files:**
+>
+> 1. `pages/reqXX_feature.py` - New page file
+> 2. `pages/__init__.py` - Import and export
+> 3. `pages/gallery.py` - Feature card for home page ⚠️ **Easy to miss!**
+> 4. `components/nav_bar.py` - Navigation link
+> 5. `ag_grid_demo.py` - Route registration
+> 6. `docs/XX_feature.md` - Documentation file
+> 7. `docs/README.md` - Documentation index
+> 8. `reflex_ag_grid/README.md` - Main README table
+
+The `gallery.py` is the **home page** of the demo app. Missing it means the new page won't appear on the landing page.
+
+---
+
+## Running the Demo App
+
+```bash
+cd reflex_ag_grid/examples/demo_app
+uv run reflex run
+# Open http://localhost:3000
+```
