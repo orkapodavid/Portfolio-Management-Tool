@@ -1,66 +1,128 @@
-# 15 - Column State
+# Requirement 15: Save Table Format (Full Grid State)
 
-**Requirement**: Save and restore table layout with AUTO-SAVE  
-**AG Grid Feature**: Column State API + localStorage + Event Handlers  
-**Demo Route**: `/15-column-state`
+Save and restore complete grid state including column widths, order, visibility, filters, and sorting.
 
-## Overview
+## Implementation
 
-Column state persistence allows users to customize column order, widths, visibility, and sorting. Changes are AUTO-SAVED using AG Grid event handlers.
+Uses AG Grid's `getState()`/`setState()` API via client-side JavaScript + localStorage.
 
-## AG Grid Features Used
+### JavaScript Setup
 
-| Feature | Description |
-|---------|-------------|
-| `api.getColumnState()` | Get current column state |
-| `api.applyColumnState()` | Apply saved state |
-| `on_column_resized` | Auto-save on resize |
-| `on_column_moved` | Auto-save on reorder |
-| `on_sort_changed` | Auto-save on sort |
-| `localStorage` | Browser storage for persistence |
-
-## Auto-Save Implementation
-
-```python
-# Auto-save script (silent save to localStorage)
-AUTO_SAVE_JS = """(function() {
-    const api = getGridApi();  // Helper to get AG Grid API
-    if (api) {
-        const state = api.getColumnState();
-        localStorage.setItem('columnState', JSON.stringify(state));
-        console.log('Auto-saved column state');
+```javascript
+// Helper to get AG Grid API from React Fiber
+function getGridApi() {
+    const wrapper = document.querySelector('.ag-root-wrapper');
+    if (!wrapper) return null;
+    
+    const key = Object.keys(wrapper).find(k => k.startsWith('__reactFiber'));
+    if (!key) return null;
+    
+    let fiber = wrapper[key];
+    let maxDepth = 50;
+    while (fiber && maxDepth-- > 0) {
+        if (fiber.stateNode?.api?.getState) return fiber.stateNode.api;
+        if (fiber.memoizedProps?.gridRef?.current?.api?.getState) {
+            return fiber.memoizedProps.gridRef.current.api;
+        }
+        fiber = fiber.return;
     }
-})()"""
+    return null;
+}
 
-ag_grid(
-    id="column_state_grid",
-    row_data=State.data,
-    column_defs=columns,
-    # Auto-save on any column change
-    on_column_resized=rx.call_script(AUTO_SAVE_JS),
-    on_column_moved=rx.call_script(AUTO_SAVE_JS),
-    on_sort_changed=rx.call_script(AUTO_SAVE_JS),
-    on_column_visible=rx.call_script(AUTO_SAVE_JS),
-    on_column_pinned=rx.call_script(AUTO_SAVE_JS),
-)
+// Save complete grid state
+function saveGridState() {
+    const api = getGridApi();
+    if (api) {
+        const state = api.getState();
+        localStorage.setItem('gridState', JSON.stringify(state));
+    }
+}
+
+// Restore complete grid state
+function restoreGridState() {
+    const api = getGridApi();
+    const stateStr = localStorage.getItem('gridState');
+    if (api && stateStr) {
+        const state = JSON.parse(stateStr);
+        // Remove flex property so saved widths apply
+        if (state.column?.columns) {
+            state.column.columns = state.column.columns.map(col => {
+                const newCol = {...col};
+                delete newCol.flex;
+                return newCol;
+            });
+        }
+        api.setState(state);
+    }
+}
+
+// Reset to defaults
+function resetGridState() {
+    const api = getGridApi();
+    if (api) {
+        api.resetColumnState();
+        api.setFilterModel(null);
+        localStorage.removeItem('gridState');
+    }
+}
+```
+
+### Auto-Restore on Page Load
+
+> [!TIP]
+> In Reflex SPAs, use `setInterval` instead of `DOMContentLoaded`:
+
+```javascript
+(function() {
+    let attempts = 0;
+    const tryRestore = setInterval(() => {
+        attempts++;
+        const api = getGridApi();
+        const stateStr = localStorage.getItem('gridState');
+        
+        if (api && stateStr) {
+            clearInterval(tryRestore);
+            setTimeout(() => {
+                const state = JSON.parse(stateStr);
+                if (state.column?.columns) {
+                    state.column.columns = state.column.columns.map(col => {
+                        const newCol = {...col};
+                        delete newCol.flex;
+                        return newCol;
+                    });
+                }
+                api.setState(state);
+            }, 100);
+        } else if (attempts >= 30) clearInterval(tryRestore);
+    }, 500);
+})();
 ```
 
 ## What Gets Saved
 
-- Column order
-- Column widths
-- Column visibility (hidden/shown)
-- Sort state
-- Pinned columns
+| Category | State Saved |
+|----------|-------------|
+| **Columns** | Width, order, visibility, pinning |
+| **Filters** | All column filter configurations |
+| **Sorting** | Sort column and direction |
 
-## How to Implement
+## Key Points
 
-1. Create auto-save JavaScript that gets column state and saves to localStorage
-2. Attach to column change events: resized, moved, sorted, visible, pinned
-3. On page load, restore state via Restore button
-4. Add Reset button to clear saved state
+> [!IMPORTANT]
+> **Remove `flex` property** when restoring - otherwise flex columns override saved widths.
 
-## Related Documentation
+- **Single API call**: `getState()` captures everything, `setState()` restores everything
+- **Auto-restore**: Uses polling to wait for grid ready in SPAs
+- **localStorage**: Persists across page refreshes and browser sessions
 
-- [AG Grid Column State](https://www.ag-grid.com/javascript-data-grid/column-state/)
+## Usage in Reflex
 
+```python
+rx.button("Save", on_click=rx.call_script("saveGridState()"))
+rx.button("Restore", on_click=rx.call_script("restoreGridState()"))
+rx.button("Reset", on_click=rx.call_script("resetGridState()"))
+```
+
+## Demo
+
+See `examples/demo_app/ag_grid_demo/pages/req15_column_state.py`

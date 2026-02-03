@@ -564,6 +564,13 @@ class AgGrid(rx.Component):
     on_cell_editing_started: rx.EventHandler[_on_cell_editing_spec]
     on_cell_editing_stopped: rx.EventHandler[_on_cell_editing_spec]
 
+    # Column state events (for column state persistence)
+    on_column_resized: rx.EventHandler[lambda e0: [e0]]
+    on_column_moved: rx.EventHandler[lambda e0: [e0]]
+    on_column_visible: rx.EventHandler[lambda e0: [e0]]
+    on_column_pinned: rx.EventHandler[lambda e0: [e0]]
+    on_sort_changed: rx.EventHandler[lambda e0: [e0]]
+
     # -------------------------------------------------------------------------
     # Component Creation
     # -------------------------------------------------------------------------

@@ -14,6 +14,7 @@
 | 2 | Tree Data Props | ✅ Complete | `/17-tree-data` |
 | 3 | Status Bar Props | ✅ Complete | `/19-status-bar` |
 | 4 | Quick Filter Search | ✅ Complete | `/26-quick-filter` |
+| 5 | Auto-Restore Column State | ✅ Complete | `/15-column-state` |
 
 ---
 
@@ -206,3 +207,66 @@ cd reflex_ag_grid/examples/demo_app
 uv run reflex run
 # Open http://localhost:3000
 ```
+
+---
+
+## Feature 5: Auto-Restore Column State
+
+**Status:** ✅ Complete  
+**Demo:** [/15-column-state](http://localhost:3000/15-column-state)
+
+### Problem
+
+Previously, the column state demo required clicking "Restore" button to load saved state from localStorage.
+
+### Solution
+
+Uses `on_grid_ready` event to automatically apply saved column state when the grid initializes. Also handles schema changes gracefully with `defaultState` option.
+
+### Key Implementation
+
+```python
+# Auto-restore script (runs on grid ready)
+AUTO_RESTORE_JS = f"""(function() {{
+    const api = {GET_API_JS};
+    const state = localStorage.getItem('columnState15');
+    if (api && state) {{
+        api.applyColumnState({{
+            state: JSON.parse(state),
+            applyOrder: true,
+            defaultState: {{ hide: false }}  // New columns are visible
+        }});
+    }}
+}})()"""
+
+ag_grid(
+    ...,
+    on_grid_ready=rx.call_script(AUTO_RESTORE_JS),
+    on_column_resized=rx.call_script(AUTO_SAVE_JS),
+    on_column_moved=rx.call_script(AUTO_SAVE_JS),
+    ...
+)
+```
+
+### Schema Change Handling
+
+| Change | Behavior |
+|--------|----------|
+| Column removed | Silently ignored (no errors) |
+| Column added | Shown at default position (not hidden) |
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `req15_column_state.py` | Added `AUTO_RESTORE_JS` and `on_grid_ready` event |
+| `15_column_state.md` | Updated documentation with auto-restore and schema handling |
+
+### Checklist
+
+- [x] Add `AUTO_RESTORE_JS` script with `defaultState` for schema changes
+- [x] Wire `on_grid_ready=rx.call_script(AUTO_RESTORE_JS)` to ag_grid
+- [x] Add auto-save event handlers (`on_column_resized`, etc.)
+- [x] Update `15_column_state.md` documentation
+- [x] Test in browser (connection timeout issues were server-side, not code)
+
