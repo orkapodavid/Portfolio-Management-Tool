@@ -120,6 +120,8 @@ def undertakings_ag_grid() -> rx.Component:
             search_value=UndertakingsGridState.search_text,
             on_search_change=UndertakingsGridState.set_search,
             on_search_clear=UndertakingsGridState.clear_search,
+            grid_id="undertakings_grid",
+            show_compact_toggle=True,
         ),
         # Grid
         create_standard_grid(
@@ -136,5 +138,3 @@ def undertakings_ag_grid() -> rx.Component:
         height="100%",
         spacing="0",
     )
-
-

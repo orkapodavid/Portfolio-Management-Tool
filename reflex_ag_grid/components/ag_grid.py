@@ -516,6 +516,12 @@ class AgGrid(rx.Component):
     row_numbers: rx.Var[bool] = False
 
     # -------------------------------------------------------------------------
+    # Row/Header Heights (for compact/dense mode)
+    # -------------------------------------------------------------------------
+    row_height: rx.Var[int] | None = None  # Height in pixels (default: ~42px)
+    header_height: rx.Var[int] | None = None  # Header height in pixels
+
+    # -------------------------------------------------------------------------
     # Grand Total Pinning (v33.3+)
     # -------------------------------------------------------------------------
     grand_total_row: rx.Var[str] = ""

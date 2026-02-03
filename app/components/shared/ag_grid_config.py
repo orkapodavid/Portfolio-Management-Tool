@@ -59,6 +59,10 @@ NO_ROWS_TEMPLATE = (
     '<span style="padding: 10px; color: #6b7280;">No rows to display</span>'
 )
 
+# Compact mode configuration - reduces row height for dense data display
+COMPACT_ROW_HEIGHT = 28  # Default is ~42px, compact is 28px
+COMPACT_HEADER_HEIGHT = 32  # Slightly reduced header
+
 
 # =============================================================================
 # FACTORY FUNCTION
@@ -80,6 +84,7 @@ def create_standard_grid(
     enable_cell_flash: bool = False,
     enable_row_numbers: bool = False,
     enable_multi_select: bool = False,
+    enable_compact_mode: bool = False,
     # Layout
     height: str = "100%",
     width: str = "100%",
@@ -162,6 +167,11 @@ def create_standard_grid(
     if enable_multi_select:
         grid_props["row_selection"] = "multiple"
 
+    # Tier 2: Compact mode (dense rows)
+    if enable_compact_mode:
+        grid_props["row_height"] = COMPACT_ROW_HEIGHT
+        grid_props["header_height"] = COMPACT_HEADER_HEIGHT
+
     # Merge any additional kwargs
     grid_props.update(kwargs)
 
@@ -222,10 +232,12 @@ def get_default_export_params(page_name: str) -> rx.Var:
             default_excel_export_params=get_default_export_params("pnl_full"),
         )
     """
-    return rx.Var.create({
-        "fileName": rx.Var(_get_filename_js(page_name)),
-        "shouldRowBeSkipped": _SHOULD_ROW_BE_SKIPPED_JS,
-    })
+    return rx.Var.create(
+        {
+            "fileName": rx.Var(_get_filename_js(page_name)),
+            "shouldRowBeSkipped": _SHOULD_ROW_BE_SKIPPED_JS,
+        }
+    )
 
 
 def get_default_csv_export_params(page_name: str) -> rx.Var:
@@ -251,10 +263,12 @@ def get_default_csv_export_params(page_name: str) -> rx.Var:
             default_csv_export_params=get_default_csv_export_params("pnl_full"),
         )
     """
-    return rx.Var.create({
-        "fileName": rx.Var(_get_filename_js(page_name)),
-        "shouldRowBeSkipped": _SHOULD_ROW_BE_SKIPPED_JS,
-    })
+    return rx.Var.create(
+        {
+            "fileName": rx.Var(_get_filename_js(page_name)),
+            "shouldRowBeSkipped": _SHOULD_ROW_BE_SKIPPED_JS,
+        }
+    )
 
 
 # =============================================================================
@@ -604,6 +618,8 @@ def grid_toolbar(
     show_restore: bool = True,
     show_reset: bool = True,
     button_size: str = "2",
+    grid_id: str | None = None,
+    show_compact_toggle: bool = False,
 ) -> rx.Component:
     """
     Create a complete grid toolbar with search, export, and layout controls.
@@ -612,6 +628,7 @@ def grid_toolbar(
     It groups buttons by function with visual dividers for better UX.
 
     Color scheme:
+    - Compact Toggle: Violet (view action)
     - Excel: Green (data export action)
     - Save Layout: Blue (layout action, matches Restore)
     - Restore: Blue (layout action)
@@ -628,6 +645,8 @@ def grid_toolbar(
         show_restore: Show Restore button
         show_reset: Show Reset button
         button_size: Radix button size
+        grid_id: Grid ID for API calls (required for compact toggle)
+        show_compact_toggle: Show compact mode toggle button
 
     Returns:
         Complete toolbar with search (left) and buttons (right)
@@ -708,8 +727,108 @@ def grid_toolbar(
             )
         )
 
+    # View group (violet) - compact mode toggle
+    view_buttons = []
+    if show_compact_toggle and grid_id:
+        # JavaScript to toggle compact mode dynamically via AG Grid API
+        # Uses React Fiber traversal to reliably access the grid API
+        toggle_compact_js = f"""(function() {{
+    // Find the AG Grid root wrapper
+    const wrapper = document.querySelector('.ag-root-wrapper');
+    if (!wrapper) {{
+        console.error('Grid not found');
+        return;
+    }}
+    
+    // Find React fiber with grid API
+    const key = Object.keys(wrapper).find(k => k.startsWith('__reactFiber'));
+    if (!key) {{
+        console.error('Grid API not accessible');
+        return;
+    }}
+    
+    let fiber = wrapper[key];
+    while (fiber) {{
+        if (fiber.stateNode && fiber.stateNode.api) {{
+            const api = fiber.stateNode.api;
+            
+            // Get current row height to determine mode
+            const firstRow = api.getDisplayedRowAtIndex(0);
+            const currentHeight = firstRow ? firstRow.rowHeight : 42;
+            const isCompact = currentHeight < 35;
+            
+            // Toggle between normal and compact
+            const newRowHeight = isCompact ? 42 : {COMPACT_ROW_HEIGHT};
+            const newHeaderHeight = isCompact ? 48 : {COMPACT_HEADER_HEIGHT};
+            
+            api.setGridOption('rowHeight', newRowHeight);
+            api.setGridOption('headerHeight', newHeaderHeight);
+            api.resetRowHeights();
+            
+            // Auto-size columns for tighter fit in compact mode
+            if (!isCompact) {{
+                // Switching TO compact: auto-size columns to content
+                api.autoSizeAllColumns();
+            }} else {{
+                // Switching to normal: size columns to fit grid width
+                api.sizeColumnsToFit();
+            }}
+            
+            // Update button visual state
+            const btn = document.getElementById('compact-toggle-{grid_id}');
+            if (btn) {{
+                const textNode = btn.querySelector('span:last-child') || btn.lastChild;
+                if (!isCompact) {{
+                    // Now compact - show active state
+                    btn.setAttribute('data-accent-color', 'green');
+                    btn.style.setProperty('--accent-9', 'var(--green-9)');
+                    btn.style.setProperty('--accent-a3', 'var(--green-a3)');
+                    if (textNode) textNode.textContent = 'Compact ✓';
+                }} else {{
+                    // Now normal - show default state
+                    btn.setAttribute('data-accent-color', 'violet');
+                    btn.style.removeProperty('--accent-9');
+                    btn.style.removeProperty('--accent-a3');
+                    if (textNode) textNode.textContent = 'Compact';
+                }}
+            }}
+            
+            console.log('Compact mode:', !isCompact, 'Row height:', newRowHeight);
+            return;
+        }}
+        fiber = fiber.return;
+    }}
+    console.error('Grid API not found in fiber tree');
+}})();"""
+        view_buttons.append(
+            rx.button(
+                rx.icon("rows-3", size=16),
+                "Compact",
+                id=f"compact-toggle-{grid_id}",
+                on_click=rx.call_script(toggle_compact_js),
+                variant="soft",
+                color_scheme="violet",
+                size=button_size,
+            )
+        )
+
     # Combine with visual divider between groups
     right_items = []
+
+    # View group (leftmost)
+    if view_buttons:
+        right_items.append(rx.hstack(*view_buttons, spacing="2"))
+
+    if view_buttons and (export_buttons or layout_buttons):
+        # Vertical divider
+        right_items.append(
+            rx.box(
+                width="1px",
+                height="24px",
+                background_color="var(--gray-6)",
+            )
+        )
+
     if export_buttons:
         right_items.append(rx.hstack(*export_buttons, spacing="2"))
 
@@ -735,7 +854,6 @@ def grid_toolbar(
         width="100%",
         padding_bottom="2",
     )
-
 
 
 # =============================================================================
@@ -943,6 +1061,6 @@ __all__ = [
     "ENHANCED_DEFAULT_COL_DEF",
     "STANDARD_DEFAULT_COL_DEF",
     "NO_ROWS_TEMPLATE",
+    "COMPACT_ROW_HEIGHT",
+    "COMPACT_HEADER_HEIGHT",
 ]
-
-

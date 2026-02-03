@@ -276,6 +276,20 @@ create_standard_grid(
 
 **Note**: This enables AG Grid v35's `multiRow` selection mode with checkboxes. Users can select multiple rows using checkboxes or Ctrl/Cmd+Click. The status bar will show "Selected: X" when rows are selected.
 
+### Compact Mode (Dense Rows)
+Enable compact mode to reduce row height and fit more data per screen:
+
+```python
+create_standard_grid(
+    grid_id="...",
+    row_data=...,
+    column_defs=...,
+    enable_compact_mode=True,  # Tier 2: Dense rows (28px vs default ~42px)
+)
+```
+
+**Note**: Compact mode sets `row_height=28` and `header_height=32` for a denser display. This is ideal for data-heavy dashboards where screen real estate matters.
+
 ### Categorical Columns (use Set Filter)
 For columns with discrete values (status, sector, type, account, currency):
 

@@ -163,6 +163,8 @@ def pnl_full_ag_grid() -> rx.Component:
             search_value=PnLFullGridState.search_text,
             on_search_change=PnLFullGridState.set_search,
             on_search_clear=PnLFullGridState.clear_search,
+            grid_id="pnl_full_grid",
+            show_compact_toggle=True,
         ),
         # Grid
         create_standard_grid(
@@ -180,5 +182,3 @@ def pnl_full_ag_grid() -> rx.Component:
         height="100%",
         spacing="0",
     )
-
-
