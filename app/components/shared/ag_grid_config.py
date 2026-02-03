@@ -19,6 +19,8 @@ Usage:
         )
 """
 
+from typing import Callable
+
 import reflex as rx
 from reflex_ag_grid import ag_grid
 
@@ -508,6 +510,89 @@ def get_column_state_handlers(storage_key: str) -> dict:
 
 
 # =============================================================================
+# QUICK FILTER INPUT
+# =============================================================================
+
+
+def quick_filter_input(
+    search_value: rx.Var[str],
+    on_change: Callable,
+    on_clear: Callable | None = None,
+    *,
+    placeholder: str = "Search all columns...",
+    width: str = "250px",
+) -> rx.Component:
+    """
+    Create a quick filter search input for AG Grid.
+
+    This component provides a styled search input that integrates with
+    AG Grid's quickFilterText prop for instant cross-column filtering.
+
+    Args:
+        search_value: State variable containing the search text (e.g., State.search_text)
+        on_change: Event handler for input changes (e.g., State.set_search)
+        on_clear: Optional event handler for clear button (e.g., State.clear_search)
+        placeholder: Input placeholder text
+        width: Input width CSS value
+
+    Returns:
+        Search input component with optional clear button
+
+    Usage:
+        class GridState(rx.State):
+            search_text: str = ""
+
+            def set_search(self, value: str):
+                self.search_text = value
+
+            def clear_search(self):
+                self.search_text = ""
+
+        # In component:
+        quick_filter_input(
+            search_value=GridState.search_text,
+            on_change=GridState.set_search,
+            on_clear=GridState.clear_search,
+        )
+
+        # Pass to grid:
+        create_standard_grid(
+            ...,
+            quick_filter_text=GridState.search_text,
+        )
+    """
+    input_component = rx.input(
+        placeholder=placeholder,
+        value=search_value,
+        on_change=on_change,
+        width=width,
+        size="2",
+    )
+
+    if on_clear is not None:
+        return rx.hstack(
+            rx.icon("search", size=16, color="gray"),
+            input_component,
+            rx.button(
+                rx.icon("x", size=14),
+                on_click=on_clear,
+                size="1",
+                variant="ghost",
+                color_scheme="gray",
+            ),
+            spacing="2",
+            align="center",
+        )
+
+    return rx.hstack(
+        rx.icon("search", size=16, color="gray"),
+        input_component,
+        spacing="2",
+        align="center",
+    )
+
+
+# =============================================================================
 # CONVENIENCE EXPORTS
 # =============================================================================
 
@@ -517,6 +602,9 @@ __all__ = [
     "export_buttons",
     "column_state_buttons",
     "get_column_state_handlers",
+    "quick_filter_input",
+    "get_default_export_params",
+    "get_default_csv_export_params",
     "STANDARD_STATUS_BAR",
     "ENHANCED_DEFAULT_COL_DEF",
     "STANDARD_DEFAULT_COL_DEF",

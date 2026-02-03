@@ -11,6 +11,25 @@ from app.components.shared.ag_grid_config import create_standard_grid
 
 
 # =============================================================================
+# QUICK FILTER STATE
+# =============================================================================
+
+
+class PnLFullGridState(rx.State):
+    """State for PnL Full grid quick filter."""
+
+    search_text: str = ""
+
+    def set_search(self, value: str):
+        """Update search text."""
+        self.search_text = value
+
+    def clear_search(self):
+        """Clear search text."""
+        self.search_text = ""
+
+
+# =============================================================================
 # CELL STYLES
 # =============================================================================
 
@@ -119,6 +138,7 @@ def pnl_full_ag_grid() -> rx.Component:
     PnL Full AG-Grid component.
 
     Displays full PnL data with Tier 1 + Tier 2 enhancements:
+    - Quick filter search across all columns
     - Excel export button
     - Column state persistence (auto-save + restore/reset)
     - Status bar with row counts and aggregation
@@ -129,6 +149,7 @@ def pnl_full_ag_grid() -> rx.Component:
     from app.components.shared.ag_grid_config import (
         export_button,
         column_state_buttons,
+        quick_filter_input,
         get_default_export_params,
         get_default_csv_export_params,
     )
@@ -136,14 +157,23 @@ def pnl_full_ag_grid() -> rx.Component:
     return rx.vstack(
         # Toolbar
         rx.hstack(
-            export_button(page_name="pnl_full"),
-            column_state_buttons(
-                _STORAGE_KEY, show_save=True
-            ),  # Manual save since auto-save not supported
-            justify="end",
+            # Left side: Quick filter
+            quick_filter_input(
+                search_value=PnLFullGridState.search_text,
+                on_change=PnLFullGridState.set_search,
+                on_clear=PnLFullGridState.clear_search,
+            ),
+            # Right side: Export and column buttons
+            rx.hstack(
+                export_button(page_name="pnl_full"),
+                column_state_buttons(
+                    _STORAGE_KEY, show_save=True
+                ),  # Manual save since auto-save not supported
+                gap="4",
+            ),
+            justify="between",
             width="100%",
             padding_bottom="2",
-            gap="4",
         ),
         # Grid
         create_standard_grid(
@@ -155,6 +185,7 @@ def pnl_full_ag_grid() -> rx.Component:
             enable_multi_select=True,  # Tier 2: Multi-row selection with checkboxes
             default_excel_export_params=get_default_export_params("pnl_full"),
             default_csv_export_params=get_default_csv_export_params("pnl_full"),
+            quick_filter_text=PnLFullGridState.search_text,  # Quick filter
         ),
         width="100%",
         height="100%",

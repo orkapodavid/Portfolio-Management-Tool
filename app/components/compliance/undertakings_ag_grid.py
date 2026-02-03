@@ -11,6 +11,25 @@ from app.components.shared.ag_grid_config import create_standard_grid
 
 
 # =============================================================================
+# QUICK FILTER STATE
+# =============================================================================
+
+
+class UndertakingsGridState(rx.State):
+    """State for Undertakings grid quick filter."""
+
+    search_text: str = ""
+
+    def set_search(self, value: str):
+        """Update search text."""
+        self.search_text = value
+
+    def clear_search(self):
+        """Clear search text."""
+        self.search_text = ""
+
+
+# =============================================================================
 # COLUMN DEFINITIONS
 # =============================================================================
 
@@ -76,6 +95,7 @@ def undertakings_ag_grid() -> rx.Component:
     Undertakings AG-Grid component.
 
     Displays undertakings compliance data with Tier 1 enhancements:
+    - Quick filter search across all columns
     - Excel export button
     - Column state persistence (auto-save + restore/reset)
     - Status bar with row counts
@@ -86,6 +106,7 @@ def undertakings_ag_grid() -> rx.Component:
     from app.components.shared.ag_grid_config import (
         export_button,
         column_state_buttons,
+        quick_filter_input,
         get_default_export_params,
         get_default_csv_export_params,
     )
@@ -93,14 +114,23 @@ def undertakings_ag_grid() -> rx.Component:
     return rx.vstack(
         # Toolbar
         rx.hstack(
-            export_button(page_name="undertakings"),
-            column_state_buttons(
-                _STORAGE_KEY, show_save=True
-            ),  # Manual save since auto-save not supported
-            justify="end",
+            # Left side: Quick filter
+            quick_filter_input(
+                search_value=UndertakingsGridState.search_text,
+                on_change=UndertakingsGridState.set_search,
+                on_clear=UndertakingsGridState.clear_search,
+            ),
+            # Right side: Export and column buttons
+            rx.hstack(
+                export_button(page_name="undertakings"),
+                column_state_buttons(
+                    _STORAGE_KEY, show_save=True
+                ),  # Manual save since auto-save not supported
+                gap="4",
+            ),
+            justify="between",
             width="100%",
             padding_bottom="2",
-            gap="4",
         ),
         # Grid
         create_standard_grid(
@@ -111,6 +141,7 @@ def undertakings_ag_grid() -> rx.Component:
             enable_multi_select=True,  # Tier 2: Multi-row selection with checkboxes
             default_excel_export_params=get_default_export_params("undertakings"),
             default_csv_export_params=get_default_csv_export_params("undertakings"),
+            quick_filter_text=UndertakingsGridState.search_text,  # Quick filter
         ),
         width="100%",
         height="100%",

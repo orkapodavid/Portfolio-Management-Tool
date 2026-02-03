@@ -108,6 +108,67 @@ This applies to both toolbar button and context menu exports:
 
 ---
 
+## Quick Filter
+
+Instant search across all grid columns (AG Grid Community feature):
+
+### 1. Add a State Class for the Grid
+
+```python
+class MyGridState(rx.State):
+    """State for grid quick filter."""
+
+    search_text: str = ""
+
+    def set_search(self, value: str):
+        self.search_text = value
+
+    def clear_search(self):
+        self.search_text = ""
+```
+
+### 2. Add the Search Input to Toolbar
+
+```python
+from app.components.shared.ag_grid_config import quick_filter_input
+
+rx.hstack(
+    # Left side: Quick filter
+    quick_filter_input(
+        search_value=MyGridState.search_text,
+        on_change=MyGridState.set_search,
+        on_clear=MyGridState.clear_search,
+    ),
+    # Right side: Export and column buttons
+    rx.hstack(
+        export_button(page_name="my_table"),
+        column_state_buttons(_STORAGE_KEY, show_save=True),
+        gap="4",
+    ),
+    justify="between",
+    width="100%",
+    padding_bottom="2",
+)
+```
+
+### 3. Pass Search Text to Grid
+
+```python
+create_standard_grid(
+    grid_id="my_grid",
+    row_data=SomeState.data,
+    column_defs=_get_column_defs(),
+    quick_filter_text=MyGridState.search_text,  # <-- Add this
+)
+```
+
+**Behavior**:
+- Searches across all visible columns instantly
+- Case-insensitive by default
+- Splits search by spaces (matches all words)
+
+---
+
 ## Column State Persistence
 
 Save and restore column layout (order, widths, visibility):
