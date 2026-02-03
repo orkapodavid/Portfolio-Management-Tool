@@ -169,28 +169,54 @@ create_standard_grid(
 
 ---
 
-## Grid State Persistence
+## Grid Toolbar (Recommended)
 
-Save and restore **full grid state**: columns (order, widths, visibility, pinning) + filters + sorting.
+Use the `grid_toolbar` helper for a complete toolbar with proper button grouping:
 
-### 1. Add Script and Buttons
+```python
+from app.components.shared.ag_grid_config import grid_state_script, grid_toolbar
+
+_STORAGE_KEY = "my_grid_state"
+
+rx.vstack(
+    rx.script(grid_state_script(_STORAGE_KEY)),
+    grid_toolbar(
+        storage_key=_STORAGE_KEY,
+        page_name="my_table",
+        search_value=MyState.search_text,
+        on_search_change=MyState.set_search,
+        on_search_clear=MyState.clear_search,
+    ),
+    create_standard_grid(...),
+)
+```
+
+**Visual Layout:**
+```
+[Search: _______________]           [Excel] | [Save Layout] [Restore] [Reset]
+                                    ↑ green   ↑ blue        ↑ blue    ↑ gray
+```
+
+**Color Scheme:**
+- **Excel**: Green (data export)
+- **Save/Restore**: Blue (layout actions grouped)
+- **Reset**: Gray (neutral)
+
+---
+
+## Grid State Persistence (Manual)
+
+If you need individual control over buttons, use separate helpers:
 
 ```python
 from app.components.shared.ag_grid_config import grid_state_script, grid_state_buttons
 
-# Unique storage key for this grid
-_STORAGE_KEY = "my_grid_state"
-
 rx.vstack(
-    # Script for auto-restore on page load
     rx.script(grid_state_script(_STORAGE_KEY)),
-    # Toolbar with state buttons
     rx.hstack(
         export_button(page_name="my_table"),
         grid_state_buttons(_STORAGE_KEY),
-        gap="4",
     ),
-    # Grid...
     create_standard_grid(...),
 )
 ```
@@ -202,15 +228,6 @@ rx.vstack(
 | **Columns** | Width, order, visibility, pinning |
 | **Filters** | All column filter configurations |
 | **Sorting** | Sort column and direction |
-
-### Behavior
-
-- **Auto-restore**: Grid state auto-restores on page load (15s polling)
-- **Save Layout**: Manually save current state to localStorage
-- **Restore**: Manually restore saved state
-- **Reset**: Clear saved state and reset grid to defaults
-
-> **Note**: The script removes `flex` property when restoring to ensure saved column widths apply correctly.
 
 ---
 

@@ -560,7 +560,7 @@ def grid_state_buttons(
                 "Save Layout",
                 on_click=rx.call_script(f"saveGridState_{safe_key}()"),
                 variant="soft",
-                color_scheme="green",
+                color_scheme="blue",  # Blue to match Restore (both are layout actions)
                 size=button_size,
             )
         )
@@ -590,6 +590,152 @@ def grid_state_buttons(
         )
 
     return rx.hstack(*buttons, spacing="2")
+
+
+def grid_toolbar(
+    storage_key: str,
+    page_name: str,
+    *,
+    search_value: rx.Var[str] | None = None,
+    on_search_change: Callable | None = None,
+    on_search_clear: Callable | None = None,
+    show_excel: bool = True,
+    show_save: bool = True,
+    show_restore: bool = True,
+    show_reset: bool = True,
+    button_size: str = "2",
+) -> rx.Component:
+    """
+    Create a complete grid toolbar with search, export, and layout controls.
+
+    This is the recommended way to add a toolbar above AG Grid components.
+    It groups buttons by function with visual dividers for better UX.
+
+    Color scheme:
+    - Excel: Green (data export action)
+    - Save Layout: Blue (layout action, matches Restore)
+    - Restore: Blue (layout action)
+    - Reset: Gray (destructive/neutral)
+
+    Args:
+        storage_key: Unique localStorage key for grid state persistence
+        page_name: Name prefix for export files (e.g., "pnl_full")
+        search_value: State var for search text (optional)
+        on_search_change: Handler for search input changes (optional)
+        on_search_clear: Handler for clearing search (optional)
+        show_excel: Show Excel export button
+        show_save: Show Save Layout button
+        show_restore: Show Restore button
+        show_reset: Show Reset button
+        button_size: Radix button size
+
+    Returns:
+        Complete toolbar with search (left) and buttons (right)
+
+    Usage:
+        grid_toolbar(
+            storage_key="pnl_grid_state",
+            page_name="pnl_full",
+            search_value=State.search_text,
+            on_search_change=State.set_search,
+            on_search_clear=State.clear_search,
+        )
+    """
+    safe_key = storage_key.replace("-", "_")
+
+    # Build left side (search)
+    left_side = []
+    if search_value is not None and on_search_change is not None:
+        left_side.append(
+            quick_filter_input(
+                search_value=search_value,
+                on_change=on_search_change,
+                on_clear=on_search_clear,
+            )
+        )
+
+    # Build right side (buttons with divider)
+    export_buttons = []
+    layout_buttons = []
+
+    # Export group (green)
+    if show_excel:
+        export_buttons.append(
+            rx.button(
+                rx.icon("file-spreadsheet", size=16),
+                "Excel",
+                on_click=rx.call_script(_get_export_excel_js(page_name)),
+                variant="soft",
+                color_scheme="green",
+                size=button_size,
+            )
+        )
+
+    # Layout group (blue/gray)
+    if show_save:
+        layout_buttons.append(
+            rx.button(
+                rx.icon("save", size=16),
+                "Save Layout",
+                on_click=rx.call_script(f"saveGridState_{safe_key}()"),
+                variant="soft",
+                color_scheme="blue",
+                size=button_size,
+            )
+        )
+
+    if show_restore:
+        layout_buttons.append(
+            rx.button(
+                rx.icon("rotate-ccw", size=16),
+                "Restore",
+                on_click=rx.call_script(f"restoreGridState_{safe_key}()"),
+                variant="soft",
+                color_scheme="blue",
+                size=button_size,
+            )
+        )
+
+    if show_reset:
+        layout_buttons.append(
+            rx.button(
+                rx.icon("x", size=16),
+                "Reset",
+                on_click=rx.call_script(f"resetGridState_{safe_key}()"),
+                variant="soft",
+                color_scheme="gray",
+                size=button_size,
+            )
+        )
+
+    # Combine with visual divider between groups
+    right_items = []
+    if export_buttons:
+        right_items.append(rx.hstack(*export_buttons, spacing="2"))
+
+    if export_buttons and layout_buttons:
+        # Vertical divider
+        right_items.append(
+            rx.box(
+                width="1px",
+                height="24px",
+                background_color="var(--gray-6)",
+            )
+        )
+
+    if layout_buttons:
+        right_items.append(rx.hstack(*layout_buttons, spacing="2"))
+
+    right_side = rx.hstack(*right_items, spacing="3", align="center")
+
+    return rx.hstack(
+        *left_side,
+        right_side,
+        justify="between",
+        width="100%",
+        padding_bottom="2",
+    )
+
 
 
 # =============================================================================
@@ -786,6 +932,7 @@ __all__ = [
     # New grid state persistence (full: columns + filters + sort)
     "grid_state_script",
     "grid_state_buttons",
+    "grid_toolbar",  # Recommended: complete toolbar with grouped buttons
     # Legacy column-only persistence (deprecated)
     "column_state_buttons",
     "get_column_state_handlers",
@@ -797,4 +944,5 @@ __all__ = [
     "STANDARD_DEFAULT_COL_DEF",
     "NO_ROWS_TEMPLATE",
 ]
+
 

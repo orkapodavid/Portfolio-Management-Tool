@@ -104,10 +104,8 @@ def undertakings_ag_grid() -> rx.Component:
     - No-rows overlay
     """
     from app.components.shared.ag_grid_config import (
-        export_button,
         grid_state_script,
-        grid_state_buttons,
-        quick_filter_input,
+        grid_toolbar,
         get_default_export_params,
         get_default_csv_export_params,
     )
@@ -115,23 +113,13 @@ def undertakings_ag_grid() -> rx.Component:
     return rx.vstack(
         # Grid state persistence script (auto-restores on page load)
         rx.script(grid_state_script(_STORAGE_KEY)),
-        # Toolbar
-        rx.hstack(
-            # Left side: Quick filter
-            quick_filter_input(
-                search_value=UndertakingsGridState.search_text,
-                on_change=UndertakingsGridState.set_search,
-                on_clear=UndertakingsGridState.clear_search,
-            ),
-            # Right side: Export and state buttons
-            rx.hstack(
-                export_button(page_name="undertakings"),
-                grid_state_buttons(_STORAGE_KEY),
-                gap="4",
-            ),
-            justify="between",
-            width="100%",
-            padding_bottom="2",
+        # Toolbar with grouped buttons (Export | Layout)
+        grid_toolbar(
+            storage_key=_STORAGE_KEY,
+            page_name="undertakings",
+            search_value=UndertakingsGridState.search_text,
+            on_search_change=UndertakingsGridState.set_search,
+            on_search_clear=UndertakingsGridState.clear_search,
         ),
         # Grid
         create_standard_grid(
@@ -142,10 +130,11 @@ def undertakings_ag_grid() -> rx.Component:
             enable_multi_select=True,  # Tier 2: Multi-row selection with checkboxes
             default_excel_export_params=get_default_export_params("undertakings"),
             default_csv_export_params=get_default_csv_export_params("undertakings"),
-            quick_filter_text=UndertakingsGridState.search_text,  # Quick filter
+            quick_filter_text=UndertakingsGridState.search_text,
         ),
         width="100%",
         height="100%",
         spacing="0",
     )
+
 
