@@ -169,32 +169,51 @@ create_standard_grid(
 
 ---
 
-## Column State Persistence
+## Grid State Persistence
 
-Save and restore column layout (order, widths, visibility):
+Save and restore **full grid state**: columns (order, widths, visibility, pinning) + filters + sorting.
+
+### 1. Add Script and Buttons
 
 ```python
-from app.components.shared.ag_grid_config import column_state_buttons
+from app.components.shared.ag_grid_config import grid_state_script, grid_state_buttons
 
-# Define a unique storage key for this grid
-_STORAGE_KEY = "my_grid_column_state"
+# Unique storage key for this grid
+_STORAGE_KEY = "my_grid_state"
 
-# Add to toolbar alongside export button
-rx.hstack(
-    export_button(page_name="my_table"),
-    column_state_buttons(_STORAGE_KEY, show_save=True),
-    justify="end",
-    width="100%",
-    gap="4",
+rx.vstack(
+    # Script for auto-restore on page load
+    rx.script(grid_state_script(_STORAGE_KEY)),
+    # Toolbar with state buttons
+    rx.hstack(
+        export_button(page_name="my_table"),
+        grid_state_buttons(_STORAGE_KEY),
+        gap="4",
+    ),
+    # Grid...
+    create_standard_grid(...),
 )
 ```
 
-**Buttons provided**:
-- **Save Layout** - Manually save current column layout
-- **Restore** - Restore saved layout
-- **Reset** - Reset to default column order
+### What Gets Saved
+
+| Category | State Saved |
+|----------|-------------|
+| **Columns** | Width, order, visibility, pinning |
+| **Filters** | All column filter configurations |
+| **Sorting** | Sort column and direction |
+
+### Behavior
+
+- **Auto-restore**: Grid state auto-restores on page load (15s polling)
+- **Save Layout**: Manually save current state to localStorage
+- **Restore**: Manually restore saved state
+- **Reset**: Clear saved state and reset grid to defaults
+
+> **Note**: The script removes `flex` property when restoring to ensure saved column widths apply correctly.
 
 ---
+
 
 ## Tier 2 Enhancements
 

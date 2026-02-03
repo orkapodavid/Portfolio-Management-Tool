@@ -145,16 +145,20 @@ def pnl_full_ag_grid() -> rx.Component:
     - Range selection
     - Floating filters
     - Cell flash for real-time updates
+    - Full grid state persistence (columns + filters + sort)
     """
     from app.components.shared.ag_grid_config import (
         export_button,
-        column_state_buttons,
+        grid_state_script,
+        grid_state_buttons,
         quick_filter_input,
         get_default_export_params,
         get_default_csv_export_params,
     )
 
     return rx.vstack(
+        # Grid state persistence script (auto-restores on page load)
+        rx.script(grid_state_script(_STORAGE_KEY)),
         # Toolbar
         rx.hstack(
             # Left side: Quick filter
@@ -163,12 +167,10 @@ def pnl_full_ag_grid() -> rx.Component:
                 on_change=PnLFullGridState.set_search,
                 on_clear=PnLFullGridState.clear_search,
             ),
-            # Right side: Export and column buttons
+            # Right side: Export and state buttons
             rx.hstack(
                 export_button(page_name="pnl_full"),
-                column_state_buttons(
-                    _STORAGE_KEY, show_save=True
-                ),  # Manual save since auto-save not supported
+                grid_state_buttons(_STORAGE_KEY),
                 gap="4",
             ),
             justify="between",
@@ -191,3 +193,4 @@ def pnl_full_ag_grid() -> rx.Component:
         height="100%",
         spacing="0",
     )
+
