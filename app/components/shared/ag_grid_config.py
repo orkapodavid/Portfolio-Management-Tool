@@ -77,6 +77,7 @@ def create_standard_grid(
     # Tier 2 enhancements (opt-in)
     enable_cell_flash: bool = False,
     enable_row_numbers: bool = False,
+    enable_multi_select: bool = False,
     # Layout
     height: str = "100%",
     width: str = "100%",
@@ -102,6 +103,7 @@ def create_standard_grid(
 
         enable_cell_flash: Flash cells on value change, for real-time grids (default: False)
         enable_row_numbers: Show auto-numbered row column (default: False)
+        enable_multi_select: Enable multi-row selection with checkboxes (default: False)
 
         height: Grid height CSS value (default: "100%")
         width: Grid width CSS value (default: "100%")
@@ -154,10 +156,103 @@ def create_standard_grid(
     if enable_row_numbers:
         grid_props["row_numbers"] = True
 
+    # Tier 2: Multi-row selection with checkboxes
+    if enable_multi_select:
+        grid_props["row_selection"] = "multiple"
+
     # Merge any additional kwargs
     grid_props.update(kwargs)
 
     return ag_grid(**grid_props)
+
+
+# =============================================================================
+# DEFAULT EXPORT PARAMS
+# =============================================================================
+
+
+def _get_filename_js(page_name: str) -> str:
+    """Generate JS function that creates timestamped filename."""
+    return f"""(() => {{
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
+        return '{page_name}_' + yyyy + mm + dd + '_' + hh + min;
+    }})()"""
+
+
+# JavaScript callback: Skip unselected rows ONLY if some rows are selected
+# If no rows are selected, export all rows (don't skip any)
+_SHOULD_ROW_BE_SKIPPED_JS = rx.Var("""(params) => {
+    const selectedRows = params.api.getSelectedRows();
+    if (selectedRows.length === 0) {
+        // No selection: export all rows
+        return false;
+    }
+    // Has selection: skip if not selected
+    return !params.node.isSelected();
+}""")
+
+
+def get_default_export_params(page_name: str) -> rx.Var:
+    """
+    Generate default Excel export params with timestamped filename.
+
+    This is used for the context menu "Export to Excel" option.
+    Features:
+    - Dynamic timestamped filename: <page_name>_YYYYMMDD_HHMM.xlsx
+    - Exports only selected rows if any are selected
+    - Exports all rows if no selection
+
+    Args:
+        page_name: Name prefix for the export file (e.g., "pnl_full")
+
+    Returns:
+        rx.Var containing export params with dynamic fileName and row filtering
+
+    Usage:
+        create_standard_grid(
+            grid_id="my_grid",
+            ...,
+            default_excel_export_params=get_default_export_params("pnl_full"),
+        )
+    """
+    return rx.Var.create({
+        "fileName": rx.Var(_get_filename_js(page_name)),
+        "shouldRowBeSkipped": _SHOULD_ROW_BE_SKIPPED_JS,
+    })
+
+
+def get_default_csv_export_params(page_name: str) -> rx.Var:
+    """
+    Generate default CSV export params with timestamped filename.
+
+    This is used for the context menu "Export to CSV" option.
+    Features:
+    - Dynamic timestamped filename: <page_name>_YYYYMMDD_HHMM.csv
+    - Exports only selected rows if any are selected
+    - Exports all rows if no selection
+
+    Args:
+        page_name: Name prefix for the export file (e.g., "pnl_full")
+
+    Returns:
+        rx.Var containing export params with dynamic fileName and row filtering
+
+    Usage:
+        create_standard_grid(
+            grid_id="my_grid",
+            ...,
+            default_csv_export_params=get_default_csv_export_params("pnl_full"),
+        )
+    """
+    return rx.Var.create({
+        "fileName": rx.Var(_get_filename_js(page_name)),
+        "shouldRowBeSkipped": _SHOULD_ROW_BE_SKIPPED_JS,
+    })
 
 
 # =============================================================================
@@ -166,40 +261,88 @@ def create_standard_grid(
 
 
 # JavaScript to find AG Grid API reliably
-_EXPORT_EXCEL_JS = """(function() {
-    // Find the AG Grid root wrapper
+_GET_GRID_API_JS = """(function() {
     const wrapper = document.querySelector('.ag-root-wrapper');
-    if (!wrapper) {
-        alert('Grid not found');
-        return;
-    }
-    
-    // Find React fiber with grid API
+    if (!wrapper) return null;
     const key = Object.keys(wrapper).find(k => k.startsWith('__reactFiber'));
-    if (!key) {
-        alert('Grid API not accessible');
-        return;
-    }
-    
+    if (!key) return null;
     let fiber = wrapper[key];
     while (fiber) {
-        if (fiber.stateNode && fiber.stateNode.api) {
-            fiber.stateNode.api.exportDataAsExcel();
-            return;
-        }
+        if (fiber.stateNode && fiber.stateNode.api) return fiber.stateNode.api;
         fiber = fiber.return;
     }
-    alert('Grid API not found');
+    return null;
 })()"""
 
 
-def export_button(button_size: str = "2") -> rx.Component:
+def _get_export_excel_js(page_name: str) -> str:
     """
-    Create an Excel export button for AG Grid.
-
-    This button finds the first AG Grid on the page and exports its data.
+    Generate JavaScript for Excel export with timestamped filename.
 
     Args:
+        page_name: Name to prefix the filename (e.g., "pnl_full")
+
+    Returns:
+        JS code that exports with filename: <page_name>_YYYYMMDD_HHMM.xlsx
+    """
+    return f"""(function() {{
+    // Find the AG Grid root wrapper
+    const wrapper = document.querySelector('.ag-root-wrapper');
+    if (!wrapper) {{
+        alert('Grid not found');
+        return;
+    }}
+    
+    // Find React fiber with grid API
+    const key = Object.keys(wrapper).find(k => k.startsWith('__reactFiber'));
+    if (!key) {{
+        alert('Grid API not accessible');
+        return;
+    }}
+    
+    let fiber = wrapper[key];
+    while (fiber) {{
+        if (fiber.stateNode && fiber.stateNode.api) {{
+            const api = fiber.stateNode.api;
+            
+            // Generate timestamp: YYYYMMDD_HHMM
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const hh = String(now.getHours()).padStart(2, '0');
+            const min = String(now.getMinutes()).padStart(2, '0');
+            const timestamp = `${{yyyy}}${{mm}}${{dd}}_${{hh}}${{min}}`;
+            
+            // Check if any rows are selected
+            const selectedRows = api.getSelectedRows();
+            const hasSelection = selectedRows.length > 0;
+            
+            // Export with conditional row filtering
+            api.exportDataAsExcel({{
+                fileName: '{page_name}_' + timestamp,
+                shouldRowBeSkipped: (params) => {{
+                    if (!hasSelection) return false;  // No selection: export all
+                    return !params.node.isSelected();  // Skip non-selected rows
+                }}
+            }});
+            return;
+        }}
+        fiber = fiber.return;
+    }}
+    alert('Grid API not found');
+}})()"""
+
+
+def export_button(page_name: str = "export", button_size: str = "2") -> rx.Component:
+    """
+    Create an Excel export button for AG Grid with timestamped filename.
+
+    This button finds the first AG Grid on the page and exports its data
+    with a filename in the format: <page_name>_YYYYMMDD_HHMM.xlsx
+
+    Args:
+        page_name: Name prefix for the export file (e.g., "pnl_full", "undertakings")
         button_size: Radix button size ("1", "2", "3")
 
     Returns:
@@ -207,14 +350,14 @@ def export_button(button_size: str = "2") -> rx.Component:
 
     Usage:
         rx.vstack(
-            rx.hstack(export_button(), justify="end", width="100%"),
+            rx.hstack(export_button(page_name="pnl_full"), justify="end", width="100%"),
             create_standard_grid(grid_id="my_grid", ...),
         )
     """
     return rx.button(
         rx.icon("file-spreadsheet", size=16),
         "Excel",
-        on_click=rx.call_script(_EXPORT_EXCEL_JS),
+        on_click=rx.call_script(_get_export_excel_js(page_name)),
         variant="soft",
         color_scheme="green",
         size=button_size,
@@ -225,31 +368,20 @@ def export_button(button_size: str = "2") -> rx.Component:
 def export_buttons(
     grid_id: str = "",  # No longer used, kept for compatibility
     *,
+    page_name: str = "export",
     show_excel: bool = True,
     show_csv: bool = False,  # Disabled by default now
     button_size: str = "2",
 ) -> rx.Component:
     """Legacy wrapper - now just returns export_button()."""
-    return rx.hstack(export_button(button_size), spacing="2")
+    return rx.hstack(export_button(page_name, button_size), spacing="2")
 
 
 # =============================================================================
 # COLUMN STATE PERSISTENCE
 # =============================================================================
 
-# JavaScript to get grid API
-_GET_GRID_API_JS = """(function() {
-    const wrapper = document.querySelector('.ag-root-wrapper');
-    if (!wrapper) { return null; }
-    const key = Object.keys(wrapper).find(k => k.startsWith('__reactFiber'));
-    if (!key) { return null; }
-    let fiber = wrapper[key];
-    while (fiber) {
-        if (fiber.stateNode && fiber.stateNode.api) return fiber.stateNode.api;
-        fiber = fiber.return;
-    }
-    return null;
-})()"""
+# Column state persistence uses the shared _GET_GRID_API_JS from above
 
 
 def _get_auto_save_js(storage_key: str) -> str:

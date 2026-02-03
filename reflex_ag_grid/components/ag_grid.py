@@ -503,6 +503,14 @@ class AgGrid(rx.Component):
     include_hidden_columns_in_advanced_filter: rx.Var[bool] = False
 
     # -------------------------------------------------------------------------
+    # Export Configuration (Enterprise)
+    # -------------------------------------------------------------------------
+    # Default params for context menu "Export to Excel" and "Export to CSV"
+    # Use with get_default_export_params() for timestamped filenames
+    default_excel_export_params: rx.Var[dict[str, Any]] | None = None
+    default_csv_export_params: rx.Var[dict[str, Any]] | None = None
+
+    # -------------------------------------------------------------------------
     # Row Numbers (v33.1+)
     # -------------------------------------------------------------------------
     row_numbers: rx.Var[bool] = False

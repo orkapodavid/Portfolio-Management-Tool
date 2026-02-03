@@ -102,19 +102,36 @@ def [table_name]_ag_grid() -> rx.Component:
 
     [Description of what this table displays].
     """
-    return ag_grid(
-        id="[table_name]_grid",
-        row_data=[StateClass].filtered_[data_var],
-        column_defs=_get_column_defs(),
-        row_id_key="id",  # or appropriate unique key
-        theme="quartz",
-        default_col_def={
-            "sortable": True,
-            "resizable": True,
-            "filter": True,
-        },
-        height="calc(100vh - 300px)",
+    from app.components.shared.ag_grid_config import (
+        create_standard_grid,
+        export_button,
+        column_state_buttons,
+    )
+
+    # Storage key for column state persistence
+    _STORAGE_KEY = "[table_name]_column_state"
+
+    return rx.vstack(
+        # Toolbar with export button
+        rx.hstack(
+            export_button(page_name="[table_name]"),  # Exports as [table_name]_YYYYMMDD_HHMM.xlsx
+            column_state_buttons(_STORAGE_KEY, show_save=True),
+            justify="end",
+            width="100%",
+            padding_bottom="2",
+            gap="4",
+        ),
+        # Grid
+        create_standard_grid(
+            grid_id="[table_name]_grid",
+            row_data=[StateClass].filtered_[data_var],
+            column_defs=_get_column_defs(),
+            enable_row_numbers=True,  # Tier 2: Row numbering
+            enable_multi_select=True,  # Tier 2: Multi-row selection
+        ),
         width="100%",
+        height="100%",
+        spacing="0",
     )
 ```
 

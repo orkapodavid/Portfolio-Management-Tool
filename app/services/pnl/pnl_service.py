@@ -72,6 +72,7 @@ class PnLService:
         # TODO: Implement in Core Service. Mock data for testing.
         return [
             {
+                "id": 1,
                 "trade_date": "2026-01-31",
                 "underlying": "Toyota Motor",
                 "ticker": "7203.T",
@@ -84,6 +85,7 @@ class PnLService:
                 "pnl_chg_pct_1m": "+8.7%",
             },
             {
+                "id": 2,
                 "trade_date": "2026-01-31",
                 "underlying": "Sony Group",
                 "ticker": "6758.T",
@@ -96,6 +98,7 @@ class PnLService:
                 "pnl_chg_pct_1m": "+5.4%",
             },
             {
+                "id": 3,
                 "trade_date": "2026-01-31",
                 "underlying": "Nintendo",
                 "ticker": "7974.T",
@@ -108,6 +111,7 @@ class PnLService:
                 "pnl_chg_pct_1m": "+12.1%",
             },
             {
+                "id": 4,
                 "trade_date": "2026-01-31",
                 "underlying": "SoftBank Group",
                 "ticker": "9984.T",
@@ -120,6 +124,7 @@ class PnLService:
                 "pnl_chg_pct_1m": "-9.8%",
             },
             {
+                "id": 5,
                 "trade_date": "2026-01-31",
                 "underlying": "Keyence",
                 "ticker": "6861.T",
@@ -132,6 +137,7 @@ class PnLService:
                 "pnl_chg_pct_1m": "+15.3%",
             },
             {
+                "id": 6,
                 "trade_date": "2026-01-31",
                 "underlying": "Fast Retailing",
                 "ticker": "9983.T",
@@ -144,6 +150,7 @@ class PnLService:
                 "pnl_chg_pct_1m": "+4.2%",
             },
             {
+                "id": 7,
                 "trade_date": "2026-01-31",
                 "underlying": "Tokyo Electron",
                 "ticker": "8035.T",
@@ -156,6 +163,7 @@ class PnLService:
                 "pnl_chg_pct_1m": "+7.6%",
             },
             {
+                "id": 8,
                 "trade_date": "2026-01-31",
                 "underlying": "Shin-Etsu Chemical",
                 "ticker": "4063.T",
@@ -168,6 +176,7 @@ class PnLService:
                 "pnl_chg_pct_1m": "+6.1%",
             },
             {
+                "id": 9,
                 "trade_date": "2026-01-31",
                 "underlying": "Hitachi",
                 "ticker": "6501.T",
@@ -180,6 +189,7 @@ class PnLService:
                 "pnl_chg_pct_1m": "+9.2%",
             },
             {
+                "id": 10,
                 "trade_date": "2026-01-31",
                 "underlying": "Mitsubishi UFJ",
                 "ticker": "8306.T",
@@ -192,6 +202,7 @@ class PnLService:
                 "pnl_chg_pct_1m": "-7.5%",
             },
             {
+                "id": 11,
                 "trade_date": "2026-01-31",
                 "underlying": "Recruit Holdings",
                 "ticker": "6098.T",
@@ -204,6 +215,7 @@ class PnLService:
                 "pnl_chg_pct_1m": "+6.8%",
             },
             {
+                "id": 12,
                 "trade_date": "2026-01-31",
                 "underlying": "Daikin Industries",
                 "ticker": "6367.T",
@@ -216,6 +228,7 @@ class PnLService:
                 "pnl_chg_pct_1m": "+3.9%",
             },
             {
+                "id": 13,
                 "trade_date": "2026-01-31",
                 "underlying": "KDDI",
                 "ticker": "9433.T",
@@ -228,6 +241,7 @@ class PnLService:
                 "pnl_chg_pct_1m": "+3.2%",
             },
             {
+                "id": 14,
                 "trade_date": "2026-01-31",
                 "underlying": "Fanuc",
                 "ticker": "6954.T",
@@ -240,6 +254,7 @@ class PnLService:
                 "pnl_chg_pct_1m": "+5.5%",
             },
             {
+                "id": 15,
                 "trade_date": "2026-01-31",
                 "underlying": "Murata Manufacturing",
                 "ticker": "6981.T",

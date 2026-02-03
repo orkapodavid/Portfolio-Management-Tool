@@ -86,12 +86,14 @@ def undertakings_ag_grid() -> rx.Component:
     from app.components.shared.ag_grid_config import (
         export_button,
         column_state_buttons,
+        get_default_export_params,
+        get_default_csv_export_params,
     )
 
     return rx.vstack(
         # Toolbar
         rx.hstack(
-            export_button(),
+            export_button(page_name="undertakings"),
             column_state_buttons(
                 _STORAGE_KEY, show_save=True
             ),  # Manual save since auto-save not supported
@@ -106,6 +108,9 @@ def undertakings_ag_grid() -> rx.Component:
             row_data=ComplianceState.filtered_undertakings,
             column_defs=_get_column_defs(),
             enable_row_numbers=True,  # Tier 2: Row numbering
+            enable_multi_select=True,  # Tier 2: Multi-row selection with checkboxes
+            default_excel_export_params=get_default_export_params("undertakings"),
+            default_csv_export_params=get_default_csv_export_params("undertakings"),
         ),
         width="100%",
         height="100%",

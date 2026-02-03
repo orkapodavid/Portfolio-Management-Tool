@@ -74,7 +74,37 @@ export_button()
 export_button(button_size="1")
 ```
 
-**Note**: `export_button()` automatically finds the first AG Grid on the page.
+**Filename Pattern**: `<page_name>_YYYYMMDD_HHMM.xlsx` (e.g., `pnl_full_20260203_1050.xlsx`)
+
+### Context Menu Export
+
+To apply timestamped filenames to right-click Export → Excel/CSV:
+
+```python
+from app.components.shared.ag_grid_config import (
+    get_default_export_params,
+    get_default_csv_export_params,
+)
+
+create_standard_grid(
+    grid_id="...",
+    row_data=...,
+    column_defs=...,
+    default_excel_export_params=get_default_export_params("my_table"),
+    default_csv_export_params=get_default_csv_export_params("my_table"),
+)
+```
+
+### Export Behavior
+
+| Condition | Export Result |
+|-----------|---------------|
+| **No rows selected** | Exports all rows |
+| **Some rows selected** | Exports only selected rows |
+
+This applies to both toolbar button and context menu exports:
+- **Excel**: `my_table_20260203_1050.xlsx`
+- **CSV**: `my_table_20260203_1050.csv`
 
 ---
 
@@ -90,7 +120,7 @@ _STORAGE_KEY = "my_grid_column_state"
 
 # Add to toolbar alongside export button
 rx.hstack(
-    export_button(),
+    export_button(page_name="my_table"),
     column_state_buttons(_STORAGE_KEY, show_save=True),
     justify="end",
     width="100%",
@@ -134,6 +164,20 @@ create_standard_grid(
     enable_row_numbers=True,  # Tier 2: Row numbering
 )
 ```
+
+### Multi-Row Selection with Checkboxes
+Enable checkbox selection for multiple rows:
+
+```python
+create_standard_grid(
+    grid_id="...",
+    row_data=...,
+    column_defs=...,
+    enable_multi_select=True,  # Tier 2: Multi-row checkbox selection
+)
+```
+
+**Note**: This enables AG Grid v35's `multiRow` selection mode with checkboxes. Users can select multiple rows using checkboxes or Ctrl/Cmd+Click. The status bar will show "Selected: X" when rows are selected.
 
 ### Categorical Columns (use Set Filter)
 For columns with discrete values (status, sector, type, account, currency):

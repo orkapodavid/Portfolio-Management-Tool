@@ -129,12 +129,14 @@ def pnl_full_ag_grid() -> rx.Component:
     from app.components.shared.ag_grid_config import (
         export_button,
         column_state_buttons,
+        get_default_export_params,
+        get_default_csv_export_params,
     )
 
     return rx.vstack(
         # Toolbar
         rx.hstack(
-            export_button(),
+            export_button(page_name="pnl_full"),
             column_state_buttons(
                 _STORAGE_KEY, show_save=True
             ),  # Manual save since auto-save not supported
@@ -150,6 +152,9 @@ def pnl_full_ag_grid() -> rx.Component:
             column_defs=_get_column_defs(),
             enable_cell_flash=True,  # Tier 2: Real-time grid
             enable_row_numbers=True,  # Tier 2: Row numbering
+            enable_multi_select=True,  # Tier 2: Multi-row selection with checkboxes
+            default_excel_export_params=get_default_export_params("pnl_full"),
+            default_csv_export_params=get_default_csv_export_params("pnl_full"),
         ),
         width="100%",
         height="100%",
