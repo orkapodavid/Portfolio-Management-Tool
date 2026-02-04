@@ -67,6 +67,7 @@ def _get_column_defs() -> list:
             filter=AGFilters.text,
             min_width=100,
             enable_row_group=True,
+            tooltip_field="trade_date",
         ),
         ag_grid.column_def(
             field="underlying",
@@ -74,6 +75,7 @@ def _get_column_defs() -> list:
             filter=AGFilters.text,
             min_width=100,
             enable_row_group=True,  # Can be grouped via drag-drop
+            tooltip_field="underlying",
         ),
         ag_grid.column_def(
             field="ticker",
@@ -81,6 +83,8 @@ def _get_column_defs() -> list:
             filter=AGFilters.text,
             min_width=100,
             enable_row_group=True,
+            tooltip_field="ticker",
+            pinned="left",  # Keep ticker visible while scrolling
         ),
         ag_grid.column_def(
             field="pnl_ytd",
@@ -178,7 +182,7 @@ def pnl_full_ag_grid() -> rx.Component:
 
     return rx.vstack(
         # Grid state persistence script (auto-restores on page load)
-        rx.script(grid_state_script(_STORAGE_KEY)),
+        rx.script(grid_state_script(_STORAGE_KEY, "pnl_full_grid")),
         # Toolbar with grouped buttons (Export | Layout)
         grid_toolbar(
             storage_key=_STORAGE_KEY,
@@ -203,7 +207,6 @@ def pnl_full_ag_grid() -> rx.Component:
             # Row grouping options (user can drag columns to group panel)
             row_group_panel_show="always",  # Show drag-drop grouping panel
             group_default_expanded=-1,  # Expand all groups by default
-            grand_total_row="bottom",  # Pin grand total at bottom
         ),
         width="100%",
         height="100%",

@@ -177,20 +177,22 @@ Use the `grid_toolbar` helper for a complete toolbar with proper button grouping
 from app.components.shared.ag_grid_config import grid_state_script, grid_toolbar
 
 _STORAGE_KEY = "my_grid_state"
+_GRID_ID = "my_grid"
 
 rx.vstack(
-    rx.script(grid_state_script(_STORAGE_KEY)),
+    # IMPORTANT: Pass grid_id to grid_state_script for SPA navigation support
+    rx.script(grid_state_script(_STORAGE_KEY, _GRID_ID)),
     grid_toolbar(
         storage_key=_STORAGE_KEY,
         page_name="my_table",
         search_value=MyState.search_text,
         on_search_change=MyState.set_search,
         on_search_clear=MyState.clear_search,
-        grid_id="my_grid",           # Required for Compact toggle
+        grid_id=_GRID_ID,            # Required for Compact toggle
         show_compact_toggle=True,     # Optional: Show Compact mode button
     ),
     create_standard_grid(
-        grid_id="my_grid",  # Must match grid_id in grid_toolbar
+        grid_id=_GRID_ID,  # Must match grid_id in grid_toolbar and grid_state_script
         ...
     ),
 )
@@ -220,13 +222,20 @@ If you need individual control over buttons, use separate helpers:
 ```python
 from app.components.shared.ag_grid_config import grid_state_script, grid_state_buttons
 
+_STORAGE_KEY = "my_grid_state"
+_GRID_ID = "my_grid"
+
 rx.vstack(
-    rx.script(grid_state_script(_STORAGE_KEY)),
+    # IMPORTANT: Always pass grid_id as second argument for SPA navigation
+    rx.script(grid_state_script(_STORAGE_KEY, _GRID_ID)),
     rx.hstack(
         export_button(page_name="my_table"),
         grid_state_buttons(_STORAGE_KEY),
     ),
-    create_standard_grid(...),
+    create_standard_grid(
+        grid_id=_GRID_ID,
+        ...
+    ),
 )
 ```
 
@@ -237,6 +246,9 @@ rx.vstack(
 | **Columns** | Width, order, visibility, pinning |
 | **Filters** | All column filter configurations |
 | **Sorting** | Sort column and direction |
+
+> [!CAUTION]
+> **SPA Navigation Bug Fix**: Always pass `grid_id` to `grid_state_script()`. Without it, tab navigation in single-page apps can cause data corruption as the grid API selector defaults to the first `.ag-root-wrapper` on the page, which may target the wrong grid.
 
 ---
 
@@ -339,6 +351,74 @@ ag_grid.column_def(
     header_name="Status",
     filter="agSetColumnFilter",  # Instead of AGFilters.text
     min_width=100,
+)
+```
+
+### Column Pinning (Identifier Columns)
+Pin key identifier columns to the left so they remain visible while scrolling:
+
+```python
+ag_grid.column_def(
+    field="ticker",
+    header_name="Ticker",
+    filter=AGFilters.text,
+    min_width=100,
+    pinned="left",  # Always visible on left
+)
+```
+
+**Use for**: `ticker`, `deal_num`, `id`, or other primary identifiers.
+
+### Tooltips (Truncated Text)
+Enable tooltips to show full text when cells are truncated:
+
+```python
+# Simple tooltip - show same field value
+ag_grid.column_def(
+    field="company_name",
+    header_name="Company Name",
+    tooltip_field="company_name",  # Show full text on hover
+    min_width=150,
+)
+
+# Header tooltip for long column names
+ag_grid.column_def(
+    field="price_change_pct",
+    header_name="Price Change %",
+    header_tooltip="Percentage change in price from previous day",
+    min_width=120,
+)
+```
+
+> [!TIP]
+> **Enable `tooltip_field` on ALL text columns by default.** This improves UX when columns are narrow.
+
+### Auto-Size Strategy (Column Sizing)
+Automatically size columns on grid load:
+
+```python
+create_standard_grid(
+    grid_id="my_grid",
+    row_data=SomeState.data,
+    column_defs=_get_column_defs(),
+    # Fit all columns to container width
+    auto_size_strategy={"type": "fitGridWidth"},
+)
+```
+
+**Options**:
+- `{"type": "fitGridWidth"}` - Fit all columns to container
+- `{"type": "fitCellContents"}` - Fit to content (may cause horizontal scroll)
+
+### Lock Column Position (Prevent Moving)
+Lock important columns in place to prevent accidental reordering:
+
+```python
+ag_grid.column_def(
+    field="ticker",
+    header_name="Ticker",
+    lock_position=True,  # Cannot be moved by drag
+    pinned="left",
 )
 ```
 
@@ -514,4 +594,73 @@ After migration, verify:
 5. ✅ Floating filters appear under headers  
 6. ✅ Empty grids show "No rows to display"  
 7. ✅ Cell flash works on real-time grids (if enabled)
+8. ✅ Tab navigation between grids preserves correct data
 
+---
+
+## Troubleshooting
+
+### Data Disappears When Switching Tabs (SPA Navigation)
+
+**Symptom**: Clicking between tabs (e.g., PnL Change → PnL Currency) causes data to disappear, show wrong columns, or display data from another grid.
+
+**Cause**: `grid_state_script()` was not passed a `grid_id`, so it defaults to `document.querySelector('.ag-root-wrapper')` which returns the **first grid** on the page instead of the intended grid.
+
+**Fix**: Always pass `grid_id` as the second argument:
+
+```python
+# ❌ BAD - No grid_id, targets first grid on page
+rx.script(grid_state_script(_STORAGE_KEY))
+
+# ✅ GOOD - Targets specific grid by ID
+rx.script(grid_state_script(_STORAGE_KEY, "my_grid_id"))
+```
+
+Make sure `grid_id` matches between:
+- `grid_state_script(_STORAGE_KEY, grid_id)`
+- `grid_toolbar(..., grid_id=grid_id)`
+- `create_standard_grid(grid_id=grid_id, ...)`
+
+### Empty Row at Bottom of Grid
+
+**Symptom**: An empty row appears pinned at the bottom of the grid.
+
+**Cause**: Using `grand_total_row="bottom"` when columns don't have aggregation functions (`agg_func`).
+
+**Fix**: Only use `grand_total_row` on grids where numeric columns have `agg_func="sum"` or `agg_func="avg"`. For grids with rates, ratios, or categorical data, omit `grand_total_row`.
+
+```python
+# ❌ BAD - Columns without agg_func will show empty cells
+create_standard_grid(
+    ...,
+    grand_total_row="bottom",  # Remove this
+)
+
+# ✅ GOOD - Only enable when aggregations are meaningful
+create_standard_grid(
+    ...,
+    # grand_total_row omitted for currency/rate grids
+)
+```
+
+### Compact Toggle Not Appearing
+
+**Symptom**: The Compact button doesn't show in the toolbar despite `show_compact_toggle=True`.
+
+**Cause**: Missing or mismatched `grid_id` between `grid_toolbar` and `create_standard_grid`.
+
+**Fix**: Ensure both use the exact same `grid_id`:
+
+```python
+_GRID_ID = "my_grid"
+
+grid_toolbar(
+    ...,
+    grid_id=_GRID_ID,  # Must match
+    show_compact_toggle=True,
+)
+create_standard_grid(
+    grid_id=_GRID_ID,  # Must match
+    ...
+)
+```

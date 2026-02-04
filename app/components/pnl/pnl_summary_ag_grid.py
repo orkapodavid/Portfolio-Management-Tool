@@ -61,6 +61,7 @@ def _get_column_defs() -> list:
             filter=AGFilters.text,
             min_width=100,
             enable_row_group=True,
+            tooltip_field="trade_date",
         ),
         ag_grid.column_def(
             field="underlying",
@@ -68,6 +69,8 @@ def _get_column_defs() -> list:
             filter=AGFilters.text,
             min_width=100,
             enable_row_group=True,
+            tooltip_field="underlying",
+            pinned="left",  # Keep visible while scrolling
         ),
         ag_grid.column_def(
             field="currency",
@@ -75,6 +78,7 @@ def _get_column_defs() -> list:
             filter=AGFilters.text,
             min_width=90,
             enable_row_group=True,
+            tooltip_field="currency",
         ),
         ag_grid.column_def(
             field="price",
@@ -169,7 +173,7 @@ def pnl_summary_ag_grid() -> rx.Component:
     )
 
     return rx.vstack(
-        rx.script(grid_state_script(_STORAGE_KEY)),
+        rx.script(grid_state_script(_STORAGE_KEY, "pnl_summary_grid")),
         grid_toolbar(
             storage_key=_STORAGE_KEY,
             page_name="pnl_summary",
@@ -193,7 +197,6 @@ def pnl_summary_ag_grid() -> rx.Component:
             # Row grouping options
             row_group_panel_show="always",
             group_default_expanded=-1,
-            grand_total_row="bottom",
         ),
         width="100%",
         height="100%",

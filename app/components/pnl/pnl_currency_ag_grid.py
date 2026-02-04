@@ -61,6 +61,7 @@ def _get_column_defs() -> list:
             filter=AGFilters.text,
             min_width=100,
             enable_row_group=True,
+            tooltip_field="trade_date",
         ),
         ag_grid.column_def(
             field="currency",
@@ -68,6 +69,8 @@ def _get_column_defs() -> list:
             filter=AGFilters.text,
             min_width=90,
             enable_row_group=True,
+            tooltip_field="currency",
+            pinned="left",  # Keep currency visible while scrolling
         ),
         ag_grid.column_def(
             field="fx_rate",
@@ -176,7 +179,7 @@ def pnl_currency_ag_grid() -> rx.Component:
     )
 
     return rx.vstack(
-        rx.script(grid_state_script(_STORAGE_KEY)),
+        rx.script(grid_state_script(_STORAGE_KEY, "pnl_currency_grid")),
         grid_toolbar(
             storage_key=_STORAGE_KEY,
             page_name="pnl_currency",

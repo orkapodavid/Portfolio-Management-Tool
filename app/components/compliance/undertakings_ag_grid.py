@@ -42,6 +42,7 @@ def _get_column_defs() -> list:
             header_name="Deal Num",
             filter=AGFilters.text,
             min_width=90,
+            tooltip_field="deal_num",
         ),
         ag_grid.column_def(
             field="ticker",
@@ -49,12 +50,15 @@ def _get_column_defs() -> list:
             filter=AGFilters.text,
             min_width=100,
             enable_row_group=True,
+            tooltip_field="ticker",
+            pinned="left",  # Keep visible while scrolling
         ),
         ag_grid.column_def(
             field="company_name",
             header_name="Company Name",
             filter=AGFilters.text,
             min_width=150,
+            tooltip_field="company_name",  # Show full name on hover
         ),
         ag_grid.column_def(
             field="account",
@@ -62,6 +66,7 @@ def _get_column_defs() -> list:
             filter=AGFilters.text,
             min_width=100,
             enable_row_group=True,
+            tooltip_field="account",
         ),
         ag_grid.column_def(
             field="undertaking_expiry",
@@ -81,6 +86,7 @@ def _get_column_defs() -> list:
             header_name="Undertaking Details",
             filter=AGFilters.text,
             min_width=150,
+            tooltip_field="undertaking_details",  # Full details on hover
         ),
     ]
 
@@ -115,7 +121,7 @@ def undertakings_ag_grid() -> rx.Component:
 
     return rx.vstack(
         # Grid state persistence script (auto-restores on page load)
-        rx.script(grid_state_script(_STORAGE_KEY)),
+        rx.script(grid_state_script(_STORAGE_KEY, "undertakings_grid")),
         # Toolbar with grouped buttons (Export | Layout)
         grid_toolbar(
             storage_key=_STORAGE_KEY,

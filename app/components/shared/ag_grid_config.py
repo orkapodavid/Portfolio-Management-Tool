@@ -401,7 +401,7 @@ def export_buttons(
 # This captures column widths/order, filters, and sorting in one call.
 
 
-def grid_state_script(storage_key: str) -> str:
+def grid_state_script(storage_key: str, grid_id: str = "") -> str:
     """
     Generate client-side JavaScript for full grid state persistence.
 
@@ -414,23 +414,38 @@ def grid_state_script(storage_key: str) -> str:
 
     Args:
         storage_key: Unique localStorage key for this grid's state
+        grid_id: Optional grid ID to target specific grid (prevents API bleeding in SPA)
 
     Returns:
         JavaScript code string to be used with rx.script()
 
     Usage:
-        rx.script(grid_state_script("my_grid_state"))
+        rx.script(grid_state_script("my_grid_state", "my_grid"))
     """
     # Sanitize key for use as JS function suffix (replace dashes with underscores)
     safe_key = storage_key.replace("-", "_")
+    
+    # Build selector: if grid_id provided, target specific grid; otherwise fallback to first
+    if grid_id:
+        selector = f"'#{grid_id} .ag-root-wrapper'"
+        fallback_selector = "'.ag-root-wrapper'"
+        wrapper_js = f"""
+    // Try to find grid by ID first, then fallback to any grid
+    let wrapper = document.querySelector({selector});
+    if (!wrapper) {{
+        wrapper = document.querySelector({fallback_selector});
+    }}
+    if (!wrapper) return null;"""
+    else:
+        wrapper_js = """
+    const wrapper = document.querySelector('.ag-root-wrapper');
+    if (!wrapper) return null;"""
 
     return f"""
 // Grid State Management for {storage_key}
 // Uses AG Grid's getState()/setState() API for complete state persistence
 
-function getGridApi_{safe_key}() {{
-    const wrapper = document.querySelector('.ag-root-wrapper');
-    if (!wrapper) return null;
+function getGridApi_{safe_key}() {{{wrapper_js}
 
     const key = Object.keys(wrapper).find(k => k.startsWith('__reactFiber'));
     if (!key) return null;

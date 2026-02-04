@@ -61,6 +61,7 @@ def _get_column_defs() -> list:
             filter=AGFilters.text,
             min_width=100,
             enable_row_group=True,
+            tooltip_field="trade_date",
         ),
         ag_grid.column_def(
             field="underlying",
@@ -68,6 +69,7 @@ def _get_column_defs() -> list:
             filter=AGFilters.text,
             min_width=100,
             enable_row_group=True,
+            tooltip_field="underlying",
         ),
         ag_grid.column_def(
             field="ticker",
@@ -75,6 +77,8 @@ def _get_column_defs() -> list:
             filter=AGFilters.text,
             min_width=100,
             enable_row_group=True,
+            tooltip_field="ticker",
+            pinned="left",  # Keep ticker visible while scrolling
         ),
         ag_grid.column_def(
             field="pnl_ytd",
@@ -169,7 +173,7 @@ def pnl_change_ag_grid() -> rx.Component:
 
     return rx.vstack(
         # Grid state persistence script (auto-restores on page load)
-        rx.script(grid_state_script(_STORAGE_KEY)),
+        rx.script(grid_state_script(_STORAGE_KEY, "pnl_change_grid")),
         # Toolbar with grouped buttons (Export | Layout)
         grid_toolbar(
             storage_key=_STORAGE_KEY,
@@ -194,7 +198,6 @@ def pnl_change_ag_grid() -> rx.Component:
             # Row grouping options
             row_group_panel_show="always",
             group_default_expanded=-1,
-            grand_total_row="bottom",
         ),
         width="100%",
         height="100%",
