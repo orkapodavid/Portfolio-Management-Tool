@@ -313,6 +313,94 @@ ag_grid.column_def(
 
 ---
 
+## Best Practices (v35)
+
+### Performance: Prefer Value Formatters over Cell Renderers
+
+Value Formatters don't create extra DOM, while Cell Renderers do:
+
+```python
+# ✅ GOOD - Value Formatter (lightweight, no extra DOM)
+ag_grid.column_def(
+    field="price",
+    value_formatter=rx.Var("(p) => '$' + p.value.toFixed(2)"),
+)
+
+# ❌ AVOID - Cell Renderer (creates extra DOM elements)
+# Only use when you need interactive elements (buttons, links)
+```
+
+### Conditional Cell Styling Pattern
+
+For financial grids with positive/negative values:
+
+```python
+_VALUE_STYLE = rx.Var("""(params) => {
+    const val = String(params.value || '');
+    const isNegative = val.startsWith('-') || val.startsWith('(');
+    return {
+        color: isNegative ? '#dc2626' : '#059669',
+        fontWeight: '700',
+        fontFamily: 'monospace'
+    };
+}""")
+
+ag_grid.column_def(
+    field="pnl_ytd",
+    header_name="PnL YTD",
+    cell_style=_VALUE_STYLE,  # Green for positive, red for negative
+)
+```
+
+### Row Grouping (Enterprise)
+
+Enable drag-to-group for analytics dashboards:
+
+```python
+# On grid:
+create_standard_grid(
+    ...,
+    row_group_panel_show="always",  # Show grouping panel at top
+    group_default_expanded=-1,       # Expand all groups (-1 = all)
+    grand_total_row="bottom",        # Pin totals at bottom
+)
+
+# On columns:
+ag_grid.column_def(
+    field="underlying",
+    enable_row_group=True,  # Allow dragging to group panel
+)
+ag_grid.column_def(
+    field="pnl_ytd",
+    enable_row_group=True,
+    agg_func="sum",  # Aggregate: sum, avg, count, min, max
+)
+ag_grid.column_def(
+    field="pnl_pct",
+    agg_func="avg",  # Use avg for percentages
+)
+```
+
+### Filter Types by Column Category
+
+| Column Type | Filter | Example |
+|-------------|--------|---------|
+| Text/ID | `AGFilters.text` | ticker, symbol, name |
+| Numeric | `AGFilters.number` | price, qty, amount |
+| Date | `AGFilters.date` | trade_date, expiry |
+| Categorical | `"agSetColumnFilter"` | status, sector, account |
+
+### v35 Deprecations to Avoid
+
+| ❌ Deprecated | ✅ Use Instead |
+|---------------|----------------|
+| `checkboxSelection` on column | `enable_multi_select=True` on grid |
+| `headerCheckboxSelection` | Handled by wrapper |
+| `row_selection="multiple"` | Wrapper auto-transforms to object format |
+| `enable_range_selection` | `cell_selection=True` |
+
+---
+
 ## Files to Migrate (45 remaining)
 
 ### compliance/ (3 remaining)
