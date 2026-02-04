@@ -519,32 +519,32 @@ ag_grid.column_def(
 - [x] `monthly_exercise_limit_ag_grid.py` - Migrated with compact toggle
 - [x] `restricted_list_ag_grid.py` - Migrated with compact toggle
 
-### emsx/ (2)
-- [ ] `emsa_order_ag_grid.py`
-- [ ] `emsa_route_ag_grid.py`
+### emsx/ (0 remaining - COMPLETED)
+- [x] `emsa_order_ag_grid.py` - Migrated with compact toggle
+- [x] `emsa_route_ag_grid.py` - Migrated with compact toggle
 
-### events/ (3)
-- [ ] `event_calendar_ag_grid.py`
-- [ ] `event_stream_ag_grid.py`
-- [ ] `reverse_inquiry_ag_grid.py`
+### events/ (0 remaining - COMPLETED)
+- [x] `event_calendar_ag_grid.py` - Migrated with compact toggle
+- [x] `event_stream_ag_grid.py` - Migrated with compact toggle
+- [x] `reverse_inquiry_ag_grid.py` - Migrated with compact toggle
 
-### instruments/ (5)
-- [ ] `instrument_data_ag_grid.py`
-- [ ] `instrument_term_ag_grid.py`
-- [ ] `special_term_ag_grid.py`
-- [ ] `stock_screener_ag_grid.py`
-- [ ] `ticker_data_ag_grid.py`
+### instruments/ (0 remaining - COMPLETED)
+- [x] `instrument_data_ag_grid.py` - Migrated with compact toggle
+- [x] `instrument_term_ag_grid.py` - Migrated with compact toggle
+- [x] `special_term_ag_grid.py` - Migrated with compact toggle
+- [x] `stock_screener_ag_grid.py` - Migrated with compact toggle
+- [x] `ticker_data_ag_grid.py` - Migrated with compact toggle
 
-### market_data/ (5) - **Enable cell flash**
-- [ ] `fx_data_ag_grid.py`
-- [ ] `historical_data_ag_grid.py`
-- [ ] `market_data_ag_grid.py`
-- [ ] `market_hours_ag_grid.py`
-- [ ] `trading_calendar_ag_grid.py`
+### market_data/ (0 remaining - COMPLETED) - **Cell flash enabled**
+- [x] `fx_data_ag_grid.py` - Migrated with cell flash & compact toggle
+- [x] `historical_data_ag_grid.py` - Migrated with cell flash & compact toggle
+- [x] `market_data_ag_grid.py` - Migrated with cell flash & compact toggle
+- [x] `market_hours_ag_grid.py` - Migrated with cell flash & compact toggle
+- [x] `trading_calendar_ag_grid.py` - Migrated with cell flash & compact toggle
 
-### operations/ (2)
-- [ ] `daily_procedure_check_ag_grid.py`
-- [ ] `operation_process_ag_grid.py`
+### operations/ (0 remaining - COMPLETED)
+- [x] `daily_procedure_check_ag_grid.py` - Migrated with compact toggle
+- [x] `operation_process_ag_grid.py` - Migrated with compact toggle
 
 ### pnl/ (0 remaining - COMPLETED) - **Enable cell flash**
 - [x] `pnl_change_ag_grid.py` - Migrated with compact toggle

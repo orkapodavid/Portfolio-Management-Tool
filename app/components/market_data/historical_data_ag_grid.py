@@ -1,12 +1,30 @@
 """
 Historical Data AG-Grid Component.
 
-AG-Grid based implementation for historical price data, replacing legacy rx.el.table.
+Migrated to use create_standard_grid factory with cell flash and full toolbar support.
 """
 
 import reflex as rx
 from reflex_ag_grid import ag_grid, AGFilters
 from app.states.market_data.market_data_state import MarketDataState
+from app.components.shared.ag_grid_config import create_standard_grid
+
+
+# =============================================================================
+# QUICK FILTER STATE
+# =============================================================================
+
+
+class HistoricalDataGridState(rx.State):
+    """State for Historical Data grid quick filter."""
+
+    search_text: str = ""
+
+    def set_search(self, value: str):
+        self.search_text = value
+
+    def clear_search(self):
+        self.search_text = ""
 
 
 # =============================================================================
@@ -46,8 +64,9 @@ def _get_column_defs() -> list:
         ag_grid.column_def(
             field="trade_date",
             header_name="Trade Date",
-            filter=AGFilters.text,
+            filter=AGFilters.date,
             min_width=110,
+            pinned="left",
         ),
         ag_grid.column_def(
             field="ticker",
@@ -55,6 +74,7 @@ def _get_column_defs() -> list:
             filter=AGFilters.text,
             min_width=100,
             cell_style=_TICKER_STYLE,
+            tooltip_field="ticker",
         ),
         ag_grid.column_def(
             field="vwap_price",
@@ -112,25 +132,42 @@ def _get_column_defs() -> list:
 # MAIN COMPONENT
 # =============================================================================
 
+_STORAGE_KEY = "historical_data_grid_state"
+_GRID_ID = "historical_data_grid"
+
 
 def historical_data_ag_grid() -> rx.Component:
-    """
-    Historical Data AG-Grid component.
+    """Historical Data AG-Grid component with cell flash and full toolbar support."""
+    from app.components.shared.ag_grid_config import (
+        grid_state_script,
+        grid_toolbar,
+        get_default_export_params,
+        get_default_csv_export_params,
+    )
 
-    Displays historical price and volume data with trade date, ticker,
-    prices, change percentage, and audit timestamps.
-    """
-    return ag_grid(
-        id="historical_data_grid",
-        row_data=MarketDataState.filtered_historical_data,
-        column_defs=_get_column_defs(),
-        row_id_key="id",
-        theme="quartz",
-        default_col_def={
-            "sortable": True,
-            "resizable": True,
-            "filter": True,
-        },
-        height="100%",
+    return rx.vstack(
+        rx.script(grid_state_script(_STORAGE_KEY, _GRID_ID)),
+        grid_toolbar(
+            storage_key=_STORAGE_KEY,
+            page_name="historical_data",
+            search_value=HistoricalDataGridState.search_text,
+            on_search_change=HistoricalDataGridState.set_search,
+            on_search_clear=HistoricalDataGridState.clear_search,
+            grid_id=_GRID_ID,
+            show_compact_toggle=True,
+        ),
+        create_standard_grid(
+            grid_id=_GRID_ID,
+            row_data=MarketDataState.filtered_historical_data,
+            column_defs=_get_column_defs(),
+            enable_cell_flash=True,  # Enable for market data
+            enable_row_numbers=True,
+            enable_multi_select=True,
+            default_excel_export_params=get_default_export_params("historical_data"),
+            default_csv_export_params=get_default_csv_export_params("historical_data"),
+            quick_filter_text=HistoricalDataGridState.search_text,
+        ),
         width="100%",
+        height="100%",
+        spacing="0",
     )
