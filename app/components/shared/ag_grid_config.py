@@ -610,9 +610,24 @@ def grid_toolbar(
     storage_key: str,
     page_name: str,
     *,
+    # Search
     search_value: rx.Var[str] | None = None,
     on_search_change: Callable | None = None,
     on_search_clear: Callable | None = None,
+    # Generate dropdown (optional)
+    show_generate: bool = False,
+    generate_items: list[str] | None = None,
+    on_generate: Callable | None = None,
+    is_generate_open: rx.Var[bool] | None = None,
+    on_generate_toggle: Callable | None = None,
+    # Refresh button (optional)
+    show_refresh: bool = False,
+    on_refresh: Callable | None = None,
+    is_loading: rx.Var[bool] | None = None,
+    # Date picker (optional)
+    show_date_picker: bool = False,
+    on_date_change: Callable | None = None,
+    # Export/Layout buttons
     show_excel: bool = True,
     show_save: bool = True,
     show_restore: bool = True,
@@ -622,108 +637,229 @@ def grid_toolbar(
     show_compact_toggle: bool = False,
 ) -> rx.Component:
     """
-    Create a complete grid toolbar with search, export, and layout controls.
+    Unified grid toolbar with search, generate, export, and layout controls.
 
     This is the recommended way to add a toolbar above AG Grid components.
-    It groups buttons by function with visual dividers for better UX.
+    It combines the styling of workspace_controls with grid-specific functionality.
 
     Color scheme:
-    - Compact Toggle: Violet (view action)
+    - Compact Toggle: Violet (view action) -> Green when active
     - Excel: Green (data export action)
     - Save Layout: Blue (layout action, matches Restore)
     - Restore: Blue (layout action)
     - Reset: Gray (destructive/neutral)
 
+    Visual Layout:
+        [Generate] [Export▾] [↻] [🔍 Search...] [📅 Date] | [Compact] | [Excel] | [Save] [Restore] [Reset]
+
+
     Args:
         storage_key: Unique localStorage key for grid state persistence
         page_name: Name prefix for export files (e.g., "pnl_full")
-        search_value: State var for search text (optional)
-        on_search_change: Handler for search input changes (optional)
-        on_search_clear: Handler for clearing search (optional)
+
+        search_value: State var for search text
+        on_search_change: Handler for search input changes
+        on_search_clear: Handler for clearing search
+
+        show_generate: Show Generate dropdown button
+        generate_items: List of menu items for Generate dropdown
+        on_generate: Handler when a generate item is clicked (receives item label)
+        is_generate_open: State var for dropdown open state
+        on_generate_toggle: Handler to toggle dropdown
+
+        show_refresh: Show Refresh button
+        on_refresh: Handler for refresh click
+        is_loading: State var for loading spinner
+
+        show_date_picker: Show date picker input
+        on_date_change: Handler for date changes
+
         show_excel: Show Excel export button
         show_save: Show Save Layout button
         show_restore: Show Restore button
         show_reset: Show Reset button
-        button_size: Radix button size
+        button_size: Radix button size for layout and view buttons
         grid_id: Grid ID for API calls (required for compact toggle)
         show_compact_toggle: Show compact mode toggle button
 
-    Returns:
-        Complete toolbar with search (left) and buttons (right)
 
-    Usage:
+    Returns:
+        Complete toolbar styled with TailwindCSS
+
+    Usage (simple - grid-only controls):
         grid_toolbar(
             storage_key="pnl_grid_state",
             page_name="pnl_full",
             search_value=State.search_text,
             on_search_change=State.set_search,
-            on_search_clear=State.clear_search,
+        )
+
+    Usage (full - with Generate and Refresh):
+        grid_toolbar(
+            storage_key="pnl_grid_state",
+            page_name="pnl_full",
+            search_value=State.search_text,
+            on_search_change=State.set_search,
+            show_generate=True,
+            generate_items=["Generate Report", "Refresh Data"],
+            on_generate=State.handle_generate,
+            is_generate_open=State.is_menu_open,
+            on_generate_toggle=State.toggle_menu,
+            show_refresh=True,
+            on_refresh=State.refresh_data,
+            is_loading=State.is_loading,
         )
     """
     safe_key = storage_key.replace("-", "_")
 
-    # Build left side (search)
-    left_side = []
-    if search_value is not None and on_search_change is not None:
-        left_side.append(
-            quick_filter_input(
-                search_value=search_value,
-                on_change=on_search_change,
-                on_clear=on_search_clear,
-            )
-        )
+    # =========================================================================
+    # LEFT SIDE CONTROLS
+    # =========================================================================
+    left_controls = []
 
-    # Build right side (buttons with divider)
-    export_buttons = []
+    # Generate dropdown button
+    if show_generate and generate_items and on_generate and is_generate_open is not None:
+        generate_btn = rx.el.div(
+            rx.el.button(
+                rx.el.div(
+                    rx.icon("zap", size=12),
+                    rx.el.span("Generate", class_name="ml-1.5"),
+                    rx.icon("chevron-down", size=10, class_name="ml-1 opacity-70"),
+                    class_name="flex items-center",
+                ),
+                on_click=on_generate_toggle,
+                class_name="px-3 h-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded hover:shadow-md transition-all flex items-center shadow-sm",
+            ),
+            rx.cond(
+                is_generate_open,
+                rx.el.div(
+                    rx.el.div(
+                        class_name="fixed inset-0 z-40",
+                        on_click=on_generate_toggle,
+                    ),
+                    rx.el.div(
+                        rx.foreach(
+                            generate_items,
+                            lambda item: rx.el.button(
+                                item,
+                                on_click=lambda i=item: on_generate(i),
+                                class_name="block w-full text-left px-4 py-2 text-[10px] font-bold text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors",
+                            ),
+                        ),
+                        class_name="absolute top-full left-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-100 py-1 z-50",
+                    ),
+                ),
+            ),
+            class_name="relative",
+        )
+        left_controls.append(generate_btn)
+
+    # Excel export button (styled like workspace_controls Export)
+    if show_excel:
+        excel_btn = rx.el.button(
+            rx.el.div(
+                rx.icon("file-spreadsheet", size=12),
+                rx.el.span("Excel", class_name="ml-1.5"),
+                class_name="flex items-center",
+            ),
+            on_click=rx.call_script(_get_export_excel_js(page_name)),
+            class_name="px-3 h-6 bg-white border border-gray-200 text-gray-600 text-[10px] font-bold uppercase tracking-widest rounded hover:bg-gray-50 hover:text-green-600 transition-colors shadow-sm flex items-center",
+        )
+        left_controls.append(excel_btn)
+
+    # Refresh button
+    if show_refresh and on_refresh:
+        refresh_btn = rx.el.button(
+            rx.icon(
+                "refresh-cw",
+                size=12,
+                class_name=rx.cond(
+                    is_loading if is_loading is not None else False,
+                    "animate-spin",
+                    "",
+                ),
+            ),
+            on_click=on_refresh,
+            class_name="h-6 w-6 flex items-center justify-center bg-white border border-gray-200 text-gray-600 rounded hover:bg-gray-50 hover:text-blue-600 transition-colors shadow-sm",
+        )
+        left_controls.append(refresh_btn)
+
+    # Search input
+    if search_value is not None and on_search_change is not None:
+        search_input = rx.el.div(
+            rx.icon("search", size=12, class_name="text-gray-400 mr-1.5 shrink-0"),
+            rx.el.input(
+                placeholder="Search all columns...",
+                value=search_value,
+                on_change=on_search_change,
+                class_name="bg-transparent text-[10px] font-bold outline-none w-full text-gray-700 placeholder-gray-400",
+            ),
+            rx.cond(
+                search_value != "",
+                rx.el.button(
+                    rx.icon("x", size=10, class_name="text-gray-400 hover:text-gray-600"),
+                    on_click=on_search_clear if on_search_clear else lambda: None,
+                    class_name="p-0.5 rounded-full hover:bg-gray-100 ml-1 transition-colors",
+                ),
+            ),
+            class_name="flex items-center bg-white border border-gray-200 rounded px-2 h-6 flex-1 max-w-[200px] shadow-sm ml-2 transition-all focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-100",
+        )
+        left_controls.append(search_input)
+
+    # Date picker
+    if show_date_picker and on_date_change:
+        date_picker = rx.el.div(
+            rx.icon("calendar", size=12, class_name="text-gray-500 mr-1.5"),
+            rx.el.input(
+                type="date",
+                on_change=on_date_change,
+                class_name="bg-transparent text-[10px] font-bold text-gray-600 outline-none w-24 uppercase",
+            ),
+            class_name="flex items-center bg-white border border-gray-200 rounded px-2 h-6 shadow-sm hover:border-blue-400 transition-colors cursor-pointer",
+        )
+        left_controls.append(date_picker)
+
+    # =========================================================================
+    # RIGHT SIDE CONTROLS (Layout buttons)
+    # =========================================================================
     layout_buttons = []
 
-    # Export group (green)
-    if show_excel:
-        export_buttons.append(
-            rx.button(
-                rx.icon("file-spreadsheet", size=16),
-                "Excel",
-                on_click=rx.call_script(_get_export_excel_js(page_name)),
-                variant="soft",
-                color_scheme="green",
-                size=button_size,
-            )
-        )
-
-    # Layout group (blue/gray)
     if show_save:
         layout_buttons.append(
-            rx.button(
-                rx.icon("save", size=16),
-                "Save Layout",
+            rx.el.button(
+                rx.el.div(
+                    rx.icon("save", size=12),
+                    rx.el.span("Save", class_name="ml-1"),
+                    class_name="flex items-center",
+                ),
                 on_click=rx.call_script(f"saveGridState_{safe_key}()"),
-                variant="soft",
-                color_scheme="blue",
-                size=button_size,
+                class_name="px-2 h-6 bg-white border border-gray-200 text-gray-600 text-[10px] font-bold rounded hover:bg-gray-50 hover:text-blue-600 transition-colors shadow-sm flex items-center",
             )
         )
 
     if show_restore:
         layout_buttons.append(
-            rx.button(
-                rx.icon("rotate-ccw", size=16),
-                "Restore",
+            rx.el.button(
+                rx.el.div(
+                    rx.icon("rotate-ccw", size=12),
+                    rx.el.span("Restore", class_name="ml-1"),
+                    class_name="flex items-center",
+                ),
                 on_click=rx.call_script(f"restoreGridState_{safe_key}()"),
-                variant="soft",
-                color_scheme="blue",
-                size=button_size,
+                class_name="px-2 h-6 bg-white border border-gray-200 text-gray-600 text-[10px] font-bold rounded hover:bg-gray-50 hover:text-blue-600 transition-colors shadow-sm flex items-center",
             )
         )
 
     if show_reset:
         layout_buttons.append(
-            rx.button(
-                rx.icon("x", size=16),
-                "Reset",
+            rx.el.button(
+                rx.el.div(
+                    rx.icon("x", size=12),
+                    rx.el.span("Reset", class_name="ml-1"),
+                    class_name="flex items-center",
+                ),
                 on_click=rx.call_script(f"resetGridState_{safe_key}()"),
-                variant="soft",
-                color_scheme="gray",
-                size=button_size,
+                class_name="px-2 h-6 bg-white border border-gray-200 text-gray-500 text-[10px] font-bold rounded hover:bg-gray-50 hover:text-red-600 transition-colors shadow-sm flex items-center",
             )
         )
 
@@ -812,47 +948,34 @@ def grid_toolbar(
             )
         )
 
-    # Combine with visual divider between groups
-    right_items = []
 
-    # View group (leftmost)
+    # =========================================================================
+    # ASSEMBLE TOOLBAR
+    # =========================================================================
+    right_side_items = []
+
+    # View buttons (Compact toggle) - first on right side
     if view_buttons:
-        right_items.append(rx.hstack(*view_buttons, spacing="2"))
-
-    if view_buttons and (export_buttons or layout_buttons):
-        # Vertical divider
-        right_items.append(
-            rx.box(
-                width="1px",
-                height="24px",
-                background_color="var(--gray-6)",
+        right_side_items.extend(view_buttons)
+        # Add divider if there are more items after
+        if layout_buttons:
+            right_side_items.append(
+                rx.el.div(class_name="w-px h-4 bg-gray-300 mx-2")
             )
-        )
-
-    if export_buttons:
-        right_items.append(rx.hstack(*export_buttons, spacing="2"))
-
-    if export_buttons and layout_buttons:
-        # Vertical divider
-        right_items.append(
-            rx.box(
-                width="1px",
-                height="24px",
-                background_color="var(--gray-6)",
-            )
-        )
 
     if layout_buttons:
-        right_items.append(rx.hstack(*layout_buttons, spacing="2"))
+        right_side_items.extend(layout_buttons)
 
-    right_side = rx.hstack(*right_items, spacing="3", align="center")
-
-    return rx.hstack(
-        *left_side,
-        right_side,
-        justify="between",
-        width="100%",
-        padding_bottom="2",
+    return rx.el.div(
+        rx.el.div(
+            *left_controls,
+            class_name="flex items-center gap-2 flex-1",
+        ),
+        rx.el.div(
+            *right_side_items,
+            class_name="flex items-center gap-1",
+        ),
+        class_name="flex items-center justify-between px-3 py-1.5 bg-[#F9F9F9] border-b border-gray-200 shrink-0 h-[40px]",
     )
 
 

@@ -115,14 +115,8 @@ def module_layout(
                     ),
                     class_name="flex flex-row items-center bg-white border-b border-gray-200 px-2 pt-0.5 overflow-hidden shrink-0 h-[28px] w-full max-w-full flex-nowrap",
                 ),
-                # Controls (Skipping complex controls for V1 of refactor to minimize errors, adding placeholder)
-                rx.el.div(
-                    rx.text(
-                        f"{module_name} > {subtab_name}",
-                        class_name="text-[10px] font-bold text-gray-400",
-                    ),
-                    class_name="flex items-center justify-between px-3 py-1.5 bg-[#F9F9F9] border-b border-gray-200 shrink-0 h-[40px]",
-                ),
+                # NOTE: workspace_controls removed - AG Grid components now include
+                # their own grid_toolbar from ag_grid_config.py
                 rx.el.div(
                     content,
                     class_name="flex-1 flex flex-col min-h-0 overflow-hidden bg-white",

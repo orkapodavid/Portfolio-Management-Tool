@@ -665,7 +665,8 @@ def contextual_workspace() -> rx.Component:
             class_name="flex flex-row items-center bg-white border-b border-gray-200 px-2 pt-0.5 overflow-hidden shrink-0 h-[28px] w-full max-w-full flex-nowrap",
         ),
         rx.el.div(
-            workspace_controls(),
+            # NOTE: workspace_controls() removed - AG Grid components now include
+            # their own grid_toolbar from ag_grid_config.py
             rx.el.div(
                 rx.cond(
                     UIState.is_loading_data,
