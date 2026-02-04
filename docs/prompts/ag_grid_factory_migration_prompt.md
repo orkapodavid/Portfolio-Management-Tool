@@ -552,35 +552,35 @@ ag_grid.column_def(
 - [x] `pnl_summary_ag_grid.py` - Migrated with compact toggle
 - [x] `pnl_full_ag_grid.py` - Migrated with compact toggle
 
-### portfolio_tools/ (9)
-- [ ] `cb_installments_ag_grid.py`
-- [ ] `coming_resets_ag_grid.py`
-- [ ] `deal_indication_ag_grid.py`
-- [ ] `excess_amount_ag_grid.py`
-- [ ] `pay_to_hold_ag_grid.py`
-- [ ] `po_settlement_ag_grid.py`
-- [ ] `reset_dates_ag_grid.py`
-- [ ] `short_ecl_ag_grid.py`
-- [ ] `stock_borrow_ag_grid.py`
+### portfolio_tools/ (0 remaining - COMPLETED)
+- [x] `cb_installments_ag_grid.py` - Migrated with compact toggle
+- [x] `coming_resets_ag_grid.py` - Migrated with compact toggle
+- [x] `deal_indication_ag_grid.py` - Migrated with compact toggle
+- [x] `excess_amount_ag_grid.py` - Migrated with compact toggle
+- [x] `pay_to_hold_ag_grid.py` - Migrated with compact toggle
+- [x] `po_settlement_ag_grid.py` - Migrated with compact toggle
+- [x] `reset_dates_ag_grid.py` - Migrated with compact toggle
+- [x] `short_ecl_ag_grid.py` - Migrated with compact toggle
+- [x] `stock_borrow_ag_grid.py` - Migrated with compact toggle
 
-### positions/ (5)
-- [ ] `bond_position_ag_grid.py`
-- [ ] `positions_ag_grid.py`
-- [ ] `stock_position_ag_grid.py`
-- [ ] `trade_summary_ag_grid.py`
-- [ ] `warrant_position_ag_grid.py`
+### positions/ (0 remaining - COMPLETED)
+- [x] `bond_position_ag_grid.py` - Migrated with compact toggle
+- [x] `positions_ag_grid.py` - Migrated with compact toggle
+- [x] `stock_position_ag_grid.py` - Migrated with compact toggle
+- [x] `trade_summary_ag_grid.py` - Migrated with compact toggle
+- [x] `warrant_position_ag_grid.py` - Migrated with compact toggle
 
-### reconciliation/ (5)
-- [ ] `failed_trades_ag_grid.py`
-- [ ] `pnl_recon_ag_grid.py`
-- [ ] `pps_recon_ag_grid.py`
-- [ ] `risk_input_recon_ag_grid.py`
-- [ ] `settlement_recon_ag_grid.py`
+### reconciliation/ (0 remaining - COMPLETED)
+- [x] `failed_trades_ag_grid.py` - Migrated with compact toggle
+- [x] `pnl_recon_ag_grid.py` - Migrated with compact toggle
+- [x] `pps_recon_ag_grid.py` - Migrated with compact toggle
+- [x] `risk_input_recon_ag_grid.py` - Migrated with compact toggle
+- [x] `settlement_recon_ag_grid.py` - Migrated with compact toggle
 
-### risk/ (3) - **Enable cell flash**
-- [ ] `delta_change_ag_grid.py`
-- [ ] `risk_inputs_ag_grid.py`
-- [ ] `risk_measures_ag_grid.py`
+### risk/ (0 remaining - COMPLETED) - **Cell flash enabled**
+- [x] `delta_change_ag_grid.py` - Migrated with cell flash & compact toggle
+- [x] `risk_inputs_ag_grid.py` - Migrated with cell flash & compact toggle
+- [x] `risk_measures_ag_grid.py` - Migrated with cell flash & compact toggle
 
 ---
 
