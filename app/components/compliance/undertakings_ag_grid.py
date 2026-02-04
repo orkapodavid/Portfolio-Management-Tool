@@ -48,6 +48,7 @@ def _get_column_defs() -> list:
             header_name="Ticker",
             filter=AGFilters.text,
             min_width=100,
+            enable_row_group=True,
         ),
         ag_grid.column_def(
             field="company_name",
@@ -60,6 +61,7 @@ def _get_column_defs() -> list:
             header_name="Account",
             filter=AGFilters.text,
             min_width=100,
+            enable_row_group=True,
         ),
         ag_grid.column_def(
             field="undertaking_expiry",
@@ -72,6 +74,7 @@ def _get_column_defs() -> list:
             header_name="Undertaking Type",
             filter="agSetColumnFilter",  # Tier 2: Set filter for categorical
             min_width=120,
+            enable_row_group=True,
         ),
         ag_grid.column_def(
             field="undertaking_details",
@@ -123,7 +126,7 @@ def undertakings_ag_grid() -> rx.Component:
             grid_id="undertakings_grid",
             show_compact_toggle=True,
         ),
-        # Grid
+        # Grid with row grouping support
         create_standard_grid(
             grid_id="undertakings_grid",
             row_data=ComplianceState.filtered_undertakings,
@@ -133,6 +136,9 @@ def undertakings_ag_grid() -> rx.Component:
             default_excel_export_params=get_default_export_params("undertakings"),
             default_csv_export_params=get_default_csv_export_params("undertakings"),
             quick_filter_text=UndertakingsGridState.search_text,
+            # Row grouping options
+            row_group_panel_show="always",
+            group_default_expanded=-1,
         ),
         width="100%",
         height="100%",

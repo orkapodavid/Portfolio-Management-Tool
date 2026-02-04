@@ -60,18 +60,21 @@ def _get_column_defs() -> list:
             header_name="Trade Date",
             filter=AGFilters.text,
             min_width=100,
+            enable_row_group=True,
         ),
         ag_grid.column_def(
             field="underlying",
             header_name="Underlying",
             filter=AGFilters.text,
             min_width=100,
+            enable_row_group=True,
         ),
         ag_grid.column_def(
             field="ticker",
             header_name="Ticker",
             filter=AGFilters.text,
             min_width=100,
+            enable_row_group=True,
         ),
         ag_grid.column_def(
             field="pnl_ytd",
@@ -79,6 +82,8 @@ def _get_column_defs() -> list:
             filter=AGFilters.text,
             min_width=100,
             cell_style=_VALUE_STYLE,
+            enable_row_group=True,
+            agg_func="sum",
         ),
         ag_grid.column_def(
             field="pnl_chg_1d",
@@ -86,6 +91,8 @@ def _get_column_defs() -> list:
             filter=AGFilters.text,
             min_width=100,
             cell_style=_VALUE_STYLE,
+            enable_row_group=True,
+            agg_func="sum",
         ),
         ag_grid.column_def(
             field="pnl_chg_1w",
@@ -93,6 +100,8 @@ def _get_column_defs() -> list:
             filter=AGFilters.text,
             min_width=100,
             cell_style=_VALUE_STYLE,
+            enable_row_group=True,
+            agg_func="sum",
         ),
         ag_grid.column_def(
             field="pnl_chg_1m",
@@ -100,6 +109,8 @@ def _get_column_defs() -> list:
             filter=AGFilters.text,
             min_width=100,
             cell_style=_VALUE_STYLE,
+            enable_row_group=True,
+            agg_func="sum",
         ),
         ag_grid.column_def(
             field="pnl_chg_pct_1d",
@@ -107,6 +118,8 @@ def _get_column_defs() -> list:
             filter=AGFilters.text,
             min_width=100,
             cell_style=_VALUE_STYLE,
+            enable_row_group=True,
+            agg_func="avg",
         ),
         ag_grid.column_def(
             field="pnl_chg_pct_1w",
@@ -114,6 +127,8 @@ def _get_column_defs() -> list:
             filter=AGFilters.text,
             min_width=100,
             cell_style=_VALUE_STYLE,
+            enable_row_group=True,
+            agg_func="avg",
         ),
         ag_grid.column_def(
             field="pnl_chg_pct_1m",
@@ -121,6 +136,8 @@ def _get_column_defs() -> list:
             filter=AGFilters.text,
             min_width=100,
             cell_style=_VALUE_STYLE,
+            enable_row_group=True,
+            agg_func="avg",
         ),
     ]
 
@@ -163,7 +180,7 @@ def pnl_change_ag_grid() -> rx.Component:
             grid_id="pnl_change_grid",
             show_compact_toggle=True,
         ),
-        # Grid
+        # Grid with row grouping support
         create_standard_grid(
             grid_id="pnl_change_grid",
             row_data=PnLState.filtered_pnl_change,
@@ -174,6 +191,10 @@ def pnl_change_ag_grid() -> rx.Component:
             default_excel_export_params=get_default_export_params("pnl_change"),
             default_csv_export_params=get_default_csv_export_params("pnl_change"),
             quick_filter_text=PnLChangeGridState.search_text,
+            # Row grouping options
+            row_group_panel_show="always",
+            group_default_expanded=-1,
+            grand_total_row="bottom",
         ),
         width="100%",
         height="100%",

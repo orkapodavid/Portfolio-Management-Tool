@@ -299,6 +299,37 @@ create_standard_grid(
 
 **Note**: Compact mode sets `row_height=28` and `header_height=32` for a denser display. This is ideal for data-heavy dashboards where screen real estate matters.
 
+### Row Grouping (All Grids - Recommended)
+Enable drag-to-group for all analytics grids:
+
+```python
+# On grid:
+create_standard_grid(
+    grid_id="...",
+    row_data=...,
+    column_defs=...,
+    row_group_panel_show="always",  # Show grouping panel at top
+    group_default_expanded=-1,       # Expand all groups (-1 = all)
+    grand_total_row="bottom",        # Pin totals at bottom (optional)
+)
+
+# On columns (add to groupable fields):
+ag_grid.column_def(
+    field="underlying",
+    enable_row_group=True,  # Allow dragging to group panel
+)
+ag_grid.column_def(
+    field="pnl_ytd",
+    enable_row_group=True,
+    agg_func="sum",  # sum, avg, count, min, max
+)
+```
+
+**Note**: Row grouping is an Enterprise feature. Use `agg_func="sum"` for amounts, `agg_func="avg"` for percentages/rates.
+
+> [!WARNING]
+> **Only use `grand_total_row` when columns have meaningful aggregations.** For grids with rates, ratios, or categorical data (e.g., FX rates, currency grids), omit `grand_total_row` to avoid an empty pinned row at the bottom.
+
 ### Categorical Columns (use Set Filter)
 For columns with discrete values (status, sector, type, account, currency):
 

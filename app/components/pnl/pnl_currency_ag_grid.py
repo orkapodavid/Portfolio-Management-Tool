@@ -60,12 +60,14 @@ def _get_column_defs() -> list:
             header_name="Trade Date",
             filter=AGFilters.text,
             min_width=100,
+            enable_row_group=True,
         ),
         ag_grid.column_def(
             field="currency",
             header_name="Currency",
             filter=AGFilters.text,
             min_width=90,
+            enable_row_group=True,
         ),
         ag_grid.column_def(
             field="fx_rate",
@@ -94,6 +96,8 @@ def _get_column_defs() -> list:
             filter=AGFilters.text,
             min_width=110,
             cell_style=_VALUE_STYLE,
+            enable_row_group=True,
+            agg_func="sum",
         ),
         ag_grid.column_def(
             field="usd_exposure",
@@ -101,6 +105,8 @@ def _get_column_defs() -> list:
             filter=AGFilters.text,
             min_width=110,
             cell_style=_VALUE_STYLE,
+            enable_row_group=True,
+            agg_func="sum",
         ),
         ag_grid.column_def(
             field="pos_ccy_expo",
@@ -115,6 +121,8 @@ def _get_column_defs() -> list:
             filter=AGFilters.text,
             min_width=120,
             cell_style=_VALUE_STYLE,
+            enable_row_group=True,
+            agg_func="sum",
         ),
         ag_grid.column_def(
             field="pos_ccy_pnl",
@@ -122,6 +130,8 @@ def _get_column_defs() -> list:
             filter=AGFilters.text,
             min_width=110,
             cell_style=_VALUE_STYLE,
+            enable_row_group=True,
+            agg_func="sum",
         ),
         ag_grid.column_def(
             field="net_ccy",
@@ -176,6 +186,7 @@ def pnl_currency_ag_grid() -> rx.Component:
             grid_id="pnl_currency_grid",
             show_compact_toggle=True,
         ),
+        # Grid with row grouping support
         create_standard_grid(
             grid_id="pnl_currency_grid",
             row_data=PnLState.filtered_pnl_currency,
@@ -186,6 +197,9 @@ def pnl_currency_ag_grid() -> rx.Component:
             default_excel_export_params=get_default_export_params("pnl_currency"),
             default_csv_export_params=get_default_csv_export_params("pnl_currency"),
             quick_filter_text=PnLCurrencyGridState.search_text,
+            # Row grouping options
+            row_group_panel_show="always",
+            group_default_expanded=-1,
         ),
         width="100%",
         height="100%",

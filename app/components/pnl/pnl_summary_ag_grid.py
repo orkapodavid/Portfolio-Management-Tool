@@ -60,18 +60,21 @@ def _get_column_defs() -> list:
             header_name="Trade Date",
             filter=AGFilters.text,
             min_width=100,
+            enable_row_group=True,
         ),
         ag_grid.column_def(
             field="underlying",
             header_name="Underlying",
             filter=AGFilters.text,
             min_width=100,
+            enable_row_group=True,
         ),
         ag_grid.column_def(
             field="currency",
             header_name="Currency",
             filter=AGFilters.text,
             min_width=90,
+            enable_row_group=True,
         ),
         ag_grid.column_def(
             field="price",
@@ -126,12 +129,16 @@ def _get_column_defs() -> list:
             header_name="Last Volume",
             filter=AGFilters.text,
             min_width=100,
+            enable_row_group=True,
+            agg_func="sum",
         ),
         ag_grid.column_def(
             field="adv_3m",
             header_name="ADV 3M",
             filter=AGFilters.text,
             min_width=90,
+            enable_row_group=True,
+            agg_func="avg",
         ),
     ]
 
@@ -172,6 +179,7 @@ def pnl_summary_ag_grid() -> rx.Component:
             grid_id="pnl_summary_grid",
             show_compact_toggle=True,
         ),
+        # Grid with row grouping support
         create_standard_grid(
             grid_id="pnl_summary_grid",
             row_data=PnLState.filtered_pnl_summary,
@@ -182,6 +190,10 @@ def pnl_summary_ag_grid() -> rx.Component:
             default_excel_export_params=get_default_export_params("pnl_summary"),
             default_csv_export_params=get_default_csv_export_params("pnl_summary"),
             quick_filter_text=PnLSummaryGridState.search_text,
+            # Row grouping options
+            row_group_panel_show="always",
+            group_default_expanded=-1,
+            grand_total_row="bottom",
         ),
         width="100%",
         height="100%",
