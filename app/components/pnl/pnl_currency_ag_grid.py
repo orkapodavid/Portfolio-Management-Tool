@@ -173,6 +173,8 @@ def pnl_currency_ag_grid() -> rx.Component:
             search_value=PnLCurrencyGridState.search_text,
             on_search_change=PnLCurrencyGridState.set_search,
             on_search_clear=PnLCurrencyGridState.clear_search,
+            grid_id="pnl_currency_grid",
+            show_compact_toggle=True,
         ),
         create_standard_grid(
             grid_id="pnl_currency_grid",

@@ -913,19 +913,17 @@ def grid_toolbar(
             // Update button visual state
             const btn = document.getElementById('compact-toggle-{grid_id}');
             if (btn) {{
-                const textNode = btn.querySelector('span:last-child') || btn.lastChild;
+                const textSpan = btn.querySelector('span');
                 if (!isCompact) {{
-                    // Now compact - show active state
-                    btn.setAttribute('data-accent-color', 'green');
-                    btn.style.setProperty('--accent-9', 'var(--green-9)');
-                    btn.style.setProperty('--accent-a3', 'var(--green-a3)');
-                    if (textNode) textNode.textContent = 'Compact ✓';
+                    // Now compact - show active state (green/active)
+                    btn.classList.remove('bg-white', 'text-gray-600', 'hover:bg-violet-50', 'hover:text-violet-600');
+                    btn.classList.add('bg-violet-100', 'text-violet-700', 'border-violet-300');
+                    if (textSpan) textSpan.textContent = 'Compact ✓';
                 }} else {{
                     // Now normal - show default state
-                    btn.setAttribute('data-accent-color', 'violet');
-                    btn.style.removeProperty('--accent-9');
-                    btn.style.removeProperty('--accent-a3');
-                    if (textNode) textNode.textContent = 'Compact';
+                    btn.classList.remove('bg-violet-100', 'text-violet-700', 'border-violet-300');
+                    btn.classList.add('bg-white', 'text-gray-600', 'hover:bg-violet-50', 'hover:text-violet-600');
+                    if (textSpan) textSpan.textContent = 'Compact';
                 }}
             }}
             
@@ -937,14 +935,15 @@ def grid_toolbar(
     console.error('Grid API not found in fiber tree');
 }})();"""
         view_buttons.append(
-            rx.button(
-                rx.icon("rows-3", size=16),
-                "Compact",
+            rx.el.button(
+                rx.el.div(
+                    rx.icon("rows-3", size=12),
+                    rx.el.span("Compact", class_name="ml-1"),
+                    class_name="flex items-center",
+                ),
                 id=f"compact-toggle-{grid_id}",
                 on_click=rx.call_script(toggle_compact_js),
-                variant="soft",
-                color_scheme="violet",
-                size=button_size,
+                class_name="px-2 h-6 bg-white border border-gray-200 text-gray-600 text-[10px] font-bold rounded hover:bg-violet-50 hover:text-violet-600 transition-colors shadow-sm flex items-center",
             )
         )
 
@@ -975,7 +974,7 @@ def grid_toolbar(
             *right_side_items,
             class_name="flex items-center gap-1",
         ),
-        class_name="flex items-center justify-between px-3 py-1.5 bg-[#F9F9F9] border-b border-gray-200 shrink-0 h-[40px]",
+        class_name="flex items-center justify-between px-3 py-1.5 bg-[#F9F9F9] border-b border-gray-200 shrink-0 h-[40px] w-full",
     )
 
 

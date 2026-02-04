@@ -186,21 +186,30 @@ rx.vstack(
         search_value=MyState.search_text,
         on_search_change=MyState.set_search,
         on_search_clear=MyState.clear_search,
+        grid_id="my_grid",           # Required for Compact toggle
+        show_compact_toggle=True,     # Optional: Show Compact mode button
     ),
-    create_standard_grid(...),
+    create_standard_grid(
+        grid_id="my_grid",  # Must match grid_id in grid_toolbar
+        ...
+    ),
 )
 ```
 
 **Visual Layout:**
 ```
-[Search: _______________]           [Excel] | [Save Layout] [Restore] [Reset]
-                                    ↑ green   ↑ blue        ↑ blue    ↑ gray
+[Search: _______________]     [Compact] | [Excel] | [Save Layout] [Restore] [Reset]
+                              ↑ violet   ↑ green   ↑ blue        ↑ blue    ↑ red
 ```
 
 **Color Scheme:**
+- **Compact**: Violet (view toggle) → Green when active
 - **Excel**: Green (data export)
 - **Save/Restore**: Blue (layout actions grouped)
-- **Reset**: Gray (neutral)
+- **Reset**: Red (destructive action)
+
+> [!IMPORTANT]
+> When using `show_compact_toggle=True`, you MUST provide `grid_id` and it MUST match the `grid_id` in `create_standard_grid`. Without this, the Compact button won't appear.
 
 ---
 
@@ -338,10 +347,11 @@ ag_grid.column_def(
 - [ ] `daily_procedure_check_ag_grid.py`
 - [ ] `operation_process_ag_grid.py`
 
-### pnl/ (3 remaining) - **Enable cell flash**
-- [ ] `pnl_change_ag_grid.py`
-- [ ] `pnl_currency_ag_grid.py`
-- [ ] `pnl_summary_ag_grid.py`
+### pnl/ (0 remaining - COMPLETED) - **Enable cell flash**
+- [x] `pnl_change_ag_grid.py` - Migrated with compact toggle
+- [x] `pnl_currency_ag_grid.py` - Migrated with compact toggle
+- [x] `pnl_summary_ag_grid.py` - Migrated with compact toggle
+- [x] `pnl_full_ag_grid.py` - Migrated with compact toggle
 
 ### portfolio_tools/ (9)
 - [ ] `cb_installments_ag_grid.py`

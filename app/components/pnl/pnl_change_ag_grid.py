@@ -160,6 +160,8 @@ def pnl_change_ag_grid() -> rx.Component:
             search_value=PnLChangeGridState.search_text,
             on_search_change=PnLChangeGridState.set_search,
             on_search_clear=PnLChangeGridState.clear_search,
+            grid_id="pnl_change_grid",
+            show_compact_toggle=True,
         ),
         # Grid
         create_standard_grid(

@@ -169,6 +169,8 @@ def pnl_summary_ag_grid() -> rx.Component:
             search_value=PnLSummaryGridState.search_text,
             on_search_change=PnLSummaryGridState.set_search,
             on_search_clear=PnLSummaryGridState.clear_search,
+            grid_id="pnl_summary_grid",
+            show_compact_toggle=True,
         ),
         create_standard_grid(
             grid_id="pnl_summary_grid",
