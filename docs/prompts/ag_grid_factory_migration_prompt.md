@@ -512,12 +512,12 @@ ag_grid.column_def(
 
 ---
 
-## Files to Migrate (45 remaining)
+## Files to Migrate (42 remaining)
 
-### compliance/ (3 remaining)
-- [ ] `beneficial_ownership_ag_grid.py`
-- [ ] `monthly_exercise_limit_ag_grid.py`
-- [ ] `restricted_list_ag_grid.py`
+### compliance/ (0 remaining - COMPLETED)
+- [x] `beneficial_ownership_ag_grid.py` - Migrated with compact toggle
+- [x] `monthly_exercise_limit_ag_grid.py` - Migrated with compact toggle
+- [x] `restricted_list_ag_grid.py` - Migrated with compact toggle
 
 ### emsx/ (2)
 - [ ] `emsa_order_ag_grid.py`
