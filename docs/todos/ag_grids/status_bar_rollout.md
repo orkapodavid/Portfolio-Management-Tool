@@ -347,9 +347,220 @@ def fx_data_ag_grid() -> rx.Component:
 | [pnl_recon_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/reconciliation/pnl_recon_ag_grid.py) | `PnLReconMixin` | Static | ✅ | ✅ force | ✅ | ✅ `id` |
 | [risk_input_recon_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/reconciliation/risk_input_recon_ag_grid.py) | `RiskInputReconMixin` | Static | ✅ | ✅ force | ✅ | ✅ `id` |
 
-### Phase 4: Portfolio Tools & Static Grids (26+ grids)
+### Phase 4: Portfolio Tools & Static Grids (25 grids)
 
-*(Same pattern — see original doc)*
+> [!IMPORTANT]
+> **All Phase 4 grids already use the `create_standard_grid()` factory pattern** with Tier 1 enhancements (status bar, floating filters, quick filter, export). The remaining work is to add:
+> 1. `last_updated` timestamp in toolbar
+> 2. Force Refresh button (for Static grids)
+> 3. `row_id_key` for delta detection
+> 4. Mixin updates for each state
+
+---
+
+#### 4.1 Compliance Grids (4) — Static ✅ COMPLETE
+
+All grids use **Force Refresh** pattern (infrequently changing compliance data).
+
+| Grid | File | Mixin | `last_updated` | Refresh | `row_id_key` |
+|------|------|-------|:--------------:|:-------:|:------------:|
+| Beneficial Ownership | [beneficial_ownership_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/compliance/beneficial_ownership_ag_grid.py) | `ComplianceState` | ✅ | ✅ force | ✅ `ticker` |
+| Monthly Exercise Limit | [monthly_exercise_limit_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/compliance/monthly_exercise_limit_ag_grid.py) | `ComplianceState` | ✅ | ✅ force | ✅ `underlying` |
+| Restricted List | [restricted_list_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/compliance/restricted_list_ag_grid.py) | `ComplianceState` | ✅ | ✅ force | ✅ `ticker` |
+| Undertakings | [undertakings_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/compliance/undertakings_ag_grid.py) | `ComplianceState` | ✅ | ✅ force | ✅ `deal_num` |
+
+**Mixin additions needed in `ComplianceState`:**
+```python
+# app/states/compliance/compliance_state.py
+beneficial_ownership_last_updated: str = "—"
+is_loading_beneficial_ownership: bool = False
+
+monthly_exercise_limit_last_updated: str = "—"
+is_loading_monthly_exercise_limit: bool = False
+
+restricted_list_last_updated: str = "—"
+is_loading_restricted_list: bool = False
+
+undertakings_last_updated: str = "—"
+is_loading_undertakings: bool = False
+
+async def force_refresh_beneficial_ownership(self):
+    if self.is_loading_beneficial_ownership:
+        return
+    self.is_loading_beneficial_ownership = True
+    yield
+    await asyncio.sleep(0.5)
+    await self.load_beneficial_ownership()
+    self.beneficial_ownership_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    self.is_loading_beneficial_ownership = False
+```
+
+---
+
+#### 4.2 EMSX Grids (2) — Ticking
+
+Order and route data is real-time → use **Auto-Refresh** pattern.
+
+| Grid | File | Mixin | `last_updated` | Refresh | `simulate_*` | `row_id_key` |
+|------|------|-------|:--------------:|:-------:|:------------:|:------------:|
+| EMSA Order | [emsa_order_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/emsx/emsa_order_ag_grid.py) | `EMSXState` | [ ] | [ ] auto | [ ] | [ ] `sequence` |
+| EMSA Route | [emsa_route_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/emsx/emsa_route_ag_grid.py) | `EMSXState` | [ ] | [ ] auto | [ ] | [ ] `route_id` |
+
+**Mixin additions needed in `EMSXState`:**
+```python
+# app/states/emsx/emsx_state.py
+emsa_order_last_updated: str = "—"
+emsa_order_auto_refresh: bool = True
+
+emsa_route_last_updated: str = "—"
+emsa_route_auto_refresh: bool = True
+
+def toggle_emsa_order_auto_refresh(self, value: bool):
+    self.emsa_order_auto_refresh = value
+    if value:
+        return type(self).start_emsa_order_auto_refresh
+
+@rx.event(background=True)
+async def start_emsa_order_auto_refresh(self):
+    while True:
+        async with self:
+            if not self.emsa_order_auto_refresh:
+                break
+            self.simulate_emsa_order_update()
+        await asyncio.sleep(2)
+
+def simulate_emsa_order_update(self):
+    # Simulate order fill updates
+    ...
+```
+
+---
+
+#### 4.3 Events Grids (3) — Static
+
+Event calendar and stream data is reference data → use **Force Refresh** pattern.
+
+| Grid | File | Mixin | `last_updated` | Refresh | `row_id_key` |
+|------|------|-------|:--------------:|:-------:|:------------:|
+| Event Calendar | [event_calendar_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/events/event_calendar_ag_grid.py) | `EventsState` | [ ] | [ ] force | [ ] `id` |
+| Event Stream | [event_stream_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/events/event_stream_ag_grid.py) | `EventsState` | [ ] | [ ] force | [ ] `id` |
+| Reverse Inquiry | [reverse_inquiry_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/events/reverse_inquiry_ag_grid.py) | `EventsState` | [ ] | [ ] force | [ ] `id` |
+
+**Mixin additions needed in `EventsState`:**
+```python
+# app/states/events/events_state.py
+event_calendar_last_updated: str = "—"
+is_loading_event_calendar: bool = False
+
+event_stream_last_updated: str = "—"
+is_loading_event_stream: bool = False
+
+reverse_inquiry_last_updated: str = "—"
+is_loading_reverse_inquiry: bool = False
+```
+
+---
+
+#### 4.4 Instruments Grids (5) — Static
+
+Instrument reference data → use **Force Refresh** pattern.
+
+| Grid | File | Mixin | `last_updated` | Refresh | `row_id_key` |
+|------|------|-------|:--------------:|:-------:|:------------:|
+| Instrument Data | [instrument_data_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/instruments/instrument_data_ag_grid.py) | `InstrumentState` | [ ] | [ ] force | [ ] `deal_num` |
+| Instrument Term | [instrument_term_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/instruments/instrument_term_ag_grid.py) | `InstrumentState` | [ ] | [ ] force | [ ] `id` |
+| Special Term | [special_term_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/instruments/special_term_ag_grid.py) | `InstrumentState` | [ ] | [ ] force | [ ] `id` |
+| Stock Screener | [stock_screener_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/instruments/stock_screener_ag_grid.py) | `InstrumentState` | [ ] | [ ] force | [ ] `ticker` |
+| Ticker Data | [ticker_data_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/instruments/ticker_data_ag_grid.py) | `InstrumentState` | [ ] | [ ] force | [ ] `ticker` |
+
+---
+
+#### 4.5 Operations Grids (2) — Static
+
+Operations tracking data → use **Force Refresh** pattern.
+
+| Grid | File | Mixin | `last_updated` | Refresh | `row_id_key` |
+|------|------|-------|:--------------:|:-------:|:------------:|
+| Daily Procedure Check | [daily_procedure_check_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/operations/daily_procedure_check_ag_grid.py) | `OperationsState` | [ ] | [ ] force | [ ] `id` |
+| Operation Process | [operation_process_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/operations/operation_process_ag_grid.py) | `OperationsState` | [ ] | [ ] force | [ ] `id` |
+
+---
+
+#### 4.6 Portfolio Tools Grids (9) — Static
+
+Portfolio reference and configuration data → use **Force Refresh** pattern.
+
+| Grid | File | Mixin | `last_updated` | Refresh | `row_id_key` |
+|------|------|-------|:--------------:|:-------:|:------------:|
+| CB Installments | [cb_installments_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/portfolio_tools/cb_installments_ag_grid.py) | `PortfolioToolsState` | [ ] | [ ] force | [ ] `id` |
+| Coming Resets | [coming_resets_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/portfolio_tools/coming_resets_ag_grid.py) | `PortfolioToolsState` | [ ] | [ ] force | [ ] `id` |
+| Deal Indication | [deal_indication_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/portfolio_tools/deal_indication_ag_grid.py) | `PortfolioToolsState` | [ ] | [ ] force | [ ] `id` |
+| Excess Amount | [excess_amount_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/portfolio_tools/excess_amount_ag_grid.py) | `PortfolioToolsState` | [ ] | [ ] force | [ ] `id` |
+| Pay to Hold | [pay_to_hold_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/portfolio_tools/pay_to_hold_ag_grid.py) | `PortfolioToolsState` | [ ] | [ ] force | [ ] `id` |
+| PO Settlement | [po_settlement_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/portfolio_tools/po_settlement_ag_grid.py) | `PortfolioToolsState` | [ ] | [ ] force | [ ] `id` |
+| Reset Dates | [reset_dates_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/portfolio_tools/reset_dates_ag_grid.py) | `PortfolioToolsState` | [ ] | [ ] force | [ ] `id` |
+| Short ECL | [short_ecl_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/portfolio_tools/short_ecl_ag_grid.py) | `PortfolioToolsState` | [ ] | [ ] force | [ ] `id` |
+| Stock Borrow | [stock_borrow_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/portfolio_tools/stock_borrow_ag_grid.py) | `PortfolioToolsState` | [ ] | [ ] force | [ ] `ticker` |
+
+---
+
+## Phase 4 Implementation Checklist
+
+### Per Grid (25 total):
+
+1. **Grid Component (`*_ag_grid.py`)**:
+   - [ ] Add `row_id_key="<unique_field>"` to `create_standard_grid()`
+   - [ ] Add `loading=<State>.is_loading_*` to `create_standard_grid()` for loading overlay
+   - [ ] Add `last_updated=<State>.*_last_updated` to `grid_toolbar()`
+   - [ ] Add `show_refresh=True` and `on_refresh=<State>.force_refresh_*()` to `grid_toolbar()`
+   - [ ] Add `is_loading=<State>.is_loading_*` to `grid_toolbar()`
+
+> [!IMPORTANT]
+> **`row_id_key` MUST be a truly unique field per row** (e.g., `"id"`, `"deal_num"` if unique).
+> Using non-unique fields like `"ticker"` or `"underlying"` causes AG Grid to **deduplicate rows**,
+> resulting in only the last row with each unique value being displayed.
+> **Symptom**: Grid shows fewer rows than expected (e.g., 8 rows → 1 row after refresh).
+
+2. **State/Mixin (`*_state.py`)**:
+   - [ ] Add `*_last_updated: str = "—"` state variable
+   - [ ] Add `is_loading_*: bool = False` state variable
+   - [ ] Add `async def force_refresh_*()` method with debounce guard
+   - [ ] Update `load_*()` to set `*_last_updated` timestamp
+
+3. **Terminal Verification (MANDATORY after each grid)**:
+   - [ ] Check terminal for compilation errors after code changes
+   - [ ] Watch for `ValueError`, `TypeError`, or `AttributeError` on page navigation
+   - [ ] Confirm no "returning empty" log messages (indicates missing mock data)
+   - [ ] Verify no `AttributeError: 'NoneType'` for missing state variables
+
+4. **Browser Verification (MANDATORY after each grid)**:
+   - [ ] Navigate to the grid page in browser
+   - [ ] Verify grid shows data rows (check "Total Rows: N" in status bar > 0)
+   - [ ] **Verify row count matches mock data** (e.g., if mock returns 8 items, status bar should show "Total Rows: 8")
+   - [ ] Verify "Last Updated" timestamp is displayed in toolbar
+   - [ ] Click Refresh button — verify **loading overlay** appears on grid
+   - [ ] After refresh completes — verify timestamp updates and **row count unchanged**
+   - [ ] Verify no console errors (F12 → Console tab)
+   - [ ] Test Quick Filter — type text, verify rows filter
+   - [ ] Test Excel export button — verify file downloads
+   - [ ] Test Save/Restore/Reset layout buttons
+   - [ ] For Ticking grids: verify Auto-Refresh toggle ON/OFF works
+
+> [!CAUTION]
+> **DO NOT proceed to next grid until all verification steps pass!**
+> Each grid must be verified working before moving on.
+
+### Summary by Category:
+
+| Category | Grids | Type | Pattern |
+|----------|-------|------|---------|
+| Compliance | 4 | Static | Force Refresh |
+| EMSX | 2 | Ticking | Auto-Refresh + simulate |
+| Events | 3 | Static | Force Refresh |
+| Instruments | 5 | Static | Force Refresh |
+| Operations | 2 | Static | Force Refresh |
+| Portfolio Tools | 9 | Static | Force Refresh |
+| **Total** | **25** | | |
 
 ---
 

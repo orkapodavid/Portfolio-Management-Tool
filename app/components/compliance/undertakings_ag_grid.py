@@ -131,12 +131,19 @@ def undertakings_ag_grid() -> rx.Component:
             on_search_clear=UndertakingsGridState.clear_search,
             grid_id="undertakings_grid",
             show_compact_toggle=True,
+            # Status Bar: Last Updated + Force Refresh
+            last_updated=ComplianceState.undertakings_last_updated,
+            show_refresh=True,
+            on_refresh=ComplianceState.force_refresh_undertakings,
+            is_loading=ComplianceState.is_loading_undertakings,
         ),
         # Grid with row grouping support
         create_standard_grid(
             grid_id="undertakings_grid",
             row_data=ComplianceState.filtered_undertakings,
             column_defs=_get_column_defs(),
+            row_id_key="id",  # Delta detection key (unique row ID)
+            loading=ComplianceState.is_loading_undertakings,  # Loading overlay
             enable_row_numbers=True,  # Tier 2: Row numbering
             enable_multi_select=True,  # Tier 2: Multi-row selection with checkboxes
             default_excel_export_params=get_default_export_params("undertakings"),

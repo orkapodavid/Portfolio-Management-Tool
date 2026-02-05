@@ -85,6 +85,9 @@ def create_standard_grid(
     enable_row_numbers: bool = False,
     enable_multi_select: bool = False,
     enable_compact_mode: bool = False,
+    # Loading overlay (for force refresh pattern)
+    loading: rx.Var[bool] | bool = False,
+    loading_template: str = "<span class='ag-overlay-loading-center'>Loading...</span>",
     # Layout
     height: str = "100%",
     width: str = "100%",
@@ -171,6 +174,10 @@ def create_standard_grid(
     if enable_compact_mode:
         grid_props["row_height"] = COMPACT_ROW_HEIGHT
         grid_props["header_height"] = COMPACT_HEADER_HEIGHT
+
+    # Loading overlay (for force refresh pattern)
+    grid_props["loading"] = loading
+    grid_props["overlay_loading_template"] = loading_template
 
     # Merge any additional kwargs
     grid_props.update(kwargs)
@@ -381,7 +388,7 @@ def grid_state_script(storage_key: str, grid_id: str = "") -> str:
     """
     # Sanitize key for use as JS function suffix (replace dashes with underscores)
     safe_key = storage_key.replace("-", "_")
-    
+
     # Build selector: if grid_id provided, target specific grid; otherwise fallback to first
     if grid_id:
         selector = f"'#{grid_id} .ag-root-wrapper'"
@@ -541,7 +548,7 @@ def grid_toolbar(
     button_size: str = "2",
     grid_id: str | None = None,
     show_compact_toggle: bool = False,
-# Status bar (optional)
+    # Status bar (optional)
     last_updated: rx.Var[str] | None = None,
     auto_refresh: rx.Var[bool] | None = None,
     on_auto_refresh_toggle: Callable | None = None,
@@ -628,7 +635,12 @@ def grid_toolbar(
     left_controls = []
 
     # Generate dropdown button
-    if show_generate and generate_items and on_generate and is_generate_open is not None:
+    if (
+        show_generate
+        and generate_items
+        and on_generate
+        and is_generate_open is not None
+    ):
         generate_btn = rx.el.div(
             rx.el.button(
                 rx.el.div(
@@ -707,7 +719,9 @@ def grid_toolbar(
             rx.cond(
                 search_value != "",
                 rx.el.button(
-                    rx.icon("x", size=10, class_name="text-gray-400 hover:text-gray-600"),
+                    rx.icon(
+                        "x", size=10, class_name="text-gray-400 hover:text-gray-600"
+                    ),
                     on_click=on_search_clear if on_search_clear else lambda: None,
                     class_name="p-0.5 rounded-full hover:bg-gray-100 ml-1 transition-colors",
                 ),
@@ -861,7 +875,6 @@ def grid_toolbar(
             )
         )
 
-
     # =========================================================================
     # ASSEMBLE TOOLBAR
     # =========================================================================
@@ -872,9 +885,7 @@ def grid_toolbar(
         right_side_items.extend(view_buttons)
         # Add divider if there are more items after
         if layout_buttons:
-            right_side_items.append(
-                rx.el.div(class_name="w-px h-4 bg-gray-300 mx-2")
-            )
+            right_side_items.append(rx.el.div(class_name="w-px h-4 bg-gray-300 mx-2"))
 
     if layout_buttons:
         right_side_items.extend(layout_buttons)
@@ -942,10 +953,6 @@ def grid_toolbar(
         )
 
     return toolbar_row
-
-
-
-
 
 
 # =============================================================================

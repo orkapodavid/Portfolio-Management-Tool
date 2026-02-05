@@ -140,12 +140,19 @@ def restricted_list_ag_grid() -> rx.Component:
             on_search_clear=RestrictedListGridState.clear_search,
             grid_id=_GRID_ID,
             show_compact_toggle=True,
+            # Status Bar: Last Updated + Force Refresh
+            last_updated=ComplianceState.restricted_list_last_updated,
+            show_refresh=True,
+            on_refresh=ComplianceState.force_refresh_restricted_list,
+            is_loading=ComplianceState.is_loading_restricted_list,
         ),
         # Grid with row grouping support
         create_standard_grid(
             grid_id=_GRID_ID,
             row_data=ComplianceState.filtered_restricted_list,
             column_defs=_get_column_defs(),
+            row_id_key="id",  # Delta detection key (unique row ID)
+            loading=ComplianceState.is_loading_restricted_list,  # Loading overlay
             enable_row_numbers=True,  # Tier 2: Row numbering
             enable_multi_select=True,  # Tier 2: Multi-row selection with checkboxes
             default_excel_export_params=get_default_export_params("restricted_list"),

@@ -103,6 +103,7 @@ class ComplianceRepository(DatabaseRepository):
                 {
                     "id": i + 1,
                     "deal_num": f"DEAL{i + 1:03d}",
+                    "underlying": tickers[i % len(tickers)],  # Required for row_id_key
                     "ticker": tickers[i % len(tickers)],
                     "company_name": f"{tickers[i % len(tickers)]} Inc.",
                     "month": f"2026-{(i % 12) + 1:02d}",
@@ -110,7 +111,7 @@ class ComplianceRepository(DatabaseRepository):
                     "exercised_qty": f"{(i + 1) * 5000:,}",
                     "remaining_qty": f"{(i + 1) * 5000:,}",
                     "limit_type": ["Soft", "Hard"][i % 2],
-                    "original_quantity": "100M",  # Filled to match service usage if needed
+                    "original_quantity": "100M",
                     "monthly_sal": "10%",
                 }
                 for i in range(8)

@@ -149,16 +149,27 @@ def beneficial_ownership_ag_grid() -> rx.Component:
             on_search_clear=BeneficialOwnershipGridState.clear_search,
             grid_id=_GRID_ID,
             show_compact_toggle=True,
+            # Status Bar: Last Updated + Force Refresh
+            last_updated=ComplianceState.beneficial_ownership_last_updated,
+            show_refresh=True,
+            on_refresh=ComplianceState.force_refresh_beneficial_ownership,
+            is_loading=ComplianceState.is_loading_beneficial_ownership,
         ),
         # Grid with row grouping support
         create_standard_grid(
             grid_id=_GRID_ID,
             row_data=ComplianceState.filtered_beneficial_ownership,
             column_defs=_get_column_defs(),
+            row_id_key="id",  # Delta detection key (unique row ID)
+            loading=ComplianceState.is_loading_beneficial_ownership,  # Loading overlay
             enable_row_numbers=True,  # Tier 2: Row numbering
             enable_multi_select=True,  # Tier 2: Multi-row selection with checkboxes
-            default_excel_export_params=get_default_export_params("beneficial_ownership"),
-            default_csv_export_params=get_default_csv_export_params("beneficial_ownership"),
+            default_excel_export_params=get_default_export_params(
+                "beneficial_ownership"
+            ),
+            default_csv_export_params=get_default_csv_export_params(
+                "beneficial_ownership"
+            ),
             quick_filter_text=BeneficialOwnershipGridState.search_text,
             # Row grouping options
             row_group_panel_show="always",
