@@ -462,6 +462,11 @@ class UIState(rx.State):
         await self._load_top_movers()
         await self._load_kpi_metrics()
 
+    @rx.event
+    def redirect_to_default(self):
+        """Redirect to the default Market Data page when accessing root route."""
+        return rx.redirect("/market-data/market-data")
+
     async def _load_notifications(self):
         """Load notifications from NotificationService."""
         try:

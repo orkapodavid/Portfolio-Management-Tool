@@ -9,6 +9,21 @@ A professional portfolio management web dashboard built with Reflex.
 - Python 3.11+
 - [uv](https://docs.astral.sh/uv/) (Python package manager)
 
+### System Dependencies
+
+Some Python packages require system-level libraries.
+
+**Linux (Ubuntu/Debian/Pop!_OS):**
+```bash
+sudo apt-get update
+sudo apt-get install -y unixodbc
+```
+
+**Windows:**
+- Usually pre-installed.
+- If connecting to SQL Server, install the [ODBC Driver for SQL Server](https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server).
+
+
 ### Installation
 
 1. **Clone the repository:**

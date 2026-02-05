@@ -1,8 +1,4 @@
 import reflex as rx
-from app.components.shared.top_navigation import top_navigation
-from app.components.shared.performance_header import performance_header
-from app.components.shared.contextual_workspace import contextual_workspace
-from app.components.shared.notification_sidebar import notification_sidebar
 
 # New States
 from app.states.ui.ui_state import UIState
@@ -96,16 +92,8 @@ from app.pages.orders.emsx_route_page import emsx_route_page
 
 
 def index() -> rx.Component:
-    return rx.el.div(
-        top_navigation(),
-        performance_header(),
-        rx.el.div(
-            contextual_workspace(),
-            notification_sidebar(),
-            class_name=f"flex flex-1 overflow-hidden min-h-0 bg-[{FINANCIAL_GREY}] w-full",
-        ),
-        class_name=f"flex flex-col h-screen w-screen bg-[{FINANCIAL_GREY}] font-['{DEFAULT_FONT}'] antialiased overflow-hidden",
-    )
+    """Root route - immediately redirects to /market-data/market-data."""
+    return rx.fragment()
 
 
 app = rx.App(
@@ -114,7 +102,7 @@ app = rx.App(
         "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
     ],
 )
-app.add_page(index, route="/", on_load=UIState.on_load)
+app.add_page(index, route="/", on_load=UIState.redirect_to_default)
 
 # ================= Module Root Redirects =================
 # ================= Module Root Redirects =================

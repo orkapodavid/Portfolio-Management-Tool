@@ -164,6 +164,12 @@ def trading_calendar_ag_grid() -> rx.Component:
             on_search_clear=TradingCalendarGridState.clear_search,
             grid_id=_GRID_ID,
             show_compact_toggle=True,
+            # Force refresh button for static data (instead of auto-refresh toggle)
+            show_refresh=True,
+            on_refresh=MarketDataState.force_refresh_trading_calendar,
+            is_loading=MarketDataState.is_loading_trading_calendar,
+            # Status bar — timestamp from mixin
+            last_updated=MarketDataState.trading_calendar_last_updated,
         ),
         create_standard_grid(
             grid_id=_GRID_ID,
@@ -175,6 +181,9 @@ def trading_calendar_ag_grid() -> rx.Component:
             default_excel_export_params=get_default_export_params("trading_calendar"),
             default_csv_export_params=get_default_csv_export_params("trading_calendar"),
             quick_filter_text=TradingCalendarGridState.search_text,
+            # Loading overlay for refresh feedback
+            loading=MarketDataState.is_loading_trading_calendar,
+            overlay_loading_template="<span class='ag-overlay-loading-center'>Refreshing data...</span>",
         ),
         width="100%",
         height="100%",

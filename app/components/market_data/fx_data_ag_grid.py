@@ -16,7 +16,7 @@ from app.components.shared.ag_grid_config import create_standard_grid
 
 
 class FxDataGridState(rx.State):
-    """State for FX Data grid quick filter."""
+    """State for FX Data grid quick filter only."""
 
     search_text: str = ""
 
@@ -130,11 +130,16 @@ def fx_data_ag_grid() -> rx.Component:
             on_search_clear=FxDataGridState.clear_search,
             grid_id=_GRID_ID,
             show_compact_toggle=True,
+            # Status bar — timestamp from mixin, toggle from mixin
+            last_updated=MarketDataState.fx_data_last_updated,
+            auto_refresh=MarketDataState.fx_auto_refresh,
+            on_auto_refresh_toggle=MarketDataState.toggle_fx_auto_refresh,
         ),
         create_standard_grid(
             grid_id=_GRID_ID,
             row_data=MarketDataState.filtered_fx_data,
             column_defs=_get_column_defs(),
+            row_id_key="ticker",  # CRITICAL: enables delta updates
             enable_cell_flash=True,  # Enable for market data
             enable_row_numbers=True,
             enable_multi_select=True,
@@ -145,4 +150,5 @@ def fx_data_ag_grid() -> rx.Component:
         width="100%",
         height="100%",
         spacing="0",
+        on_mount=MarketDataState.start_fx_auto_refresh,
     )

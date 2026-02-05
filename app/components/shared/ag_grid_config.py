@@ -541,6 +541,10 @@ def grid_toolbar(
     button_size: str = "2",
     grid_id: str | None = None,
     show_compact_toggle: bool = False,
+# Status bar (optional)
+    last_updated: rx.Var[str] | None = None,
+    auto_refresh: rx.Var[bool] | None = None,
+    on_auto_refresh_toggle: Callable | None = None,
 ) -> rx.Component:
     """
     Unified grid toolbar with search, generate, export, and layout controls.
@@ -875,7 +879,49 @@ def grid_toolbar(
     if layout_buttons:
         right_side_items.extend(layout_buttons)
 
-    return rx.el.div(
+    # =========================================================================
+    # STATUS BAR (optional - shows last updated time and auto-refresh toggle)
+    # =========================================================================
+    has_status_bar = last_updated is not None or auto_refresh is not None
+
+    status_bar_content = None
+    if has_status_bar:
+        status_left = []
+        status_right = []
+
+        if last_updated is not None:
+            status_left.append(
+                rx.el.div(
+                    rx.icon("clock", size=10, class_name="text-gray-400 mr-1.5"),
+                    rx.el.span("Last Updated: ", class_name="text-gray-400"),
+                    rx.el.span(last_updated, class_name="text-gray-600 font-mono"),
+                    class_name="flex items-center",
+                )
+            )
+
+        if auto_refresh is not None and on_auto_refresh_toggle is not None:
+            status_right.append(
+                rx.el.div(
+                    rx.el.span("Auto Refresh", class_name="text-gray-500 mr-2"),
+                    rx.switch(
+                        checked=auto_refresh,
+                        on_change=on_auto_refresh_toggle,
+                        size="1",
+                    ),
+                    class_name="flex items-center",
+                )
+            )
+
+        status_bar_content = rx.el.div(
+            rx.el.div(*status_left, class_name="flex items-center gap-4"),
+            rx.el.div(*status_right, class_name="flex items-center gap-4"),
+            class_name="flex items-center justify-between px-3 py-1 bg-[#FAFAFA] border-b border-gray-100 text-[10px] font-medium w-full",
+        )
+
+    # =========================================================================
+    # TOOLBAR ROW
+    # =========================================================================
+    toolbar_row = rx.el.div(
         rx.el.div(
             *left_controls,
             class_name="flex items-center gap-2 flex-1",
@@ -886,6 +932,16 @@ def grid_toolbar(
         ),
         class_name="flex items-center justify-between px-3 py-1.5 bg-[#F9F9F9] border-b border-gray-200 shrink-0 h-[40px] w-full",
     )
+
+    # Return with optional status bar
+    if has_status_bar:
+        return rx.el.div(
+            status_bar_content,
+            toolbar_row,
+            class_name="flex flex-col w-full",
+        )
+
+    return toolbar_row
 
 
 

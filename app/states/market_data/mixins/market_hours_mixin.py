@@ -11,6 +11,7 @@ class MarketHoursMixin(rx.State, mixin=True):
     market_hours: list[MarketHoursItem] = []
     is_loading_market_hours: bool = False
     market_hours_error: str = ""
+    market_hours_last_updated: str = "—"
 
     async def load_market_hours(self):
         self.is_loading_market_hours = True
@@ -25,3 +26,14 @@ class MarketHoursMixin(rx.State, mixin=True):
             logging.exception(f"Error loading market hours: {e}")
         finally:
             self.is_loading_market_hours = False
+            from datetime import datetime
+            self.market_hours_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    async def force_refresh_market_hours(self):
+        """Force refresh - reloads data from service (all cells flash)."""
+        import asyncio
+        self.is_loading_market_hours = True
+        yield  # Send loading state to client
+        await asyncio.sleep(1)  # Show loading overlay for 1s
+        await self.load_market_hours()
+
