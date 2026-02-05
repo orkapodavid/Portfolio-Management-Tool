@@ -141,6 +141,10 @@ def trade_summary_ag_grid() -> rx.Component:
             on_search_clear=TradeSummaryGridState.clear_search,
             grid_id=_GRID_ID,
             show_compact_toggle=True,
+            # Status bar
+            last_updated=PositionsState.trade_summary_last_updated,
+            auto_refresh=PositionsState.trade_summary_auto_refresh,
+            on_auto_refresh_toggle=PositionsState.toggle_trade_summary_auto_refresh,
         ),
         create_standard_grid(
             grid_id=_GRID_ID,
@@ -151,8 +155,11 @@ def trade_summary_ag_grid() -> rx.Component:
             default_excel_export_params=get_default_export_params("trade_summary"),
             default_csv_export_params=get_default_csv_export_params("trade_summary"),
             quick_filter_text=TradeSummaryGridState.search_text,
+            row_id_key="id",
+            enable_cell_flash=True,
         ),
         width="100%",
         height="100%",
         spacing="0",
+        on_mount=PositionsState.start_trade_summary_auto_refresh,
     )

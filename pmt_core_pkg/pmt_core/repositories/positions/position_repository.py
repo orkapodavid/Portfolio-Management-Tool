@@ -20,27 +20,78 @@ class PositionRepository(DatabaseRepository):
             logger.info("Returning mock positions")
             # Using basic dicts that match PositionRecord structure, relying on TypedDict
             # In a real scenario, we would map SQL rows to PositionRecord
-            return [
-                PositionRecord(
-                    id=i,
-                    trade_date=position_date or "2026-01-17",
-                    deal_num=f"DEAL{i:03d}",
-                    detail_id=f"D{i:03d}",
-                    underlying=f"TKR{i} US Equity",
-                    ticker=f"TKR{i}",
-                    company_name=f"Company {i}",
-                    sec_id=f"SEC{i:06d}",
-                    sec_type="Equity",
-                    subtype=None,
-                    currency="USD",
-                    account_id="ACC001",
-                    pos_loc="NY",
-                    notional=f"${(i + 1) * 50000:,.2f}",
-                    position=f"{(i + 1) * 1000}",
-                    market_value=f"${(i + 1) * 52500:,.2f}",
+            positions = []
+            
+            # Generate 10 Equity positions
+            for i in range(10):
+                positions.append(
+                    PositionRecord(
+                        id=i,
+                        trade_date=position_date or "2026-01-17",
+                        deal_num=f"DEAL{i:03d}",
+                        detail_id=f"D{i:03d}",
+                        underlying=f"TKR{i} US Equity",
+                        ticker=f"TKR{i}",
+                        company_name=f"Company {i}",
+                        sec_id=f"SEC{i:06d}",
+                        sec_type="Equity",
+                        subtype=None,
+                        currency="USD",
+                        account_id="ACC001",
+                        pos_loc="NY",
+                        notional=f"${(i + 1) * 50000:,.2f}",
+                        position=f"{(i + 1) * 1000}",
+                        market_value=f"${(i + 1) * 52500:,.2f}",
+                    )
                 )
-                for i in range(10)
-            ]
+            
+            # Generate 5 Warrant positions
+            for i in range(5):
+                positions.append(
+                    PositionRecord(
+                        id=100 + i,
+                        trade_date=position_date or "2026-01-17",
+                        deal_num=f"WDEAL{i:03d}",
+                        detail_id=f"WD{i:03d}",
+                        underlying=f"WRT{i} US Warrant",
+                        ticker=f"WRT{i}",
+                        company_name=f"Warrant Co {i}",
+                        sec_id=f"WSEC{i:06d}",
+                        sec_type="Warrant",
+                        subtype="Call",
+                        currency="USD",
+                        account_id="ACC002",
+                        pos_loc="NY",
+                        notional=f"${(i + 1) * 25000:,.2f}",
+                        position=f"{(i + 1) * 500}",
+                        market_value=f"${(i + 1) * 26250:,.2f}",
+                    )
+                )
+            
+            # Generate 5 Bond positions
+            for i in range(5):
+                positions.append(
+                    PositionRecord(
+                        id=200 + i,
+                        trade_date=position_date or "2026-01-17",
+                        deal_num=f"BDEAL{i:03d}",
+                        detail_id=f"BD{i:03d}",
+                        underlying=f"BND{i} US Bond",
+                        ticker=f"BND{i}",
+                        company_name=f"Bond Issuer {i}",
+                        sec_id=f"BSEC{i:06d}",
+                        sec_type="Bond",
+                        subtype="Corporate",
+                        currency="USD",
+                        account_id="ACC003",
+                        pos_loc="LN",
+                        notional=f"${(i + 1) * 100000:,.2f}",
+                        position=f"{(i + 1) * 100}",
+                        market_value=f"${(i + 1) * 101500:,.2f}",
+                    )
+                )
+            
+            return positions
         return []
 
     async def get_instrument_data(self) -> List[dict[str, Any]]:

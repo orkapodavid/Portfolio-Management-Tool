@@ -37,11 +37,11 @@ class MarketDataMixin(rx.State, mixin=True):
 
     @rx.event(background=True)
     async def start_market_data_auto_refresh(self):
-        """Background task for market data auto-refresh (2s interval)."""
+        """Background task for Market Data auto-refresh (2s interval)."""
         while True:
             async with self:
                 if not self.market_data_auto_refresh:
-                    break  # Exit loop when turned off
+                    break
                 self.simulate_market_data_update()
             await asyncio.sleep(2)
 

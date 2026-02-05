@@ -135,6 +135,10 @@ def bond_position_ag_grid() -> rx.Component:
             on_search_clear=BondPositionGridState.clear_search,
             grid_id=_GRID_ID,
             show_compact_toggle=True,
+            # Status bar
+            last_updated=PositionsState.bond_positions_last_updated,
+            auto_refresh=PositionsState.bond_positions_auto_refresh,
+            on_auto_refresh_toggle=PositionsState.toggle_bond_positions_auto_refresh,
         ),
         create_standard_grid(
             grid_id=_GRID_ID,
@@ -145,8 +149,11 @@ def bond_position_ag_grid() -> rx.Component:
             default_excel_export_params=get_default_export_params("bond_position"),
             default_csv_export_params=get_default_csv_export_params("bond_position"),
             quick_filter_text=BondPositionGridState.search_text,
+            row_id_key="id",
+            enable_cell_flash=True,
         ),
         width="100%",
         height="100%",
         spacing="0",
+        on_mount=PositionsState.start_bond_positions_auto_refresh,
     )

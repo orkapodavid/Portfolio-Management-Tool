@@ -122,6 +122,11 @@ def pps_recon_ag_grid() -> rx.Component:
             on_search_clear=PpsReconGridState.clear_search,
             grid_id=_GRID_ID,
             show_compact_toggle=True,
+            # Force refresh pattern
+            show_refresh=True,
+            on_refresh=ReconciliationState.force_refresh_pps_recon,
+            is_loading=ReconciliationState.is_loading_pps_recon,
+            last_updated=ReconciliationState.pps_recon_last_updated,
         ),
         create_standard_grid(
             grid_id=_GRID_ID,
@@ -132,6 +137,10 @@ def pps_recon_ag_grid() -> rx.Component:
             default_excel_export_params=get_default_export_params("pps_recon"),
             default_csv_export_params=get_default_csv_export_params("pps_recon"),
             quick_filter_text=PpsReconGridState.search_text,
+            row_id_key="id",
+            enable_cell_flash=True,
+            loading=ReconciliationState.is_loading_pps_recon,
+            overlay_loading_template="<span class='ag-overlay-loading-center'>Refreshing data...</span>",
         ),
         width="100%",
         height="100%",

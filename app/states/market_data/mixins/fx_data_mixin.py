@@ -37,11 +37,11 @@ class FXDataMixin(rx.State, mixin=True):
 
     @rx.event(background=True)
     async def start_fx_auto_refresh(self):
-        """Background task for FX data auto-refresh (2s interval)."""
+        """Background task for FX Data auto-refresh (2s interval)."""
         while True:
             async with self:
                 if not self.fx_auto_refresh:
-                    break  # Exit loop when turned off
+                    break
                 self.simulate_fx_update()
             await asyncio.sleep(2)
 

@@ -1,41 +1,33 @@
 """
 Reconciliation State - Module-specific state for Reconciliation data
 
-Handles all reconciliation-related data:
-- PPS Reconciliation
-- Settlement Reconciliation
-- Failed Trades
-- PnL Reconciliation
-- Risk Input Reconciliation
+Composes all Reconciliation mixins to provide unified interface.
+Following the mixin-per-tab architecture pattern.
 """
 
 import reflex as rx
-from app.services import DatabaseService
-from app.states.reconciliation.types import (
-    PPSReconItem,
-    SettlementReconItem,
-    FailedTradeItem,
-    PnLReconItem,
-    RiskInputReconItem,
-)
+from app.states.reconciliation.mixins.pps_recon_mixin import PPSReconMixin
+from app.states.reconciliation.mixins.settlement_recon_mixin import SettlementReconMixin
+from app.states.reconciliation.mixins.failed_trades_mixin import FailedTradesMixin
+from app.states.reconciliation.mixins.pnl_recon_mixin import PnLReconMixin
+from app.states.reconciliation.mixins.risk_input_recon_mixin import RiskInputReconMixin
 
 
-class ReconciliationState(rx.State):
+class ReconciliationState(
+    PPSReconMixin,
+    SettlementReconMixin,
+    FailedTradesMixin,
+    PnLReconMixin,
+    RiskInputReconMixin,
+    rx.State,
+):
     """
-    State management for reconciliation data.
+    Main Reconciliation module state.
+    Inherits from all Reconciliation tab mixins to provide unified interface.
     """
 
-    # Reconciliation data lists
-    pps_recon: list[PPSReconItem] = []
-    settlement_recon: list[SettlementReconItem] = []
-    failed_trades: list[FailedTradeItem] = []
-    pnl_recon: list[PnLReconItem] = []
-    risk_input_recon: list[RiskInputReconItem] = []
-
-    # UI state
-    is_loading: bool = False
-    current_search_query: str = ""
-    current_tab: str = "pps"
+    # Module-level state
+    current_tab: str = "pps"  # "pps", "settlement", "failed", "pnl", "risk_input"
 
     # Shared UI state for sorting
     sort_column: str = ""
@@ -47,25 +39,25 @@ class ReconciliationState(rx.State):
         await self.load_reconciliation_data()
 
     async def load_reconciliation_data(self):
-        """Load all reconciliation data from DatabaseService."""
-        self.is_loading = True
-        try:
-            service = DatabaseService()
-            self.pps_recon = await service.get_pps_recon()
-            self.settlement_recon = await service.get_settlement_recon()
-            self.failed_trades = await service.get_failed_trades()
-            self.pnl_recon = await service.get_pnl_recon()
-            self.risk_input_recon = await service.get_risk_input_recon()
-        except Exception as e:
-            import logging
+        """Load all reconciliation data (backward compatible)."""
+        await self.load_pps_recon_data()
+        await self.load_settlement_recon_data()
+        await self.load_failed_trades_data()
+        await self.load_pnl_recon_data()
+        await self.load_risk_input_recon_data()
 
-            logging.exception(f"Error loading reconciliation data: {e}")
-        finally:
-            self.is_loading = False
-
-    def set_search_query(self, query: str):
-        """Update search query for filtering."""
-        self.current_search_query = query
+    async def load_reconciliation_module_data(self):
+        """Load data for the active tab only."""
+        if self.current_tab == "pps":
+            await self.load_pps_recon_data()
+        elif self.current_tab == "settlement":
+            await self.load_settlement_recon_data()
+        elif self.current_tab == "failed":
+            await self.load_failed_trades_data()
+        elif self.current_tab == "pnl":
+            await self.load_pnl_recon_data()
+        elif self.current_tab == "risk_input":
+            await self.load_risk_input_recon_data()
 
     def set_current_tab(self, tab: str):
         """Switch between reconciliation tabs."""
@@ -82,74 +74,3 @@ class ReconciliationState(rx.State):
     def set_selected_row(self, row_id: int):
         """Set selected row ID."""
         self.selected_row = row_id
-
-    @rx.var(cache=True)
-    def filtered_pps_recon(self) -> list[PPSReconItem]:
-        """Filtered PPS reconciliation based on search query."""
-        if not self.current_search_query:
-            return self.pps_recon
-
-        query = self.current_search_query.lower()
-        return [
-            item
-            for item in self.pps_recon
-            if query in item.get("ticker", "").lower()
-            or query in item.get("company_name", "").lower()
-        ]
-
-    @rx.var(cache=True)
-    def filtered_settlement_recon(self) -> list[SettlementReconItem]:
-        """Filtered settlement reconciliation based on search query."""
-        if not self.current_search_query:
-            return self.settlement_recon
-
-        query = self.current_search_query.lower()
-        return [
-            item
-            for item in self.settlement_recon
-            if query in item.get("ticker", "").lower()
-            or query in item.get("company_name", "").lower()
-        ]
-
-    @rx.var(cache=True)
-    def filtered_failed_trades(self) -> list[FailedTradeItem]:
-        """Filtered failed trades based on search query."""
-        if not self.current_search_query:
-            return self.failed_trades
-
-        query = self.current_search_query.lower()
-        return [
-            item
-            for item in self.failed_trades
-            if query in item.get("ticker", "").lower()
-            or query in item.get("company_name", "").lower()
-            or query in item.get("broker", "").lower()
-        ]
-
-    @rx.var(cache=True)
-    def filtered_pnl_recon(self) -> list[PnLReconItem]:
-        """Filtered PnL reconciliation based on search query."""
-        if not self.current_search_query:
-            return self.pnl_recon
-
-        query = self.current_search_query.lower()
-        return [
-            item
-            for item in self.pnl_recon
-            if query in item.get("underlying", "").lower()
-            or query in item.get("deal_num", "").lower()
-        ]
-
-    @rx.var(cache=True)
-    def filtered_risk_input_recon(self) -> list[RiskInputReconItem]:
-        """Filtered risk input reconciliation based on search query."""
-        if not self.current_search_query:
-            return self.risk_input_recon
-
-        query = self.current_search_query.lower()
-        return [
-            item
-            for item in self.risk_input_recon
-            if query in item.get("ticker", "").lower()
-            or query in item.get("underlying", "").lower()
-        ]

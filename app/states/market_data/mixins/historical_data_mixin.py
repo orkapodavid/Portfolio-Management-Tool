@@ -39,11 +39,11 @@ class HistoricalDataMixin(rx.State, mixin=True):
 
     @rx.event(background=True)
     async def start_historical_auto_refresh(self):
-        """Background task for historical data auto-refresh (5s interval)."""
+        """Background task for Historical Data auto-refresh (5s interval)."""
         while True:
             async with self:
                 if not self.historical_auto_refresh:
-                    break  # Exit loop when turned off
+                    break
                 self.simulate_historical_update()
             await asyncio.sleep(5)
 

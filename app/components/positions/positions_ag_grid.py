@@ -87,6 +87,12 @@ def _get_column_defs() -> list:
             filter="agSetColumnFilter",
             min_width=80,
         ),
+        ag_grid.column_def(
+            field="notional",
+            header_name="Notional",
+            filter=AGFilters.number,
+            min_width=120,
+        ),
     ]
 
 
@@ -117,6 +123,10 @@ def positions_ag_grid() -> rx.Component:
             on_search_clear=PositionsGridState.clear_search,
             grid_id=_GRID_ID,
             show_compact_toggle=True,
+            # Status bar
+            last_updated=PositionsState.positions_last_updated,
+            auto_refresh=PositionsState.positions_auto_refresh,
+            on_auto_refresh_toggle=PositionsState.toggle_positions_auto_refresh,
         ),
         create_standard_grid(
             grid_id=_GRID_ID,
@@ -127,8 +137,11 @@ def positions_ag_grid() -> rx.Component:
             default_excel_export_params=get_default_export_params("positions"),
             default_csv_export_params=get_default_csv_export_params("positions"),
             quick_filter_text=PositionsGridState.search_text,
+            row_id_key="id",
+            enable_cell_flash=True,
         ),
         width="100%",
         height="100%",
         spacing="0",
+        on_mount=PositionsState.start_positions_auto_refresh,
     )

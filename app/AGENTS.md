@@ -430,5 +430,50 @@ def index() -> rx.Component:
 
 5. **Cross-State Access**: Always use `await self.get_state(OtherState)` in async methods.
 
+
 6. **Styling**: Use Tailwind classes via `class_name`. Never use inline `style={}` except for dynamic values.
+
+
+---
+
+## Critical Troubleshooting / Gotchas
+
+### PyO3 / Tokio Panic with Background Tasks
+
+**Issue**: Using a `while True` loop inside a `@rx.event(background=True)` handler can cause the application to crash with a `tokio-runtime-worker` panic:
+`"Cannot drop pointer into Python heap without the thread being attached to the Python interpreter"`
+
+This occurs because long-running loops in background threads may hold references to Python objects across `await` points in a way that conflicts with PyO3's thread safety mechanisms (GIL management) during task cancellation or cleanup.
+
+**Solution**: Use the **Recursive Event Pattern**. instead of an infinite loop.
+
+**❌ BAD (Unsafe):**
+```python
+@rx.event(background=True)
+async def start_auto_refresh(self):
+    while True:  # <--- CAUSES PANIC
+        async with self:
+            if not self.active: break
+            self.refresh_data()
+        await asyncio.sleep(2)
+```
+
+**✅ GOOD (Safe):**
+```python
+@rx.event(background=True)
+async def run_refresh_step(self):
+    async with self:
+        if not self.active: return
+        self.refresh_data()
+    
+    await asyncio.sleep(2)
+    return type(self).run_refresh_step  # <--- Recursively schedule next step
+```
+
+This ensures the Python future completes entirely between steps, allowing safe cleanup and avoiding the unsafe state that triggers the panic.
+
+**Note**: When renaming the handler (e.g., from `start_auto_refresh` to `run_auto_refresh_step`), remember to update **all references**, especially `on_mount` triggers in your pages or components:
+
+`on_mount=State.run_refresh_step` (was `State.start_auto_refresh`)
+
 

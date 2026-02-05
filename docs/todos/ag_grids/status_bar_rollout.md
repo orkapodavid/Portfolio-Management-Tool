@@ -21,7 +21,7 @@ Add `last_updated` timestamp, `auto_refresh` toggle, and **simulated delta updat
 
 | Grid Type | Refresh Method | Pattern |
 |-----------|----------------|---------|
-| **Ticking** (FX, Market Data, Historical) | Auto-refresh toggle + background task | `@rx.event(background=True)` loop with `asyncio.sleep()` |
+| **Ticking** (FX, Market Data, Historical) | Auto-refresh toggle + background task | `@rx.event(background=True)` recursive step pattern |
 | **Static** (Trading Calendar, Market Hours) | Force Refresh button | `show_refresh=True` + `force_refresh_*()` method |
 
 ### Force Refresh Pattern (Static Grids)
@@ -29,9 +29,21 @@ Add `last_updated` timestamp, `auto_refresh` toggle, and **simulated delta updat
 For grids with infrequently changing data, use a **Force Refresh button** instead of auto-refresh:
 
 ```python
-# Mixin - force refresh method
+# Mixin - force refresh method with debounce
 async def force_refresh_trading_calendar(self):
-    """Force refresh - reloads data from service (all cells flash)."""
+    """Force refresh - reloads data from service (all cells flash).
+    
+    Uses yield + is_loading guard to:
+    1. Prevent multiple clicks while loading
+    2. Show loading overlay immediately
+    """
+    if self.is_loading_trading_calendar:
+        return  # Debounce: ignore clicks while loading
+    
+    import asyncio
+    self.is_loading_trading_calendar = True
+    yield  # Send loading state to client immediately
+    await asyncio.sleep(0.5)  # Brief delay to show loading overlay
     await self.load_trading_calendar()
 
 # Grid component - toolbar config
@@ -50,6 +62,12 @@ create_standard_grid(
     overlay_loading_template="<span class='ag-overlay-loading-center'>Refreshing data...</span>",
 )
 ```
+
+> [!IMPORTANT]
+> **Force refresh must include debounce protection:**
+> 1. Check `if self.is_loading_*: return` at start to ignore clicks while loading
+> 2. Set `is_loading = True` then `yield` to send state to client immediately
+> 3. The refresh button is automatically disabled when `is_loading=True`
 
 **Key props:**
 - `loading`: `rx.Var[bool]` — shows AG Grid's built-in loading overlay when `True`
@@ -103,6 +121,74 @@ def simulate_update(self):
 # ❌ BAD - Mutates existing row objects
 self.data_list[idx]["price"] = new_price
 ```
+
+### ⚠️ One Mixin Per Tab (Critical)
+
+> [!WARNING]
+> **Each tab must have its own mixin with independent state.** Do NOT share `last_updated` or `auto_refresh` across tabs!
+>
+> If multiple tabs share the same `auto_refresh` toggle, toggling one will affect all tabs.
+
+**Correct pattern — separate mixin per tab:**
+
+```
+app/states/risk/
+├── mixins/
+│   ├── delta_change_mixin.py      # delta_change_auto_refresh, delta_change_last_updated
+│   ├── risk_measures_mixin.py     # risk_measures_auto_refresh, risk_measures_last_updated
+│   └── risk_inputs_mixin.py       # risk_inputs_auto_refresh, risk_inputs_last_updated
+└── risk_state.py                  # Composes all mixins
+```
+
+Each mixin must define:
+
+```python
+class DeltaChangeMixin(rx.State, mixin=True):
+    # Tab-specific data
+    delta_changes: list[DeltaChangeItem] = []
+    
+    # Tab-specific timestamps (NOT shared!)
+    delta_change_last_updated: str = "—"
+    delta_change_auto_refresh: bool = True
+    
+    # Tab-specific background task (while True loop pattern)
+    @rx.event(background=True)
+    async def start_delta_change_auto_refresh(self):
+        """Background task for Delta Change auto-refresh (2s interval)."""
+        while True:
+            async with self:
+                if not self.delta_change_auto_refresh:
+                    break
+                self.simulate_delta_change_update()
+            await asyncio.sleep(2)
+
+    def toggle_delta_change_auto_refresh(self, value: bool):
+        """Toggle auto-refresh state. Restarts background task if enabled."""
+        self.delta_change_auto_refresh = value
+        if value:
+            # Use type(self) here - this is OUTSIDE background context
+            return type(self).start_delta_change_auto_refresh
+```
+
+> [!CAUTION]
+> **Recursive step pattern does NOT work with mixins!**
+> Returning `MixinClass.method` from a background task returns a raw function, not an EventHandler.
+> Use the `while True` loop pattern instead.
+
+> [!TIP]
+> **`type(self)` works in the toggle method** because it's called outside the background task context.
+> The toggle method runs synchronously, so `type(self)` returns the composed State class.
+
+**Incorrect — shared state across tabs:**
+
+```python
+# ❌ BAD - All tabs share one auto_refresh toggle
+class RiskState(rx.State):
+    risk_auto_refresh: bool = True  # Affects ALL tabs!
+```
+
+See [PnL mixins](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/states/pnl/mixins/) and [Risk mixins](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/states/risk/mixins/) for reference implementations.
+
 
 
 ### Delta Update Pattern (from Performance Demo)
@@ -239,9 +325,27 @@ def fx_data_ag_grid() -> rx.Component:
 | [risk_inputs_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/risk/risk_inputs_ag_grid.py) | `RiskState` | Ticking | ✅ | ✅ auto | ✅ | ✅ `seed` |
 | [risk_measures_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/risk/risk_measures_ag_grid.py) | `RiskState` | Ticking | ✅ | ✅ auto | ✅ | ✅ `ticker` |
 
-### Phase 3: Positions & Reconciliation (10 grids)
+### Phase 3: Positions & Reconciliation (10 grids) — *Completed*
 
-*(Same pattern — see original doc)*
+**Positions Grids (5):**
+
+| Grid | Mixin | Type | `last_updated` | Refresh | `simulate_*` | `row_id_key` |
+|------|-------|:----:|:--------------:|:-------:|:------------:|:------------:|
+| [positions_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/positions/positions_ag_grid.py) | `PositionsMixin` | Ticking | ✅ | ✅ auto | ✅ | ✅ `id` |
+| [stock_position_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/positions/stock_position_ag_grid.py) | `StockPositionMixin` | Ticking | ✅ | ✅ auto | ✅ | ✅ `id` |
+| [warrant_position_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/positions/warrant_position_ag_grid.py) | `WarrantPositionMixin` | Ticking | ✅ | ✅ auto | ✅ | ✅ `id` |
+| [bond_position_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/positions/bond_position_ag_grid.py) | `BondPositionsMixin` | Ticking | ✅ | ✅ auto | ✅ | ✅ `id` |
+| [trade_summary_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/positions/trade_summary_ag_grid.py) | `TradeSummaryMixin` | Ticking | ✅ | ✅ auto | ✅ | ✅ `id` |
+
+**Reconciliation Grids (5):**
+
+| Grid | Mixin | Type | `last_updated` | Refresh | Loading Overlay | `row_id_key` |
+|------|-------|:----:|:--------------:|:-------:|:---------------:|:------------:|
+| [pps_recon_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/reconciliation/pps_recon_ag_grid.py) | `PPSReconMixin` | Static | ✅ | ✅ force | ✅ | ✅ `id` |
+| [settlement_recon_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/reconciliation/settlement_recon_ag_grid.py) | `SettlementReconMixin` | Static | ✅ | ✅ force | ✅ | ✅ `id` |
+| [failed_trades_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/reconciliation/failed_trades_ag_grid.py) | `FailedTradesMixin` | Static | ✅ | ✅ force | ✅ | ✅ `id` |
+| [pnl_recon_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/reconciliation/pnl_recon_ag_grid.py) | `PnLReconMixin` | Static | ✅ | ✅ force | ✅ | ✅ `id` |
+| [risk_input_recon_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/reconciliation/risk_input_recon_ag_grid.py) | `RiskInputReconMixin` | Static | ✅ | ✅ force | ✅ | ✅ `id` |
 
 ### Phase 4: Portfolio Tools & Static Grids (26+ grids)
 
@@ -284,13 +388,128 @@ def fx_data_ag_grid() -> rx.Component:
 6. [ ] No console errors
 7. [ ] Grid still functions (filtering, sorting, selection)
 
-### Manual Testing
-1. Navigate to `/pmt/market-data/fx-data`
-2. Verify auto-refresh toggle is ON by default
-3. Observe cells flashing as prices update (~every 2s)
-4. Toggle OFF — updates should stop
-5. Toggle ON — updates should resume
-6. Check "Last Updated" timestamp updates with each tick
+### Terminal Verification (Critical)
+
+> [!IMPORTANT]
+> **Always check the terminal output when testing AG Grids.** Watch for:
+> - `ValueError` or `TypeError` in simulation methods
+> - `AttributeError` for missing state methods
+> - Log messages like `"returning empty"` indicating missing mock data
+
+**Example terminal check:**
+```bash
+# Watch for errors after navigating to a grid page
+2026-02-05 19:01:09 - pmt_core.repositories.positions.position_repository - INFO - Returning mock positions  # ✅ Good
+get_trade_summary not implemented in core yet, returning empty.  # ❌ Missing mock data!
+ValueError: invalid literal for int() with base 10: 'WD004'  # ❌ Data parsing error!
+```
+
+### Browser Data Verification (Critical)
+
+> [!WARNING]
+> **The grid MUST show data rows in the browser.** An empty grid indicates:
+> 1. Service/repository returns empty list
+> 2. Initial data load not called in background task
+> 3. Data filtering returns no matches
+
+**Verify in browser:**
+- Check "Total Rows: N" at bottom of grid — should be > 0
+- Verify row data appears (not "No rows to display")
+- Confirm "Last Updated" timestamp updates every ~2 seconds
+
+### Mock Data Implementation Checklist
+
+If a grid shows no data, implement mock data in the following order:
+
+1. **Repository Layer** (`pmt_core_pkg/pmt_core/repositories/`):
+   ```python
+   async def get_positions(self) -> List[PositionRecord]:
+       if self.mock_mode:
+           logger.info("Returning mock positions")
+           return [
+               PositionRecord(id=i, ticker=f"TKR{i}", ...)
+               for i in range(10)
+           ]
+       return []
+   ```
+
+2. **Service Layer** (`app/services/`):
+   ```python
+   async def get_trade_summary(self) -> list[dict]:
+       # Add mock data directly if core not implemented
+       return [
+           {"id": i, "ticker": f"TRD{i}", ...}
+           for i in range(8)
+       ]
+   ```
+
+3. **Mixin Layer** (add initial data load to background task):
+   ```python
+   @rx.event(background=True)
+   async def start_*_auto_refresh(self):
+       # Load initial data if empty
+       async with self:
+           if len(self.data_list) == 0:
+               await self.load_*_data()
+       
+       while True:
+           async with self:
+               if not self.*_auto_refresh:
+                   break
+               self.simulate_*_update()
+           await asyncio.sleep(2)
+   ```
+
+### Common Error Patterns & Fixes
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `ValueError: invalid literal for int()` with `'WD004'` | Alphanumeric ID parsing | Use regex: `re.match(r"([A-Za-z]*)(\d+)", val)` |
+| `ValueError` with `'$300,000.00'` | Formatted currency string | Use `parse_currency()` helper to strip symbols |
+| `AttributeError: 'AgGridNamespace' has no attribute 'value_formatter'` | Non-existent AG Grid API | Remove `value_formatter`, use `AGFilters.number` |
+| `"returning empty"` log message | Service not implemented | Add mock data to service or repository |
+| Grid shows "No rows to display" | Initial load not called | Add `if len(self.data) == 0: await self.load_*()` |
+
+**Alphanumeric ID parsing helper:**
+```python
+def parse_alphanumeric_id(val: str) -> tuple[str, int]:
+    """Parse 'WD004' into ('WD', 4)."""
+    match = re.match(r"([A-Za-z]*)(\d+)", str(val))
+    if match:
+        return match.group(1), int(match.group(2))
+    return "", 0
+```
+
+**Currency parsing helper:**
+```python
+def parse_currency(val) -> float:
+    """Parse '$300,000.00' to 300000.00."""
+    if isinstance(val, (int, float)):
+        return float(val)
+    cleaned = re.sub(r"[^\d.\-]", "", str(val))
+    return float(cleaned) if cleaned else 0.0
+```
+
+### Manual Testing Procedure
+
+1. **Start the app:** `uv run reflex run`
+2. **Monitor terminal** for compilation and runtime errors
+3. **Navigate to grid page** (e.g., `/pmt/market-data/fx-data`)
+4. **Verify in terminal:**
+   - No `ValueError`, `TypeError`, or `AttributeError`
+   - Log shows data being returned (e.g., `Returning mock positions`)
+5. **Verify in browser:**
+   - Grid shows data rows (check "Total Rows: N")
+   - Auto-refresh toggle is ON by default
+   - Cells flash as values update (~every 2s)
+   - "Last Updated" timestamp updates with each tick
+6. **Test toggle:**
+   - Toggle OFF — updates should stop immediately
+   - Toggle ON — updates should resume
+7. **Test grid features:**
+   - Filtering still works
+   - Sorting still works
+   - Selection still works
 
 ---
 

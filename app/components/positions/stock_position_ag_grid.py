@@ -134,6 +134,10 @@ def stock_position_ag_grid() -> rx.Component:
             on_search_clear=StockPositionGridState.clear_search,
             grid_id=_GRID_ID,
             show_compact_toggle=True,
+            # Status bar
+            last_updated=PositionsState.stock_positions_last_updated,
+            auto_refresh=PositionsState.stock_positions_auto_refresh,
+            on_auto_refresh_toggle=PositionsState.toggle_stock_positions_auto_refresh,
         ),
         create_standard_grid(
             grid_id=_GRID_ID,
@@ -144,8 +148,11 @@ def stock_position_ag_grid() -> rx.Component:
             default_excel_export_params=get_default_export_params("stock_position"),
             default_csv_export_params=get_default_csv_export_params("stock_position"),
             quick_filter_text=StockPositionGridState.search_text,
+            row_id_key="id",
+            enable_cell_flash=True,
         ),
         width="100%",
         height="100%",
         spacing="0",
+        on_mount=PositionsState.start_stock_positions_auto_refresh,
     )
