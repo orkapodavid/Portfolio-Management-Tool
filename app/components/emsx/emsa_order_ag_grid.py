@@ -144,7 +144,7 @@ def emsa_order_ag_grid() -> rx.Component:
     return rx.vstack(
         # Grid state persistence script (auto-restores on page load)
         rx.script(grid_state_script(_STORAGE_KEY, _GRID_ID)),
-        # Toolbar with grouped buttons (Export | Layout)
+        # Toolbar with grouped buttons (Export | Layout | Refresh)
         grid_toolbar(
             storage_key=_STORAGE_KEY,
             page_name="emsa_order",
@@ -153,14 +153,24 @@ def emsa_order_ag_grid() -> rx.Component:
             on_search_clear=EMSAOrderGridState.clear_search,
             grid_id=_GRID_ID,
             show_compact_toggle=True,
+            # Ticking pattern props
+            last_updated=EMSXState.emsa_order_last_updated,
+            show_refresh=True,
+            on_refresh=EMSXState.force_refresh_emsa_orders,
+            is_loading=EMSXState.is_loading_emsa_orders,
+            auto_refresh=EMSXState.emsa_order_auto_refresh,
+            on_auto_refresh_toggle=EMSXState.toggle_emsa_order_auto_refresh,
         ),
         # Grid with factory pattern
         create_standard_grid(
             grid_id=_GRID_ID,
             row_data=EMSXState.filtered_emsa_orders,
             column_defs=_get_column_defs(),
+            row_id_key="id",  # Delta detection key (unique row ID)
+            loading=EMSXState.is_loading_emsa_orders,  # Loading overlay
             enable_row_numbers=True,  # Tier 2: Row numbering
             enable_multi_select=True,  # Tier 2: Multi-row selection with checkboxes
+            enable_cell_flash=True,  # Tier 2: Cell flash for ticking updates
             default_excel_export_params=get_default_export_params("emsa_order"),
             default_csv_export_params=get_default_csv_export_params("emsa_order"),
             quick_filter_text=EMSAOrderGridState.search_text,

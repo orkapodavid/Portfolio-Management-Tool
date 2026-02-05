@@ -397,14 +397,15 @@ async def force_refresh_beneficial_ownership(self):
 
 ---
 
-#### 4.2 EMSX Grids (2) — Ticking
+#### 4.2 EMSX Grids (2) — Ticking ✅ COMPLETE
 
 Order and route data is real-time → use **Auto-Refresh** pattern.
 
 | Grid | File | Mixin | `last_updated` | Refresh | `simulate_*` | `row_id_key` |
 |------|------|-------|:--------------:|:-------:|:------------:|:------------:|
-| EMSA Order | [emsa_order_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/emsx/emsa_order_ag_grid.py) | `EMSXState` | [ ] | [ ] auto | [ ] | [ ] `sequence` |
-| EMSA Route | [emsa_route_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/emsx/emsa_route_ag_grid.py) | `EMSXState` | [ ] | [ ] auto | [ ] | [ ] `route_id` |
+| EMSA Order | [emsa_order_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/emsx/emsa_order_ag_grid.py) | `EMSXState` | [x] | [x] auto | [x] | [x] `id` |
+| EMSA Route | [emsa_route_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/emsx/emsa_route_ag_grid.py) | `EMSXState` | [x] | [x] auto | [x] | [x] `id` |
+
 
 **Mixin additions needed in `EMSXState`:**
 ```python
@@ -521,11 +522,15 @@ Portfolio reference and configuration data → use **Force Refresh** pattern.
 > resulting in only the last row with each unique value being displayed.
 > **Symptom**: Grid shows fewer rows than expected (e.g., 8 rows → 1 row after refresh).
 
-2. **State/Mixin (`*_state.py`)**:
-   - [ ] Add `*_last_updated: str = "—"` state variable
-   - [ ] Add `is_loading_*: bool = False` state variable
-   - [ ] Add `async def force_refresh_*()` method with debounce guard
-   - [ ] Update `load_*()` to set `*_last_updated` timestamp
+2. **State/Mixin Architecture (`*_mixin.py` + `*_state.py`)**:
+   - [ ] Each grid has its own mixin file (e.g., `emsa_order_mixin.py`)
+   - [ ] Mixin inherits from `rx.State, mixin=True`
+   - [ ] Main state inherits from all relevant mixins (e.g., `EMSXState(EMSAOrderMixin, EMSARouteMixin, rx.State)`)
+   - [ ] Add `*_last_updated: str = "—"` state variable in mixin
+   - [ ] Add `is_loading_*: bool = False` state variable in mixin
+   - [ ] Add `async def force_refresh_*()` method with debounce guard in mixin
+   - [ ] Add `async def load_*()` method to set `*_last_updated` timestamp in mixin
+   - [ ] Mixin's `filtered_*` computed var accesses `self.current_search_query` from parent state
 
 3. **Terminal Verification (MANDATORY after each grid)**:
    - [ ] Check terminal for compilation errors after code changes
