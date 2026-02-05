@@ -531,11 +531,14 @@ Portfolio reference and configuration data → use **Force Refresh** pattern.
    - [ ] Add `async def force_refresh_*()` method with debounce guard in mixin
    - [ ] Add `async def load_*()` method to set `*_last_updated` timestamp in mixin
    - [ ] Grid uses raw data (e.g., `emsa_orders`) with `quick_filter_text` for filtering
+   - [ ] **REMOVE** any `current_search_query` state variable and related code
+   - [ ] **REMOVE** any `filtered_*` computed vars that reference `current_search_query`
 
-> [!NOTE]
-> **AG Grid handles filtering client-side** via `quick_filter_text` prop.
-> **Do NOT create `filtered_*` computed vars** in mixins referencing `current_search_query`.
-> Instead, pass raw data (e.g., `row_data=EMSXState.emsa_orders`) and let AG Grid filter.
+> [!WARNING]
+> **Search/filtering is handled by AG Grid** via `quick_filter_text` prop in `ag_grid_config.py`.
+> **Do NOT use** `current_search_query` in mixins or main state — it's obsolete.
+> **Do NOT create** `filtered_*` computed vars — they cause redundant filtering.
+> Use raw data directly: `row_data=EMSXState.emsa_orders` and let AG Grid filter client-side.
 
 3. **Terminal Verification (MANDATORY after each grid)**:
    - [ ] Check terminal for compilation errors after code changes

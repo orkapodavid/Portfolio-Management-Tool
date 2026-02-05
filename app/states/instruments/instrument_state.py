@@ -9,6 +9,9 @@ Handles all instrument-related data:
 - Instrument Terms
 """
 
+import asyncio
+from datetime import datetime
+
 import reflex as rx
 from app.services import DatabaseService
 from app.states.types import (
@@ -32,9 +35,28 @@ class InstrumentState(rx.State):
     instrument_data: list[InstrumentDataItem] = []
     instrument_terms: list[InstrumentTermItem] = []
 
+    # Ticker Data loading state
+    is_loading_ticker_data: bool = False
+    ticker_data_last_updated: str = "—"
+
+    # Stock Screener loading state
+    is_loading_stock_screener: bool = False
+    stock_screener_last_updated: str = "—"
+
+    # Special Terms loading state
+    is_loading_special_terms: bool = False
+    special_terms_last_updated: str = "—"
+
+    # Instrument Data loading state
+    is_loading_instrument_data: bool = False
+    instrument_data_last_updated: str = "—"
+
+    # Instrument Terms loading state
+    is_loading_instrument_terms: bool = False
+    instrument_terms_last_updated: str = "—"
+
     # UI state
     is_loading: bool = False
-    current_search_query: str = ""
     current_tab: str = "ticker"
 
     # Shared UI state for sorting
@@ -49,13 +71,23 @@ class InstrumentState(rx.State):
     async def load_instruments_data(self):
         """Load all instruments data from DatabaseService."""
         self.is_loading = True
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         try:
             service = DatabaseService()
             self.ticker_data = await service.get_ticker_data()
+            self.ticker_data_last_updated = timestamp
+
             self.stock_screener = await service.get_stock_screener()
+            self.stock_screener_last_updated = timestamp
+
             self.special_terms = await service.get_special_terms()
+            self.special_terms_last_updated = timestamp
+
             self.instrument_data = await service.get_instrument_data()
+            self.instrument_data_last_updated = timestamp
+
             self.instrument_terms = await service.get_instrument_terms()
+            self.instrument_terms_last_updated = timestamp
         except Exception as e:
             import logging
 
@@ -63,9 +95,127 @@ class InstrumentState(rx.State):
         finally:
             self.is_loading = False
 
-    def set_search_query(self, query: str):
-        """Update search query for filtering."""
-        self.current_search_query = query
+    # =========================================================================
+    # Ticker Data
+    # =========================================================================
+
+    async def force_refresh_ticker_data(self):
+        """Force refresh ticker data with loading overlay."""
+        if self.is_loading_ticker_data:
+            return
+        self.is_loading_ticker_data = True
+        yield
+        await asyncio.sleep(0.3)
+        try:
+            service = DatabaseService()
+            self.ticker_data = await service.get_ticker_data()
+            self.ticker_data_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        except Exception as e:
+            import logging
+
+            logging.exception(f"Error refreshing ticker data: {e}")
+        finally:
+            self.is_loading_ticker_data = False
+
+    # =========================================================================
+    # Stock Screener
+    # =========================================================================
+
+    async def force_refresh_stock_screener(self):
+        """Force refresh stock screener data with loading overlay."""
+        if self.is_loading_stock_screener:
+            return
+        self.is_loading_stock_screener = True
+        yield
+        await asyncio.sleep(0.3)
+        try:
+            service = DatabaseService()
+            self.stock_screener = await service.get_stock_screener()
+            self.stock_screener_last_updated = datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+        except Exception as e:
+            import logging
+
+            logging.exception(f"Error refreshing stock screener: {e}")
+        finally:
+            self.is_loading_stock_screener = False
+
+    # =========================================================================
+    # Special Terms
+    # =========================================================================
+
+    async def force_refresh_special_terms(self):
+        """Force refresh special terms data with loading overlay."""
+        if self.is_loading_special_terms:
+            return
+        self.is_loading_special_terms = True
+        yield
+        await asyncio.sleep(0.3)
+        try:
+            service = DatabaseService()
+            self.special_terms = await service.get_special_terms()
+            self.special_terms_last_updated = datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+        except Exception as e:
+            import logging
+
+            logging.exception(f"Error refreshing special terms: {e}")
+        finally:
+            self.is_loading_special_terms = False
+
+    # =========================================================================
+    # Instrument Data
+    # =========================================================================
+
+    async def force_refresh_instrument_data(self):
+        """Force refresh instrument data with loading overlay."""
+        if self.is_loading_instrument_data:
+            return
+        self.is_loading_instrument_data = True
+        yield
+        await asyncio.sleep(0.3)
+        try:
+            service = DatabaseService()
+            self.instrument_data = await service.get_instrument_data()
+            self.instrument_data_last_updated = datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+        except Exception as e:
+            import logging
+
+            logging.exception(f"Error refreshing instrument data: {e}")
+        finally:
+            self.is_loading_instrument_data = False
+
+    # =========================================================================
+    # Instrument Terms
+    # =========================================================================
+
+    async def force_refresh_instrument_terms(self):
+        """Force refresh instrument terms data with loading overlay."""
+        if self.is_loading_instrument_terms:
+            return
+        self.is_loading_instrument_terms = True
+        yield
+        await asyncio.sleep(0.3)
+        try:
+            service = DatabaseService()
+            self.instrument_terms = await service.get_instrument_terms()
+            self.instrument_terms_last_updated = datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+        except Exception as e:
+            import logging
+
+            logging.exception(f"Error refreshing instrument terms: {e}")
+        finally:
+            self.is_loading_instrument_terms = False
+
+    # =========================================================================
+    # UI State Methods
+    # =========================================================================
 
     def set_current_tab(self, tab: str):
         """Switch between instruments tabs."""
@@ -82,77 +232,3 @@ class InstrumentState(rx.State):
     def set_selected_row(self, row_id: int):
         """Set selected row ID."""
         self.selected_row = row_id
-
-    @rx.var(cache=True)
-    def filtered_ticker_data(self) -> list[TickerDataItem]:
-        """Filtered ticker data based on search query."""
-        if not self.current_search_query:
-            return self.ticker_data
-
-        query = self.current_search_query.lower()
-        return [
-            item
-            for item in self.ticker_data
-            if query in item.get("ticker", "").lower()
-            or query in item.get("company", "").lower()
-        ]
-
-    @rx.var(cache=True)
-    def filtered_stock_screener(self) -> list[StockScreenerItem]:
-        """Filtered stock screener based on search query."""
-        if not self.current_search_query:
-            return self.stock_screener
-
-        query = self.current_search_query.lower()
-        return [
-            item
-            for item in self.stock_screener
-            if query in item.get("ticker", "").lower()
-            or query in item.get("company", "").lower()
-            or query in item.get("industry", "").lower()
-        ]
-
-    @rx.var(cache=True)
-    def filtered_special_terms(self) -> list[SpecialTermItem]:
-        """Filtered special terms based on search query."""
-        if not self.current_search_query:
-            return self.special_terms
-
-        query = self.current_search_query.lower()
-        return [
-            item
-            for item in self.special_terms
-            if query in item.get("ticker", "").lower()
-            or query in item.get("company_name", "").lower()
-            or query in item.get("deal_num", "").lower()
-        ]
-
-    @rx.var(cache=True)
-    def filtered_instrument_data(self) -> list[InstrumentDataItem]:
-        """Filtered instrument data based on search query."""
-        if not self.current_search_query:
-            return self.instrument_data
-
-        query = self.current_search_query.lower()
-        return [
-            item
-            for item in self.instrument_data
-            if query in item.get("ticker", "").lower()
-            or query in item.get("company_name", "").lower()
-            or query in item.get("underlying", "").lower()
-        ]
-
-    @rx.var(cache=True)
-    def filtered_instrument_terms(self) -> list[InstrumentTermItem]:
-        """Filtered instrument terms based on search query."""
-        if not self.current_search_query:
-            return self.instrument_terms
-
-        query = self.current_search_query.lower()
-        return [
-            item
-            for item in self.instrument_terms
-            if query in item.get("ticker", "").lower()
-            or query in item.get("company_name", "").lower()
-            or query in item.get("underlying", "").lower()
-        ]

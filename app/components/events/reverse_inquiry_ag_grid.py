@@ -128,12 +128,19 @@ def reverse_inquiry_ag_grid() -> rx.Component:
             on_search_clear=ReverseInquiryGridState.clear_search,
             grid_id=_GRID_ID,
             show_compact_toggle=True,
+            # Status Bar: Last Updated + Force Refresh
+            last_updated=EventsState.reverse_inquiry_last_updated,
+            show_refresh=True,
+            on_refresh=EventsState.force_refresh_reverse_inquiry,
+            is_loading=EventsState.is_loading_reverse_inquiry,
         ),
         # Grid with factory pattern
         create_standard_grid(
             grid_id=_GRID_ID,
-            row_data=EventsState.filtered_reverse_inquiry,
+            row_data=EventsState.reverse_inquiry,
             column_defs=_get_column_defs(),
+            row_id_key="id",  # Delta detection key (unique row ID)
+            loading=EventsState.is_loading_reverse_inquiry,  # Loading overlay
             enable_row_numbers=True,  # Tier 2: Row numbering
             enable_multi_select=True,  # Tier 2: Multi-row selection with checkboxes
             default_excel_export_params=get_default_export_params("reverse_inquiry"),

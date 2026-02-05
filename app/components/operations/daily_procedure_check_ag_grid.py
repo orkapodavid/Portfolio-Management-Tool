@@ -159,11 +159,17 @@ def daily_procedure_check_ag_grid() -> rx.Component:
             on_search_clear=DailyProcedureCheckGridState.clear_search,
             grid_id=_GRID_ID,
             show_compact_toggle=True,
+            last_updated=OperationsState.daily_procedures_last_updated,
+            show_refresh=True,
+            on_refresh=OperationsState.force_refresh_daily_procedures,
+            is_loading=OperationsState.is_loading_daily_procedures,
         ),
         create_standard_grid(
             grid_id=_GRID_ID,
-            row_data=OperationsState.filtered_daily_procedures,
+            row_data=OperationsState.daily_procedures,
             column_defs=_get_column_defs(),
+            row_id_key="id",
+            loading=OperationsState.is_loading_daily_procedures,
             enable_row_numbers=True,
             enable_multi_select=True,
             default_excel_export_params=get_default_export_params(

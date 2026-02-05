@@ -6,6 +6,9 @@ Handles all operations-related data:
 - Operation Processes
 """
 
+import asyncio
+from datetime import datetime
+
 import reflex as rx
 from app.services import DatabaseService
 from app.states.operations.types import (
@@ -23,9 +26,16 @@ class OperationsState(rx.State):
     daily_procedures: list[DailyProcedureItem] = []
     operation_processes: list[OperationProcessItem] = []
 
+    # Daily Procedures loading state
+    is_loading_daily_procedures: bool = False
+    daily_procedures_last_updated: str = "—"
+
+    # Operation Processes loading state
+    is_loading_operation_processes: bool = False
+    operation_processes_last_updated: str = "—"
+
     # UI state
     is_loading: bool = False
-    current_search_query: str = ""
     current_tab: str = "daily"
 
     # Shared UI state for sorting
@@ -40,10 +50,14 @@ class OperationsState(rx.State):
     async def load_operations_data(self):
         """Load all operations data from DatabaseService."""
         self.is_loading = True
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         try:
             service = DatabaseService()
             self.daily_procedures = await service.get_daily_procedures()
+            self.daily_procedures_last_updated = timestamp
+
             self.operation_processes = await service.get_operation_processes()
+            self.operation_processes_last_updated = timestamp
         except Exception as e:
             import logging
 
@@ -51,9 +65,57 @@ class OperationsState(rx.State):
         finally:
             self.is_loading = False
 
-    def set_search_query(self, query: str):
-        """Update search query for filtering."""
-        self.current_search_query = query
+    # =========================================================================
+    # Daily Procedures
+    # =========================================================================
+
+    async def force_refresh_daily_procedures(self):
+        """Force refresh daily procedures with loading overlay."""
+        if self.is_loading_daily_procedures:
+            return
+        self.is_loading_daily_procedures = True
+        yield
+        await asyncio.sleep(0.3)
+        try:
+            service = DatabaseService()
+            self.daily_procedures = await service.get_daily_procedures()
+            self.daily_procedures_last_updated = datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+        except Exception as e:
+            import logging
+
+            logging.exception(f"Error refreshing daily procedures: {e}")
+        finally:
+            self.is_loading_daily_procedures = False
+
+    # =========================================================================
+    # Operation Processes
+    # =========================================================================
+
+    async def force_refresh_operation_processes(self):
+        """Force refresh operation processes with loading overlay."""
+        if self.is_loading_operation_processes:
+            return
+        self.is_loading_operation_processes = True
+        yield
+        await asyncio.sleep(0.3)
+        try:
+            service = DatabaseService()
+            self.operation_processes = await service.get_operation_processes()
+            self.operation_processes_last_updated = datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+        except Exception as e:
+            import logging
+
+            logging.exception(f"Error refreshing operation processes: {e}")
+        finally:
+            self.is_loading_operation_processes = False
+
+    # =========================================================================
+    # UI State Methods
+    # =========================================================================
 
     def set_current_tab(self, tab: str):
         """Switch between operations tabs."""
@@ -70,31 +132,3 @@ class OperationsState(rx.State):
     def set_selected_row(self, row_id: int):
         """Set selected row ID."""
         self.selected_row = row_id
-
-    @rx.var(cache=True)
-    def filtered_daily_procedures(self) -> list[DailyProcedureItem]:
-        """Filtered daily procedures based on search query."""
-        if not self.current_search_query:
-            return self.daily_procedures
-
-        query = self.current_search_query.lower()
-        return [
-            item
-            for item in self.daily_procedures
-            if query in item.get("procedure_name", "").lower()
-            or query in item.get("status", "").lower()
-        ]
-
-    @rx.var(cache=True)
-    def filtered_operation_processes(self) -> list[OperationProcessItem]:
-        """Filtered operation processes based on search query."""
-        if not self.current_search_query:
-            return self.operation_processes
-
-        query = self.current_search_query.lower()
-        return [
-            item
-            for item in self.operation_processes
-            if query in item.get("process", "").lower()
-            or query in item.get("status", "").lower()
-        ]

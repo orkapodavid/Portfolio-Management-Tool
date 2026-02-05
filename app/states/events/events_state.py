@@ -7,6 +7,9 @@ Handles all event-related data:
 - Reverse Inquiry
 """
 
+import asyncio
+from datetime import datetime
+
 import reflex as rx
 from app.services import DatabaseService
 from app.states.types import (
@@ -26,9 +29,20 @@ class EventsState(rx.State):
     event_stream: list[EventStreamItem] = []
     reverse_inquiry: list[ReverseInquiryItem] = []
 
+    # Event Calendar loading state
+    is_loading_event_calendar: bool = False
+    event_calendar_last_updated: str = "—"
+
+    # Event Stream loading state
+    is_loading_event_stream: bool = False
+    event_stream_last_updated: str = "—"
+
+    # Reverse Inquiry loading state
+    is_loading_reverse_inquiry: bool = False
+    reverse_inquiry_last_updated: str = "—"
+
     # UI state
     is_loading: bool = False
-    current_search_query: str = ""
     current_tab: str = "calendar"
 
     # Shared UI state for sorting
@@ -46,8 +60,19 @@ class EventsState(rx.State):
         try:
             service = DatabaseService()
             self.event_calendar = await service.get_event_calendar()
+            self.event_calendar_last_updated = datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+
             self.event_stream = await service.get_event_stream()
+            self.event_stream_last_updated = datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+
             self.reverse_inquiry = await service.get_reverse_inquiry()
+            self.reverse_inquiry_last_updated = datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
         except Exception as e:
             import logging
 
@@ -55,9 +80,81 @@ class EventsState(rx.State):
         finally:
             self.is_loading = False
 
-    def set_search_query(self, query: str):
-        """Update search query for filtering."""
-        self.current_search_query = query
+    # =========================================================================
+    # Event Calendar
+    # =========================================================================
+
+    async def force_refresh_event_calendar(self):
+        """Force refresh event calendar data with loading overlay."""
+        if self.is_loading_event_calendar:
+            return  # Debounce
+        self.is_loading_event_calendar = True
+        yield  # Send loading state to client immediately
+        await asyncio.sleep(0.3)
+        try:
+            service = DatabaseService()
+            self.event_calendar = await service.get_event_calendar()
+            self.event_calendar_last_updated = datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+        except Exception as e:
+            import logging
+
+            logging.exception(f"Error refreshing event calendar: {e}")
+        finally:
+            self.is_loading_event_calendar = False
+
+    # =========================================================================
+    # Event Stream
+    # =========================================================================
+
+    async def force_refresh_event_stream(self):
+        """Force refresh event stream data with loading overlay."""
+        if self.is_loading_event_stream:
+            return  # Debounce
+        self.is_loading_event_stream = True
+        yield  # Send loading state to client immediately
+        await asyncio.sleep(0.3)
+        try:
+            service = DatabaseService()
+            self.event_stream = await service.get_event_stream()
+            self.event_stream_last_updated = datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+        except Exception as e:
+            import logging
+
+            logging.exception(f"Error refreshing event stream: {e}")
+        finally:
+            self.is_loading_event_stream = False
+
+    # =========================================================================
+    # Reverse Inquiry
+    # =========================================================================
+
+    async def force_refresh_reverse_inquiry(self):
+        """Force refresh reverse inquiry data with loading overlay."""
+        if self.is_loading_reverse_inquiry:
+            return  # Debounce
+        self.is_loading_reverse_inquiry = True
+        yield  # Send loading state to client immediately
+        await asyncio.sleep(0.3)
+        try:
+            service = DatabaseService()
+            self.reverse_inquiry = await service.get_reverse_inquiry()
+            self.reverse_inquiry_last_updated = datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+        except Exception as e:
+            import logging
+
+            logging.exception(f"Error refreshing reverse inquiry: {e}")
+        finally:
+            self.is_loading_reverse_inquiry = False
+
+    # =========================================================================
+    # UI State Methods
+    # =========================================================================
 
     def set_current_tab(self, tab: str):
         """Switch between events tabs."""
@@ -74,48 +171,3 @@ class EventsState(rx.State):
     def set_selected_row(self, row_id: int):
         """Set selected row ID."""
         self.selected_row = row_id
-
-    @rx.var(cache=True)
-    def filtered_event_calendar(self) -> list[EventCalendarItem]:
-        """Filtered event calendar based on search query."""
-        if not self.current_search_query:
-            return self.event_calendar
-
-        query = self.current_search_query.lower()
-        return [
-            item
-            for item in self.event_calendar
-            if query in item.get("ticker", "").lower()
-            or query in item.get("company", "").lower()
-            or query in item.get("underlying", "").lower()
-        ]
-
-    @rx.var(cache=True)
-    def filtered_event_stream(self) -> list[EventStreamItem]:
-        """Filtered event stream based on search query."""
-        if not self.current_search_query:
-            return self.event_stream
-
-        query = self.current_search_query.lower()
-        return [
-            item
-            for item in self.event_stream
-            if query in item.get("symbol", "").lower()
-            or query in item.get("subject", "").lower()
-            or query in item.get("event_type", "").lower()
-        ]
-
-    @rx.var(cache=True)
-    def filtered_reverse_inquiry(self) -> list[ReverseInquiryItem]:
-        """Filtered reverse inquiry based on search query."""
-        if not self.current_search_query:
-            return self.reverse_inquiry
-
-        query = self.current_search_query.lower()
-        return [
-            item
-            for item in self.reverse_inquiry
-            if query in item.get("ticker", "").lower()
-            or query in item.get("company", "").lower()
-            or query in item.get("agent", "").lower()
-        ]
