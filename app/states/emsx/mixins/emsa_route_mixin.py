@@ -86,18 +86,3 @@ class EMSARouteMixin(rx.State, mixin=True):
             logging.exception(f"Error refreshing EMSA routes: {e}")
         finally:
             self.is_loading_emsa_routes = False
-
-    @rx.var(cache=True)
-    def filtered_emsa_routes(self) -> list[dict]:
-        """Filtered EMSA routes based on search query."""
-        if not self.current_search_query:
-            return self.emsa_routes
-
-        query = self.current_search_query.lower()
-        return [
-            item
-            for item in self.emsa_routes
-            if query in item.get("ticker", "").lower()
-            or query in item.get("underlying", "").lower()
-            or query in item.get("broker", "").lower()
-        ]

@@ -90,18 +90,3 @@ class EMSAOrderMixin(rx.State, mixin=True):
             logging.exception(f"Error refreshing EMSA orders: {e}")
         finally:
             self.is_loading_emsa_orders = False
-
-    @rx.var(cache=True)
-    def filtered_emsa_orders(self) -> list[EMSAOrderItem]:
-        """Filtered EMSA orders based on search query."""
-        if not self.current_search_query:
-            return self.emsa_orders
-
-        query = self.current_search_query.lower()
-        return [
-            item
-            for item in self.emsa_orders
-            if query in item.get("ticker", "").lower()
-            or query in item.get("underlying", "").lower()
-            or query in item.get("broker", "").lower()
-        ]

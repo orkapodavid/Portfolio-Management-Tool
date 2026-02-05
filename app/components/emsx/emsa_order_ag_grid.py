@@ -164,7 +164,7 @@ def emsa_order_ag_grid() -> rx.Component:
         # Grid with factory pattern
         create_standard_grid(
             grid_id=_GRID_ID,
-            row_data=EMSXState.filtered_emsa_orders,
+            row_data=EMSXState.emsa_orders,
             column_defs=_get_column_defs(),
             row_id_key="id",  # Delta detection key (unique row ID)
             loading=EMSXState.is_loading_emsa_orders,  # Loading overlay
