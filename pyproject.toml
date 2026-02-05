@@ -9,7 +9,7 @@ dependencies = [
     "PyGithub",
     "pyodbc",
     "python-dotenv",
-    "pandas",
+    "pandas>=2.0,<3.0",
     "pmt-core",
     "reflex-ag-grid",
     "plotly>=6.5.2",
