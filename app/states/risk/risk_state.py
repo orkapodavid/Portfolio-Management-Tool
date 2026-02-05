@@ -1,43 +1,28 @@
 """
 Risk State - Module-specific state for Risk data
 
-Handles all risk-related data and calculations.
-
-This follows Reflex best practices for state architecture:
-- Focused responsibility (only risk metrics)
-- Service integration (uses RiskService)
-- Independent from other dashboard states
-- Efficient loading (only loads when needed)
+Composes all Risk mixins to provide unified interface.
+Following the PnL pattern with mixin-per-tab architecture.
 """
 
 import reflex as rx
-from app.services import RiskService
-from app.states.risk.types import (
-    DeltaChangeItem,
-    RiskMeasureItem,
-    RiskInputItem,
-)
+from app.states.risk.mixins.delta_change_mixin import DeltaChangeMixin
+from app.states.risk.mixins.risk_measures_mixin import RiskMeasuresMixin
+from app.states.risk.mixins.risk_inputs_mixin import RiskInputsMixin
 
 
-class RiskState(rx.State):
+class RiskState(
+    DeltaChangeMixin,
+    RiskMeasuresMixin,
+    RiskInputsMixin,
+    rx.State,
+):
     """
-    State management for risk metrics and calculations.
-
-    Responsibilities:
-    - Load delta change data
-    - Load risk measures (Greeks, sensitivities)
-    - Load risk input parameters
-    - Handle filtering and search for risk views
+    Main Risk module state.
+    Inherits from all Risk tab mixins to provide unified interface.
     """
 
-    # Data storage
-    delta_changes: list[DeltaChangeItem] = []
-    risk_measures: list[RiskMeasureItem] = []
-    risk_inputs: list[RiskInputItem] = []
-
-    # UI state
-    is_loading: bool = False
-    current_search_query: str = ""
+    # Module-level state
     current_tab: str = "delta"  # "delta", "measures", "inputs"
 
     # Shared UI state for sorting
@@ -50,23 +35,22 @@ class RiskState(rx.State):
         await self.load_risk_data()
 
     async def load_risk_data(self):
-        """Load all risk data from RiskService."""
-        self.is_loading = True
-        try:
-            service = RiskService()
-            self.delta_changes = await service.get_delta_changes()
-            self.risk_measures = await service.get_risk_measures()
-            self.risk_inputs = await service.get_risk_inputs()
-        except Exception as e:
-            import logging
+        """Load all risk data from RiskService (backward compatible).
+        
+        This loads data for all tabs - used by on_load handlers in routes.
+        """
+        await self.load_delta_change_data()
+        await self.load_risk_measures_data()
+        await self.load_risk_inputs_data()
 
-            logging.exception(f"Error loading risk data: {e}")
-        finally:
-            self.is_loading = False
-
-    def set_search_query(self, query: str):
-        """Update search query for filtering."""
-        self.current_search_query = query
+    async def load_risk_module_data(self):
+        """Load data for the active tab only."""
+        if self.current_tab == "delta":
+            await self.load_delta_change_data()
+        elif self.current_tab == "measures":
+            await self.load_risk_measures_data()
+        elif self.current_tab == "inputs":
+            await self.load_risk_inputs_data()
 
     def set_current_tab(self, tab: str):
         """Switch between risk tabs."""
@@ -84,44 +68,3 @@ class RiskState(rx.State):
         """Set selected row ID."""
         self.selected_row = row_id
 
-    @rx.var(cache=True)
-    def filtered_delta_changes(self) -> list[DeltaChangeItem]:
-        """Filtered delta changes based on search query."""
-        if not self.current_search_query:
-            return self.delta_changes
-
-        query = self.current_search_query.lower()
-        return [
-            item
-            for item in self.delta_changes
-            if query in item.get("ticker", "").lower()
-            or query in item.get("company_name", "").lower()
-        ]
-
-    @rx.var(cache=True)
-    def filtered_risk_measures(self) -> list[RiskMeasureItem]:
-        """Filtered risk measures based on search query."""
-        if not self.current_search_query:
-            return self.risk_measures
-
-        query = self.current_search_query.lower()
-        return [
-            item
-            for item in self.risk_measures
-            if query in item.get("ticker", "").lower()
-            or query in item.get("underlying", "").lower()
-        ]
-
-    @rx.var(cache=True)
-    def filtered_risk_inputs(self) -> list[RiskInputItem]:
-        """Filtered risk inputs based on search query."""
-        if not self.current_search_query:
-            return self.risk_inputs
-
-        query = self.current_search_query.lower()
-        return [
-            item
-            for item in self.risk_inputs
-            if query in item.get("ticker", "").lower()
-            or query in item.get("underlying", "").lower()
-        ]

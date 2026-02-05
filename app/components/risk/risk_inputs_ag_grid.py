@@ -123,11 +123,16 @@ def risk_inputs_ag_grid() -> rx.Component:
             on_search_clear=RiskInputsGridState.clear_search,
             grid_id=_GRID_ID,
             show_compact_toggle=True,
+            # Status bar - use mixin-specific state
+            last_updated=RiskState.risk_inputs_last_updated,
+            auto_refresh=RiskState.risk_inputs_auto_refresh,
+            on_auto_refresh_toggle=RiskState.toggle_risk_inputs_auto_refresh,
         ),
         create_standard_grid(
             grid_id=_GRID_ID,
             row_data=RiskState.filtered_risk_inputs,
             column_defs=_get_column_defs(),
+            row_id_key="seed",
             enable_cell_flash=True,
             enable_row_numbers=True,
             enable_multi_select=True,
@@ -138,4 +143,6 @@ def risk_inputs_ag_grid() -> rx.Component:
         width="100%",
         height="100%",
         spacing="0",
+        on_mount=RiskState.start_risk_inputs_auto_refresh,
     )
+

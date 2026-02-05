@@ -70,6 +70,41 @@ Based on [18_performance.md](file:///home/kuro/Desktop/projects/Portfolio-Manage
 | `rx.moment(interval=N)` | Timer for auto-refresh ticks | Add to grid components |
 | State mutation pattern | In-place update of list items | See example below |
 
+### ⚠️ Cell Flash Requirements (Critical)
+
+> [!IMPORTANT]
+> **For AG Grid cell flash to work correctly, ALL of these are required:**
+>
+> 1. **Immutable Updates**: Create new list + new row dict objects — do NOT mutate in-place
+> 2. **Correct Field Names**: Update fields that actually exist in the data structure
+> 3. **`row_id_key`**: Each grid must specify a unique identifier field (e.g., `ticker`, `currency`)
+> 4. **`enable_cell_change_flash=True`**: Enabled by `create_standard_grid(enable_cell_flash=True)`
+
+**Correct (immutable) pattern:**
+
+```python
+def simulate_update(self):
+    # Create a NEW list
+    new_list = list(self.data_list)
+    
+    for _ in range(random.randint(1, 3)):
+        idx = random.randint(0, len(new_list) - 1)
+        # Create a NEW row dict
+        new_row = dict(new_list[idx])
+        new_row["price"] = round(new_row["price"] * random.uniform(0.99, 1.01), 2)
+        new_list[idx] = new_row  # Replace with new object
+    
+    self.data_list = new_list  # Assign new list to trigger detection
+```
+
+**Incorrect (in-place mutation) — CELL FLASH WILL NOT WORK:**
+
+```python
+# ❌ BAD - Mutates existing row objects
+self.data_list[idx]["price"] = new_price
+```
+
+
 ### Delta Update Pattern (from Performance Demo)
 
 ```python
@@ -192,17 +227,17 @@ def fx_data_ag_grid() -> rx.Component:
 | [market_hours_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/market_data/market_hours_ag_grid.py) | `MarketHoursMixin` | Static | ✅ | ✅ force | — | [ ] `market` |
 | [trading_calendar_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/market_data/trading_calendar_ag_grid.py) | `TradingCalendarMixin` | Static | ✅ | ✅ force | — | [ ] `trade_date` |
 
-### Phase 2: PnL & Risk Grids (7 grids)
+### Phase 2: PnL & Risk Grids (7 grids) — *Completed*
 
-| Grid | Mixin | `last_updated` | `auto_refresh` | `simulate_*` | `row_id_key` |
-|------|-------|:--------------:|:--------------:|:------------:|:------------:|
-| pnl_change_ag_grid.py | PnLChangeMixin | [ ] | [ ] | [ ] | [ ] |
-| pnl_currency_ag_grid.py | PnLCurrencyMixin | [ ] | [ ] | [ ] | [ ] |
-| pnl_full_ag_grid.py | PnLFullMixin | [ ] | [ ] | [ ] | [ ] |
-| pnl_summary_ag_grid.py | PnLSummaryMixin | [ ] | [ ] | [ ] | [ ] |
-| delta_change_ag_grid.py | RiskMixin | [ ] | [ ] | [ ] | [ ] |
-| risk_inputs_ag_grid.py | RiskMixin | [ ] | [ ] | [ ] | [ ] |
-| risk_measures_ag_grid.py | RiskMixin | [ ] | [ ] | [ ] | [ ] |
+| Grid | Mixin | Type | `last_updated` | Refresh | `simulate_*` | `row_id_key` |
+|------|-------|:----:|:--------------:|:-------:|:------------:|:------------:|
+| [pnl_change_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/pnl/pnl_change_ag_grid.py) | `PnLChangeMixin` | Ticking | ✅ | ✅ auto | ✅ | ✅ `ticker` |
+| [pnl_currency_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/pnl/pnl_currency_ag_grid.py) | `PnLCurrencyMixin` | Ticking | ✅ | ✅ auto | ✅ | ✅ `currency` |
+| [pnl_full_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/pnl/pnl_full_ag_grid.py) | `PnLFullMixin` | Ticking | ✅ | ✅ auto | ✅ | ✅ `ticker` |
+| [pnl_summary_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/pnl/pnl_summary_ag_grid.py) | `PnLSummaryMixin` | Ticking | ✅ | ✅ auto | ✅ | ✅ `underlying` |
+| [delta_change_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/risk/delta_change_ag_grid.py) | `RiskState` | Ticking | ✅ | ✅ auto | ✅ | ✅ `ticker` |
+| [risk_inputs_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/risk/risk_inputs_ag_grid.py) | `RiskState` | Ticking | ✅ | ✅ auto | ✅ | ✅ `seed` |
+| [risk_measures_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/risk/risk_measures_ag_grid.py) | `RiskState` | Ticking | ✅ | ✅ auto | ✅ | ✅ `ticker` |
 
 ### Phase 3: Positions & Reconciliation (10 grids)
 

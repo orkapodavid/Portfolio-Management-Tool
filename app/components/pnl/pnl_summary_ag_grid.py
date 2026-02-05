@@ -182,12 +182,17 @@ def pnl_summary_ag_grid() -> rx.Component:
             on_search_clear=PnLSummaryGridState.clear_search,
             grid_id="pnl_summary_grid",
             show_compact_toggle=True,
+            # Status bar
+            last_updated=PnLState.pnl_summary_last_updated,
+            auto_refresh=PnLState.pnl_summary_auto_refresh,
+            on_auto_refresh_toggle=PnLState.toggle_pnl_summary_auto_refresh,
         ),
         # Grid with row grouping support
         create_standard_grid(
             grid_id="pnl_summary_grid",
             row_data=PnLState.filtered_pnl_summary,
             column_defs=_get_column_defs(),
+            row_id_key="underlying",
             enable_cell_flash=True,
             enable_row_numbers=True,
             enable_multi_select=True,
@@ -201,5 +206,6 @@ def pnl_summary_ag_grid() -> rx.Component:
         width="100%",
         height="100%",
         spacing="0",
+        on_mount=PnLState.start_pnl_summary_auto_refresh,
     )
 

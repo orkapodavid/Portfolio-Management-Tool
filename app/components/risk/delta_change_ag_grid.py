@@ -105,11 +105,16 @@ def delta_change_ag_grid() -> rx.Component:
             on_search_clear=DeltaChangeGridState.clear_search,
             grid_id=_GRID_ID,
             show_compact_toggle=True,
+            # Status bar - use mixin-specific state
+            last_updated=RiskState.delta_change_last_updated,
+            auto_refresh=RiskState.delta_change_auto_refresh,
+            on_auto_refresh_toggle=RiskState.toggle_delta_change_auto_refresh,
         ),
         create_standard_grid(
             grid_id=_GRID_ID,
             row_data=RiskState.filtered_delta_changes,
             column_defs=_get_column_defs(),
+            row_id_key="ticker",
             enable_cell_flash=True,
             enable_row_numbers=True,
             enable_multi_select=True,
@@ -120,4 +125,6 @@ def delta_change_ag_grid() -> rx.Component:
         width="100%",
         height="100%",
         spacing="0",
+        on_mount=RiskState.start_delta_change_auto_refresh,
     )
+

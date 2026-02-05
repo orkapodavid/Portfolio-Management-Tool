@@ -1,3 +1,5 @@
+import asyncio
+
 import reflex as rx
 from app.services import PnLService
 from app.states.pnl.types import PnLChangeItem
@@ -12,6 +14,8 @@ class PnLChangeMixin(rx.State, mixin=True):
     pnl_change_list: list[PnLChangeItem] = []
     is_loading_pnl_change: bool = False
     pnl_change_error: str = ""
+    pnl_change_last_updated: str = "—"
+    pnl_change_auto_refresh: bool = True
 
     # Filters
     pnl_change_search: str = ""
@@ -32,6 +36,78 @@ class PnLChangeMixin(rx.State, mixin=True):
             logging.exception(f"Error loading P&L change data: {e}")
         finally:
             self.is_loading_pnl_change = False
+            from datetime import datetime
+
+            self.pnl_change_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    @rx.event(background=True)
+    async def start_pnl_change_auto_refresh(self):
+        """Background task for PnL Change auto-refresh (2s interval)."""
+        while True:
+            async with self:
+                if not self.pnl_change_auto_refresh:
+                    break
+                self.simulate_pnl_change_update()
+            await asyncio.sleep(2)
+
+    def toggle_pnl_change_auto_refresh(self, value: bool):
+        """Toggle auto-refresh state. Restarts background task if enabled."""
+        self.pnl_change_auto_refresh = value
+        if value:
+            return type(self).start_pnl_change_auto_refresh
+
+    def simulate_pnl_change_update(self):
+        """Simulated delta update for demo - random PnL fluctuations."""
+        if not self.pnl_change_auto_refresh or len(self.pnl_change_list) < 1:
+            return
+
+        import random
+        from datetime import datetime
+
+        # Create a new list to trigger change detection
+        new_list = list(self.pnl_change_list)
+
+        # Update 1-5 random rows
+        for _ in range(random.randint(1, min(5, len(new_list)))):
+            idx = random.randint(0, len(new_list) - 1)
+            old_row = new_list[idx]
+            # Create a new row dict (immutable update for AG Grid change detection)
+            new_row = dict(old_row)
+
+            # Simulate small PnL changes using correct field names from PnLRecord
+            for field in ["pnl_chg_1d", "pnl_chg_1w", "pnl_chg_1m", "pnl_ytd"]:
+                if field in new_row and new_row[field]:
+                    try:
+                        # Parse value (handle "$1,234" or "($456)" or "-$123" formats)
+                        val_str = str(new_row[field])
+                        is_negative = "(" in val_str or val_str.startswith("-")
+                        val = float(val_str.replace("$", "").replace(",", "").replace("(", "").replace(")", "").replace("-", "").strip())
+                        if is_negative:
+                            val = -val
+                        new_val = round(val * random.uniform(0.95, 1.05), 2)
+                        # Format output
+                        if new_val < 0:
+                            new_row[field] = f"-${abs(new_val):,.2f}"
+                        else:
+                            new_row[field] = f"${new_val:,.2f}"
+                    except (ValueError, TypeError):
+                        pass
+
+            # Also update percentage fields
+            for field in ["pnl_chg_pct_1d", "pnl_chg_pct_1w", "pnl_chg_pct_1m"]:
+                if field in new_row and new_row[field]:
+                    try:
+                        val_str = str(new_row[field])
+                        val = float(val_str.replace("%", "").replace("+", ""))
+                        new_val = round(val * random.uniform(0.9, 1.1), 2)
+                        new_row[field] = f"{new_val:+.1f}%"
+                    except (ValueError, TypeError):
+                        pass
+
+            new_list[idx] = new_row
+
+        self.pnl_change_list = new_list
+        self.pnl_change_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     def set_pnl_change_search(self, query: str):
         self.pnl_change_search = query
@@ -59,7 +135,6 @@ class PnLChangeMixin(rx.State, mixin=True):
             def get_sort_key(item):
                 val = item.get(self.pnl_change_sort_column, "")
                 if isinstance(val, str):
-                    # Simple heuristic to clean currency/pct for sorting
                     cleaned = (
                         val.replace("$", "")
                         .replace(",", "")

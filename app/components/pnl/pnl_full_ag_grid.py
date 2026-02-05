@@ -192,12 +192,17 @@ def pnl_full_ag_grid() -> rx.Component:
             on_search_clear=PnLFullGridState.clear_search,
             grid_id="pnl_full_grid",
             show_compact_toggle=True,
+            # Status bar
+            last_updated=PnLState.pnl_full_last_updated,
+            auto_refresh=PnLState.pnl_full_auto_refresh,
+            on_auto_refresh_toggle=PnLState.toggle_pnl_full_auto_refresh,
         ),
         # Grid with row grouping support
         create_standard_grid(
             grid_id="pnl_full_grid",
             row_data=PnLState.filtered_pnl_full,
             column_defs=_get_column_defs(),
+            row_id_key="ticker",
             enable_cell_flash=True,  # Tier 2: Real-time grid
             enable_row_numbers=True,  # Tier 2: Row numbering
             enable_multi_select=True,  # Tier 2: Multi-row selection with checkboxes
@@ -211,4 +216,5 @@ def pnl_full_ag_grid() -> rx.Component:
         width="100%",
         height="100%",
         spacing="0",
+        on_mount=PnLState.start_pnl_full_auto_refresh,
     )
