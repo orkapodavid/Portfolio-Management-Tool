@@ -10,7 +10,36 @@ from typing import Optional
 from pmt_core.services import PnLService as CorePnLService
 from pmt_core import PnLRecord
 
+from app.ag_grid_constants import GridId
+from app.services.notifications.notification_registry import NotificationRegistry
+
 logger = logging.getLogger(__name__)
+
+
+# === NOTIFICATION PROVIDERS ===
+def _get_pnl_notifications() -> list[dict]:
+    """Mock PnL notifications for P&L threshold alerts."""
+    return [
+        {
+            "id": "pnl-001",
+            "category": "Alerts",
+            "title": "PnL Alert",
+            "message": "AAPL daily PnL exceeded threshold",
+            "time_ago": "10 mins ago",
+            "is_read": False,
+            "icon": "dollar-sign",
+            "color": "text-yellow-500",
+            "module": "PnL",
+            "subtab": "PnL Change",
+            "row_id": "AAPL",
+            "grid_id": GridId.PNL_CHANGE,
+            "ticker": "AAPL",
+        },
+    ]
+
+
+# Register provider at module load
+NotificationRegistry.register("pnl", _get_pnl_notifications)
 
 
 class PnLService:

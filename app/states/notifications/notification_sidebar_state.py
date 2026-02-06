@@ -31,10 +31,13 @@ class NotificationSidebarState(rx.State):
     # Notification data
     notifications: List[NotificationItem] = []
 
-    # Filter and pagination
+    # Filter
     notification_filter: str = "all"
-    notification_page: int = 1
-    notification_page_size: int = 5
+
+    # Infinite scroll vars
+    visible_count: int = 20         # How many notifications currently shown
+    batch_size: int = 20            # How many to load per scroll
+    is_loading_more: bool = False   # Prevent multiple concurrent loads
 
     # Loading state
     is_loading: bool = False
@@ -62,17 +65,34 @@ class NotificationSidebarState(rx.State):
         ]
 
     @rx.var
-    def total_notification_pages(self) -> int:
-        """Total pages based on filtered notifications."""
-        count = len(self.filtered_notifications)
-        return (count + self.notification_page_size - 1) // self.notification_page_size or 1
+    def sorted_notifications(self) -> List[NotificationItem]:
+        """Sort notifications by priority (alerts first) then recency.
+        
+        Priority order: alert > warning > info
+        """
+        priority_order = {"alert": 0, "warning": 1, "info": 2}
+        return sorted(
+            self.filtered_notifications,
+            key=lambda n: (
+                priority_order.get(n.get("type", "info"), 2),
+                -n.get("id", 0)  # Higher ID = more recent (negative for descending)
+            )
+        )
 
     @rx.var
-    def paginated_notifications(self) -> List[NotificationItem]:
-        """Current page of filtered notifications."""
-        start = (self.notification_page - 1) * self.notification_page_size
-        end = start + self.notification_page_size
-        return self.filtered_notifications[start:end]
+    def visible_notifications(self) -> List[NotificationItem]:
+        """Return first N sorted notifications for lazy rendering."""
+        return self.sorted_notifications[:self.visible_count]
+
+    @rx.var
+    def has_more_notifications(self) -> bool:
+        """Check if there are more notifications to load."""
+        return self.visible_count < len(self.sorted_notifications)
+
+    @rx.var
+    def total_notifications_count(self) -> int:
+        """Total number of filtered notifications."""
+        return len(self.sorted_notifications)
 
     # Event Handlers - Data Loading
     @rx.event
@@ -91,7 +111,7 @@ class NotificationSidebarState(rx.State):
             # Transform to NotificationItem format expected by component
             self.notifications = [
                 {
-                    "id": int(n.get("id", i + 1)),
+                    "id": str(n.get("id", i + 1)),  # Keep as string - IDs are now prefixed like 'sys-001'
                     "header": n.get("title", "Notification"),
                     "ticker": n.get("ticker", n.get("row_id", "N/A")),
                     "timestamp": n.get("time_ago", "Just now"),
@@ -128,26 +148,28 @@ class NotificationSidebarState(rx.State):
     # Event Handlers - Filtering
     @rx.event
     def set_notification_filter(self, filter_val: str):
-        """Change the notification filter."""
+        """Change the notification filter and reset visible count."""
         self.notification_filter = filter_val
-        self.notification_page = 1
+        self.visible_count = self.batch_size  # Reset to initial batch
 
-    # Event Handlers - Pagination
+    # Event Handlers - Infinite Scroll
     @rx.event
-    def next_notification_page(self):
-        """Go to next page."""
-        if self.notification_page < self.total_notification_pages:
-            self.notification_page += 1
+    def load_more_notifications(self):
+        """Load more notifications when scrolling near bottom."""
+        if self.is_loading_more or not self.has_more_notifications:
+            return
+        self.is_loading_more = True
+        self.visible_count += self.batch_size
+        self.is_loading_more = False
 
     @rx.event
-    def prev_notification_page(self):
-        """Go to previous page."""
-        if self.notification_page > 1:
-            self.notification_page -= 1
+    def reset_visible_count(self):
+        """Reset visible count to initial batch size."""
+        self.visible_count = self.batch_size
 
     # Event Handlers - Notification Actions
     @rx.event
-    def mark_notification_read(self, notif_id: int):
+    def mark_notification_read(self, notif_id: str):
         """Mark a notification as read."""
         updated = []
         for n in self.notifications:
@@ -157,14 +179,15 @@ class NotificationSidebarState(rx.State):
         self.notifications = updated
 
     @rx.event
-    def dismiss_notification(self, notif_id: int):
+    def dismiss_notification(self, notif_id: str):
         """Remove a notification."""
         self.notifications = [n for n in self.notifications if n.get("id") != notif_id]
 
     @rx.event
     def add_simulated_notification(self):
         """Add a simulated notification for testing."""
-        new_id = max([n.get("id", 0) for n in self.notifications], default=0) + 1
+        # Generate unique ID for simulated notification
+        new_id = f"sim-{random.randint(1000, 9999)}"
         types = ["alert", "info", "warning"]
         tickers = ["AAPL", "MSFT", "GOOGL", "TSLA", "NVDA", "META"]
         headers = ["Price Alert", "Volume Spike", "Risk Warning", "Settlement Notice"]
@@ -188,7 +211,7 @@ class NotificationSidebarState(rx.State):
 
     # Event Handlers - Navigation & Jump to Row
     @rx.event
-    def navigate_to_item(self, notif_id: int):
+    def navigate_to_item(self, notif_id: str):
         """
         Navigate to the relevant module/subtab and highlight the row.
         Called when clicking the arrow button on a notification.

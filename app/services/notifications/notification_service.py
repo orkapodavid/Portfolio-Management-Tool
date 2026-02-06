@@ -4,24 +4,76 @@ Notification Service for Portfolio Management Tool.
 This service handles notification management including alerts, portfolio updates,
 news, and system notifications.
 
-TODO: Implement real notification logic with persistence.
+It aggregates notifications from the NotificationRegistry, where domain services
+register their notification providers.
+
+IMPORTANT: Mock notification providers are now defined in their respective domain services:
+- market_data_service.py: Market data and FX notifications
+- pnl_service.py: P&L notifications  
+- risk_service.py: Risk notifications
+- position_service.py: Position notifications
+- This file: System notifications only
 """
 
 import logging
 from typing import Optional
-from datetime import datetime
 import random
 
 from app.ag_grid_constants import GridId
+from app.services.notifications.notification_registry import NotificationRegistry
 
 logger = logging.getLogger(__name__)
+
+
+# === SYSTEM NOTIFICATION PROVIDER ===
+# System notifications are infrastructure-related and stay in NotificationService
+def _get_system_notifications() -> list[dict]:
+    """Mock system notifications for maintenance, API status, etc."""
+    return [
+        {
+            "id": "sys-001",
+            "category": "System",
+            "title": "System Maintenance",
+            "message": "Scheduled maintenance tonight from 10pm-12am EST",
+            "time_ago": "1 day ago",
+            "is_read": True,
+            "icon": "settings",
+            "color": "text-gray-500",
+            "module": "Market Data",
+            "subtab": "Market Data",
+            "row_id": "GOOGL",
+            "grid_id": GridId.MARKET_DATA,
+            "ticker": "SYSTEM",
+        },
+        {
+            "id": "sys-002",
+            "category": "System",
+            "title": "API Connected",
+            "message": "Bloomberg API connection restored",
+            "time_ago": "6 hours ago",
+            "is_read": True,
+            "icon": "check-circle",
+            "color": "text-green-500",
+            "module": "Market Data",
+            "subtab": "Market Data",
+            "row_id": "AMZN",
+            "grid_id": GridId.MARKET_DATA,
+            "ticker": "API",
+        },
+    ]
+
+
+# Register system provider
+NotificationRegistry.register("system", _get_system_notifications)
 
 
 class NotificationService:
     """
     Service for managing notifications.
     
-    Handles different notification types:
+    Aggregates notifications from all registered providers in NotificationRegistry.
+    
+    Notification types:
     - Alerts (price alerts, risk alerts)
     - Portfolio (dividend, trade confirmations)
     - News (market updates)
@@ -41,6 +93,8 @@ class NotificationService:
         """
         Get notifications, optionally filtered by category.
         
+        Aggregates from all registered notification providers.
+        
         Args:
             category: Filter by category ('Alerts', 'Portfolio', 'News', 'System')
             unread_only: Only return unread notifications
@@ -48,201 +102,14 @@ class NotificationService:
             
         Returns:
             List of notification dictionaries
-            
-        TODO: Implement database query to fetch real notifications.
         """
-        logger.warning("Using mock notification data.")
+        # Aggregate from registry
+        all_notifications = NotificationRegistry.get_all_notifications()
         
-        # Mock notifications with navigation metadata
-        # Using GridId enum for consistent grid targeting
-        all_notifications = [
-            # === MARKET DATA GRID NOTIFICATIONS ===
-            {
-                "id": "1",
-                "category": "Alerts",
-                "title": "Price Alert Triggered",
-                "message": "TSLA has crossed above $200.00",
-                "time_ago": "2 mins ago",
-                "is_read": False,
-                "icon": "bell",
-                "color": "text-amber-500",
-                "module": "Market Data",
-                "subtab": "Market Data",
-                "row_id": "TSLA",
-                "grid_id": GridId.MARKET_DATA,
-                "ticker": "TSLA",
-            },
-            {
-                "id": "2",
-                "category": "Portfolio",
-                "title": "Trade Executed",
-                "message": "Your order to buy 100 shares of AAPL has been filled at $189.50",
-                "time_ago": "1 hour ago",
-                "is_read": False,
-                "icon": "wallet",
-                "color": "text-emerald-500",
-                "module": "Market Data",
-                "subtab": "Market Data",
-                "row_id": "AAPL",
-                "grid_id": GridId.MARKET_DATA,
-                "ticker": "AAPL",
-            },
-            {
-                "id": "3",
-                "category": "News",
-                "title": "Market Update",
-                "message": "S&P 500 reaches new all-time high amid strong earnings reports",
-                "time_ago": "3 hours ago",
-                "is_read": True,
-                "icon": "newspaper",
-                "color": "text-blue-500",
-                "module": "Market Data",
-                "subtab": "Market Data",
-                "row_id": "MSFT",
-                "grid_id": GridId.MARKET_DATA,
-                "ticker": "MSFT",
-            },
-            {
-                "id": "7",
-                "category": "Alerts",
-                "title": "Volume Spike",
-                "message": "NVDA trading volume 3x average",
-                "time_ago": "15 mins ago",
-                "is_read": False,
-                "icon": "trending-up",
-                "color": "text-orange-500",
-                "module": "Market Data",
-                "subtab": "Market Data",
-                "row_id": "NVDA",
-                "grid_id": GridId.MARKET_DATA,
-                "ticker": "NVDA",
-            },
-            {
-                "id": "8",
-                "category": "Alerts",
-                "title": "52-Week High",
-                "message": "GOOGL hit new 52-week high at $142.50",
-                "time_ago": "30 mins ago",
-                "is_read": False,
-                "icon": "arrow-up-circle",
-                "color": "text-green-500",
-                "module": "Market Data",
-                "subtab": "Market Data",
-                "row_id": "GOOGL",
-                "grid_id": GridId.MARKET_DATA,
-                "ticker": "GOOGL",
-            },
-            # === POSITIONS GRID NOTIFICATIONS ===
-            {
-                "id": "9",
-                "category": "Portfolio",
-                "title": "Position Update",
-                "message": "TKR0 position size updated after partial fill",
-                "time_ago": "45 mins ago",
-                "is_read": False,
-                "icon": "layers",
-                "color": "text-purple-500",
-                "module": "Positions",
-                "subtab": "Positions",
-                "row_id": "TKR0",
-                "grid_id": GridId.POSITIONS,
-                "ticker": "TKR0",
-            },
-            {
-                "id": "10",
-                "category": "Portfolio",
-                "title": "New Position",
-                "message": "TKR5 added to portfolio",
-                "time_ago": "2 hours ago",
-                "is_read": True,
-                "icon": "plus-circle",
-                "color": "text-teal-500",
-                "module": "Positions",
-                "subtab": "Positions",
-                "row_id": "TKR5",
-                "grid_id": GridId.POSITIONS,
-                "ticker": "TKR5",
-            },
-            # === PNL CHANGE GRID NOTIFICATIONS ===
-            {
-                "id": "11",
-                "category": "Alerts",
-                "title": "PnL Alert",
-                "message": "AAPL daily PnL exceeded threshold",
-                "time_ago": "10 mins ago",
-                "is_read": False,
-                "icon": "dollar-sign",
-                "color": "text-yellow-500",
-                "module": "PnL",
-                "subtab": "PnL Change",
-                "row_id": "AAPL",
-                "grid_id": GridId.PNL_CHANGE,
-                "ticker": "AAPL",
-            },
-            # === RISK GRID NOTIFICATIONS ===
-            {
-                "id": "4",
-                "category": "Alerts",
-                "title": "Risk Alert",
-                "message": "Portfolio delta exposure has increased by 15%",
-                "time_ago": "5 hours ago",
-                "is_read": True,
-                "icon": "alert-triangle",
-                "color": "text-red-500",
-                "module": "Risk",
-                "subtab": "Delta Change",
-                "row_id": "TSLA",  # Uses ticker as row_id_key
-                "grid_id": GridId.DELTA_CHANGE,
-                "ticker": "TSLA",
-            },
-            # === FX DATA GRID NOTIFICATIONS ===
-            {
-                "id": "12",
-                "category": "News",
-                "title": "FX Update",
-                "message": "USD/JPY crossed 150 level",
-                "time_ago": "20 mins ago",
-                "is_read": False,
-                "icon": "globe",
-                "color": "text-indigo-500",
-                "module": "Market Data",
-                "subtab": "FX Data",
-                "row_id": "USDJPY",  # Matches FX grid ticker format (no slash)
-                "grid_id": GridId.FX_DATA,
-                "ticker": "USD/JPY",  # Display name keeps slash
-            },
-            # === SYSTEM NOTIFICATIONS ===
-            {
-                "id": "5",
-                "category": "System",
-                "title": "System Maintenance",
-                "message": "Scheduled maintenance tonight from 10pm-12am EST",
-                "time_ago": "1 day ago",
-                "is_read": True,
-                "icon": "settings",
-                "color": "text-gray-500",
-                "module": "Market Data",
-                "subtab": "Market Data",
-                "row_id": "GOOGL",
-                "grid_id": GridId.MARKET_DATA,
-                "ticker": "SYSTEM",
-            },
-            {
-                "id": "6",
-                "category": "System",
-                "title": "API Connected",
-                "message": "Bloomberg API connection restored",
-                "time_ago": "6 hours ago",
-                "is_read": True,
-                "icon": "check-circle",
-                "color": "text-green-500",
-                "module": "Market Data",
-                "subtab": "Market Data",
-                "row_id": "AMZN",
-                "grid_id": GridId.MARKET_DATA,
-                "ticker": "API",
-            },
-        ]
+        logger.debug(
+            f"Aggregated {len(all_notifications)} notifications from "
+            f"{len(NotificationRegistry.get_provider_names())} providers"
+        )
         
         # Apply category filter
         if category and category != "All":
@@ -377,6 +244,7 @@ if __name__ == "__main__":
         # Test get notifications
         notifications = await service.get_notifications()
         print(f"All notifications: {len(notifications)}")
+        print(f"Providers: {NotificationRegistry.get_provider_names()}")
         
         # Test filtered notifications
         alerts = await service.get_notifications(category="Alerts")

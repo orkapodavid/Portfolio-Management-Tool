@@ -25,6 +25,7 @@ from app.services.portfolio_tools.portfolio_tools_service import PortfolioToolsS
 from app.services.market_data.market_data_service import MarketDataService
 from app.services.emsx.emsx_service import EMSXService
 from app.services.notifications.notification_service import NotificationService
+from app.services.notifications.notification_registry import NotificationRegistry
 from app.services.user.user_service import UserService
 from app.services.shared.database_service import DatabaseService
 from app.services.shared.performance_header_service import PerformanceHeaderService
@@ -39,8 +40,10 @@ __all__ = [
     "MarketDataService",
     "EMSXService",
     "NotificationService",
+    "NotificationRegistry",
     "UserService",
     "DatabaseService",
     "PerformanceHeaderService",
     "finance_service",
 ]
+

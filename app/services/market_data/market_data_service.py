@@ -14,8 +14,118 @@ from datetime import datetime
 import yfinance as yf
 
 from app.services.shared.database_service import DatabaseService
+from app.ag_grid_constants import GridId
+from app.services.notifications.notification_registry import NotificationRegistry
 
 logger = logging.getLogger(__name__)
+
+
+# === NOTIFICATION PROVIDERS ===
+def _get_market_data_notifications() -> list[dict]:
+    """Mock market data notifications for price alerts, trade executions, etc."""
+    return [
+        {
+            "id": "mkt-001",
+            "category": "Alerts",
+            "title": "Price Alert Triggered",
+            "message": "TSLA has crossed above $200.00",
+            "time_ago": "2 mins ago",
+            "is_read": False,
+            "icon": "bell",
+            "color": "text-amber-500",
+            "module": "Market Data",
+            "subtab": "Market Data",
+            "row_id": "TSLA",
+            "grid_id": GridId.MARKET_DATA,
+            "ticker": "TSLA",
+        },
+        {
+            "id": "mkt-002",
+            "category": "Portfolio",
+            "title": "Trade Executed",
+            "message": "Your order to buy 100 shares of AAPL has been filled at $189.50",
+            "time_ago": "1 hour ago",
+            "is_read": False,
+            "icon": "wallet",
+            "color": "text-emerald-500",
+            "module": "Market Data",
+            "subtab": "Market Data",
+            "row_id": "AAPL",
+            "grid_id": GridId.MARKET_DATA,
+            "ticker": "AAPL",
+        },
+        {
+            "id": "mkt-003",
+            "category": "News",
+            "title": "Market Update",
+            "message": "S&P 500 reaches new all-time high amid strong earnings reports",
+            "time_ago": "3 hours ago",
+            "is_read": True,
+            "icon": "newspaper",
+            "color": "text-blue-500",
+            "module": "Market Data",
+            "subtab": "Market Data",
+            "row_id": "MSFT",
+            "grid_id": GridId.MARKET_DATA,
+            "ticker": "MSFT",
+        },
+        {
+            "id": "mkt-004",
+            "category": "Alerts",
+            "title": "Volume Spike",
+            "message": "NVDA trading volume 3x average",
+            "time_ago": "15 mins ago",
+            "is_read": False,
+            "icon": "trending-up",
+            "color": "text-orange-500",
+            "module": "Market Data",
+            "subtab": "Market Data",
+            "row_id": "NVDA",
+            "grid_id": GridId.MARKET_DATA,
+            "ticker": "NVDA",
+        },
+        {
+            "id": "mkt-005",
+            "category": "Alerts",
+            "title": "52-Week High",
+            "message": "GOOGL hit new 52-week high at $142.50",
+            "time_ago": "30 mins ago",
+            "is_read": False,
+            "icon": "arrow-up-circle",
+            "color": "text-green-500",
+            "module": "Market Data",
+            "subtab": "Market Data",
+            "row_id": "GOOGL",
+            "grid_id": GridId.MARKET_DATA,
+            "ticker": "GOOGL",
+        },
+    ]
+
+
+def _get_fx_notifications() -> list[dict]:
+    """Mock FX notifications for currency rate alerts."""
+    return [
+        {
+            "id": "fx-001",
+            "category": "News",
+            "title": "FX Update",
+            "message": "USD/JPY crossed 150 level",
+            "time_ago": "20 mins ago",
+            "is_read": False,
+            "icon": "globe",
+            "color": "text-indigo-500",
+            "module": "Market Data",
+            "subtab": "FX Data",
+            "row_id": "USDJPY",
+            "grid_id": GridId.FX_DATA,
+            "ticker": "USD/JPY",
+        },
+    ]
+
+
+# Register providers at module load
+NotificationRegistry.register("market_data", _get_market_data_notifications)
+NotificationRegistry.register("fx", _get_fx_notifications)
 
 
 class MarketDataService:

@@ -78,33 +78,61 @@ def alert_card(notification: NotificationItem) -> rx.Component:
     )
 
 
-def pagination_footer() -> rx.Component:
+def scroll_sentinel() -> rx.Component:
+    """Invisible sentinel element that triggers loading more notifications.
+    
+    Uses IntersectionObserver to detect when user scrolls near the bottom.
+    """
+    # JavaScript to set up IntersectionObserver for infinite scroll
+    observer_script = """
+    (() => {
+        const sentinel = document.getElementById('scroll-sentinel');
+        if (!sentinel) return;
+        
+        // Avoid duplicate observers
+        if (sentinel.dataset.observed === 'true') return;
+        sentinel.dataset.observed = 'true';
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    // Trigger the Reflex event
+                    const event = new CustomEvent('load-more');
+                    sentinel.dispatchEvent(event);
+                }
+            });
+        }, {
+            root: sentinel.closest('[data-scroll-area]'),
+            rootMargin: '100px',
+            threshold: 0.1
+        });
+        
+        observer.observe(sentinel);
+    })()
+    """
+    
     return rx.el.div(
-        rx.el.button(
+        rx.cond(
+            NotificationSidebarState.is_loading_more,
             rx.el.div(
-                rx.icon("chevron-left", size=12),
-                rx.el.span("Prev", class_name="ml-1"),
-                class_name="flex items-center",
+                rx.icon("loader-circle", size=16, class_name="animate-spin text-gray-400"),
+                rx.el.span("Loading...", class_name="text-[9px] text-gray-400"),
+                class_name="flex items-center justify-center gap-2 py-2",
             ),
-            on_click=NotificationSidebarState.prev_notification_page,
-            disabled=NotificationSidebarState.notification_page == 1,
-            class_name="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-[9px] font-black uppercase tracking-tighter",
-        ),
-        rx.el.span(
-            f"{NotificationSidebarState.notification_page} / {NotificationSidebarState.total_notification_pages}",
-            class_name="text-[10px] font-black text-gray-600 tabular-nums",
-        ),
-        rx.el.button(
-            rx.el.div(
-                rx.el.span("Next", class_name="mr-1"),
-                rx.icon("chevron-right", size=12),
-                class_name="flex items-center",
+            rx.cond(
+                NotificationSidebarState.has_more_notifications,
+                rx.el.div(
+                    rx.el.span(
+                        f"Scroll for more • {NotificationSidebarState.visible_notifications.length()} of {NotificationSidebarState.total_notifications_count}",
+                        class_name="text-[8px] text-gray-400",
+                    ),
+                    class_name="text-center py-2",
+                ),
             ),
-            on_click=NotificationSidebarState.next_notification_page,
-            disabled=NotificationSidebarState.notification_page == NotificationSidebarState.total_notification_pages,
-            class_name="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-[9px] font-black uppercase tracking-tighter",
         ),
-        class_name="flex items-center justify-between px-3 py-2 border-t border-gray-200 bg-white/80 backdrop-blur-sm sticky bottom-0",
+        id="scroll-sentinel",
+        on_click=NotificationSidebarState.load_more_notifications,  # Fallback click
+        class_name="min-h-[20px]",
     )
 
 
@@ -122,7 +150,7 @@ def filter_tab(label: str, filter_val: str) -> rx.Component:
 
 
 def notification_sidebar() -> rx.Component:
-    """The right sidebar component for notifications (Region 4) with filtering."""
+    """The right sidebar component for notifications (Region 4) with infinite scroll."""
     # Import UIState only for sidebar visibility toggle
     from app.states.ui.ui_state import UIState
 
@@ -168,10 +196,13 @@ def notification_sidebar() -> rx.Component:
                     rx.scroll_area(
                         rx.el.div(
                             rx.cond(
-                                NotificationSidebarState.paginated_notifications.length() > 0,
-                                rx.foreach(
-                                    NotificationSidebarState.paginated_notifications,
-                                    alert_card,
+                                NotificationSidebarState.visible_notifications.length() > 0,
+                                rx.fragment(
+                                    rx.foreach(
+                                        NotificationSidebarState.visible_notifications,
+                                        alert_card,
+                                    ),
+                                    scroll_sentinel(),
                                 ),
                                 rx.el.div(
                                     rx.icon(
@@ -191,9 +222,18 @@ def notification_sidebar() -> rx.Component:
                         type="hover",
                         scrollbars="vertical",
                         class_name="flex-1 w-full",
-                        style={"height": "calc(100vh - 200px)"},
+                        style={"height": "calc(100vh - 160px)"},
+                        # Trigger load more when scrolling near bottom
+                        on_scroll=NotificationSidebarState.load_more_notifications,
                     ),
-                    pagination_footer(),
+                    # Footer with count instead of pagination
+                    rx.el.div(
+                        rx.el.span(
+                            f"Showing {NotificationSidebarState.visible_notifications.length()} of {NotificationSidebarState.total_notifications_count}",
+                            class_name="text-[9px] font-bold text-gray-500",
+                        ),
+                        class_name="flex items-center justify-center px-3 py-2 border-t border-gray-200 bg-white/80 backdrop-blur-sm",
+                    ),
                     class_name="h-full w-full flex flex-col min-w-[220px]",
                 ),
                 class_name="h-full w-full overflow-hidden",

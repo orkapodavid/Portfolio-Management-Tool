@@ -17,7 +17,36 @@ from app.services.shared.database_service import DatabaseService
 from pmt_core import RiskRecord, InstrumentType
 from pmt_core.models.common import Currency
 
+from app.ag_grid_constants import GridId
+from app.services.notifications.notification_registry import NotificationRegistry
+
 logger = logging.getLogger(__name__)
+
+
+# === NOTIFICATION PROVIDERS ===
+def _get_risk_notifications() -> list[dict]:
+    """Mock risk notifications for delta/gamma exposure alerts."""
+    return [
+        {
+            "id": "risk-001",
+            "category": "Alerts",
+            "title": "Risk Alert",
+            "message": "Portfolio delta exposure has increased by 15%",
+            "time_ago": "5 hours ago",
+            "is_read": True,
+            "icon": "alert-triangle",
+            "color": "text-red-500",
+            "module": "Risk",
+            "subtab": "Delta Change",
+            "row_id": "TSLA",
+            "grid_id": GridId.DELTA_CHANGE,
+            "ticker": "TSLA",
+        },
+    ]
+
+
+# Register provider at module load
+NotificationRegistry.register("risk", _get_risk_notifications)
 
 
 class RiskService:

@@ -11,7 +11,55 @@ from typing import Optional
 from pmt_core.services import PositionService as CorePositionService
 from pmt_core import PositionRecord
 
+from app.ag_grid_constants import GridId
+from app.services.notifications.notification_registry import NotificationRegistry
+
 logger = logging.getLogger(__name__)
+
+
+def _get_position_notifications() -> list[dict]:
+    """
+    Mock position-related notifications.
+    
+    In production, these would be generated from real position events
+    (new positions, updates, fills, etc.)
+    """
+    return [
+        {
+            "id": "pos-001",
+            "category": "Portfolio",
+            "title": "Position Update",
+            "message": "TKR0 position size updated after partial fill",
+            "time_ago": "45 mins ago",
+            "is_read": False,
+            "icon": "layers",
+            "color": "text-purple-500",
+            "module": "Positions",
+            "subtab": "Positions",
+            "row_id": "TKR0",
+            "grid_id": GridId.POSITIONS,
+            "ticker": "TKR0",
+        },
+        {
+            "id": "pos-002",
+            "category": "Portfolio",
+            "title": "New Position",
+            "message": "TKR5 added to portfolio",
+            "time_ago": "2 hours ago",
+            "is_read": True,
+            "icon": "plus-circle",
+            "color": "text-teal-500",
+            "module": "Positions",
+            "subtab": "Positions",
+            "row_id": "TKR5",
+            "grid_id": GridId.POSITIONS,
+            "ticker": "TKR5",
+        },
+    ]
+
+
+# Register position notifications with the central registry
+NotificationRegistry.register("positions", _get_position_notifications)
 
 
 class PositionService:
