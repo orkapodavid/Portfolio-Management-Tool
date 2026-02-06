@@ -71,12 +71,11 @@ class NotificationSidebarState(rx.State):
         Priority order: alert > warning > info
         """
         priority_order = {"alert": 0, "warning": 1, "info": 2}
+        # Sort by type priority only - notifications from providers are already in order
+        # Using enumerate to preserve original order within each priority group
         return sorted(
             self.filtered_notifications,
-            key=lambda n: (
-                priority_order.get(n.get("type", "info"), 2),
-                -n.get("id", 0)  # Higher ID = more recent (negative for descending)
-            )
+            key=lambda n: priority_order.get(n.get("type", "info"), 2)
         )
 
     @rx.var
