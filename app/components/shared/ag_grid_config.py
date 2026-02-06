@@ -180,7 +180,7 @@ def create_standard_grid(
 
     # Notification jump (wire on_grid_ready to check for pending highlights)
     if enable_notification_jump:
-        from app.states.ui.notification_sidebar_state import NotificationSidebarState
+        from app.states.notifications import NotificationSidebarState
         grid_props["on_grid_ready"] = NotificationSidebarState.execute_pending_highlight(grid_id)
 
     # Loading overlay (for force refresh pattern)

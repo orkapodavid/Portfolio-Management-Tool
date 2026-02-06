@@ -248,14 +248,7 @@ class TopMover(TypedDict):
     is_positive: bool
 
 
-class NotificationItem(TypedDict):
-    id: int
-    header: str
-    ticker: str
-    timestamp: str
-    instruction: str
-    type: str
-    read: bool
+
 
 
 # Trade Types

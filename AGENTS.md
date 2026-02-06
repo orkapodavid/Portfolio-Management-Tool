@@ -264,6 +264,8 @@ app/states/
 └── ui/                       # UI state management
 ```
 
+> **File Organization**: AG Grid constants (`GridId`, `GRID_ROUTES`, `GRID_ROW_ID_CONFIG`) live in `app/ag_grid_constants.py`. Notification types and state live in `app/states/notifications/`.
+
 ###  Service Layer Pattern
 
 Every state should use services for data access:

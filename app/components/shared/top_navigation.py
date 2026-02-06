@@ -1,6 +1,6 @@
 import reflex as rx
 from app.states.ui.ui_state import UIState
-from app.states.ui.notification_sidebar_state import NotificationSidebarState
+from app.states.notifications import NotificationSidebarState
 from app.constants import NAV_HEIGHT, NAV_BG, ICON_NAV_SIZE
 
 

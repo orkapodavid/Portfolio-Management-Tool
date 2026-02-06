@@ -12,7 +12,7 @@ from typing import Optional
 from datetime import datetime
 import random
 
-from app.constants import GridId
+from app.ag_grid_constants import GridId
 
 logger = logging.getLogger(__name__)
 

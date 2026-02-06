@@ -1,6 +1,5 @@
 import reflex as rx
-from app.states.ui.notification_sidebar_state import NotificationSidebarState
-from app.states.types import NotificationItem
+from app.states.notifications import NotificationSidebarState, NotificationItem
 
 
 def alert_card(notification: NotificationItem) -> rx.Component:

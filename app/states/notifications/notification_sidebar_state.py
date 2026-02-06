@@ -14,8 +14,8 @@ import logging
 import random
 from datetime import datetime
 
-from app.states.types import NotificationItem
-from app.constants import get_grid_row_id_key
+from app.states.notifications.types import NotificationItem
+from app.ag_grid_constants import get_grid_row_id_key
 
 logger = logging.getLogger(__name__)
 
