@@ -6,7 +6,7 @@ Handles:
 - Sidebar State
 - Mobile Menu
 - Global Settings/Filters
-- Portfolio Summary Data for KPIs
+- Notifications
 """
 
 import reflex as rx
@@ -15,10 +15,7 @@ import random
 from datetime import datetime
 from app.states.types import (
     NotificationItem,
-    KPIMetric,
-    TopMover,
     GenericTableItem,
-    Holding,
 )
 
 
@@ -37,7 +34,6 @@ class UIState(rx.State):
     is_mobile_menu_open: bool = False
     is_generate_menu_open: bool = False
     is_export_dropdown_open: bool = False
-    show_top_movers: bool = False
     is_loading: bool = False
     is_loading_data: bool = False
     is_exporting: bool = False
@@ -91,105 +87,6 @@ class UIState(rx.State):
         start = (self.notification_page - 1) * self.notification_page_size
         end = start + self.notification_page_size
         return self.filtered_notifications[start:end]
-
-    # KPI Metrics for header
-    kpi_metrics: List[KPIMetric] = [
-        {
-            "label": "Total NAV",
-            "value": "$2.4B",
-            "is_positive": True,
-            "trend_data": "+2.5%",
-        },
-        {
-            "label": "Daily P&L",
-            "value": "+$12.5M",
-            "is_positive": True,
-            "trend_data": "+0.5%",
-        },
-        {
-            "label": "YTD Return",
-            "value": "+18.2%",
-            "is_positive": True,
-            "trend_data": "vs 15% benchmark",
-        },
-        {
-            "label": "Net Exposure",
-            "value": "72%",
-            "is_positive": True,
-            "trend_data": "Target: 70-80%",
-        },
-    ]
-
-    # Top movers data
-    top_movers_ops: List[TopMover] = []
-    top_movers_ytd: List[TopMover] = []
-    top_movers_delta: List[TopMover] = []
-    top_movers_price: List[TopMover] = []
-    top_movers_volume: List[TopMover] = []
-
-    # Portfolio summary data for performance header
-    portfolio_holdings: List[Holding] = [
-        {
-            "symbol": "AAPL",
-            "name": "Apple Inc.",
-            "shares": 150,
-            "avg_cost": 175.0,
-            "current_price": 189.5,
-            "daily_change_pct": 1.25,
-            "asset_class": "Technology",
-        },
-        {
-            "symbol": "MSFT",
-            "name": "Microsoft Corp.",
-            "shares": 100,
-            "avg_cost": 350.0,
-            "current_price": 402.1,
-            "daily_change_pct": 0.85,
-            "asset_class": "Technology",
-        },
-        {
-            "symbol": "JPM",
-            "name": "JPMorgan Chase",
-            "shares": 200,
-            "avg_cost": 140.0,
-            "current_price": 175.3,
-            "daily_change_pct": -0.45,
-            "asset_class": "Finance",
-        },
-    ]
-
-    # Portfolio computed vars
-    @rx.var
-    def portfolio_total_value(self) -> float:
-        """Total portfolio value."""
-        return sum([h["shares"] * h["current_price"] for h in self.portfolio_holdings])
-
-    @rx.var
-    def portfolio_total_cost_basis(self) -> float:
-        """Total cost basis."""
-        return sum([h["shares"] * h["avg_cost"] for h in self.portfolio_holdings])
-
-    @rx.var
-    def portfolio_total_gain_loss(self) -> float:
-        """Total gain/loss."""
-        return self.portfolio_total_value - self.portfolio_total_cost_basis
-
-    @rx.var
-    def portfolio_total_gain_loss_pct(self) -> float:
-        """Total gain/loss percentage."""
-        if self.portfolio_total_cost_basis == 0:
-            return 0.0
-        return self.portfolio_total_gain_loss / self.portfolio_total_cost_basis * 100
-
-    @rx.var
-    def portfolio_daily_change_value(self) -> float:
-        """Daily change value."""
-        return sum(
-            [
-                h["shares"] * h["current_price"] * (h["daily_change_pct"] / 100)
-                for h in self.portfolio_holdings
-            ]
-        )
 
     # Module configuration
     MODULE_ICONS: Dict[str, str] = {
@@ -332,10 +229,6 @@ class UIState(rx.State):
         self.is_sidebar_open = not self.is_sidebar_open
 
     @rx.event
-    def toggle_top_movers(self):
-        self.show_top_movers = not self.show_top_movers
-
-    @rx.event
     def toggle_export_dropdown(self):
         self.is_export_dropdown_open = not self.is_export_dropdown_open
 
@@ -456,18 +349,13 @@ class UIState(rx.State):
         }
         self.notifications = [new_notification] + self.notifications
 
-    async def on_load(self):
-        """Load UI-specific data when dashboard loads."""
-        await self._load_notifications()
-        await self._load_top_movers()
-        await self._load_kpi_metrics()
-
     @rx.event
     def redirect_to_default(self):
         """Redirect to the default Market Data page when accessing root route."""
         return rx.redirect("/market-data/market-data")
 
-    async def _load_notifications(self):
+    @rx.event
+    async def load_notifications(self):
         """Load notifications from NotificationService."""
         try:
             from app.services import NotificationService
@@ -493,40 +381,6 @@ class UIState(rx.State):
 
             logging.exception(f"Error loading notifications: {e}")
             self.notifications = []
-
-    async def _load_top_movers(self):
-        """Load top movers data from MarketDataService."""
-        try:
-            from app.services import MarketDataService
-
-            service = MarketDataService()
-            self.top_movers_ops = await service.get_top_movers("ops")
-            self.top_movers_ytd = await service.get_top_movers("ytd")
-            self.top_movers_delta = await service.get_top_movers("delta")
-            self.top_movers_price = await service.get_top_movers("price")
-            self.top_movers_volume = await service.get_top_movers("volume")
-        except Exception as e:
-            import logging
-
-            logging.exception(f"Error loading top movers: {e}")
-            self.top_movers_ops = []
-            self.top_movers_ytd = []
-            self.top_movers_delta = []
-            self.top_movers_price = []
-            self.top_movers_volume = []
-
-    async def _load_kpi_metrics(self):
-        """Load KPI metrics from PnLService."""
-        try:
-            from app.services import PnLService
-
-            service = PnLService()
-            self.kpi_metrics = await service.get_kpi_metrics()
-        except Exception as e:
-            import logging
-
-            logging.exception(f"Error loading KPI metrics: {e}")
-            self.kpi_metrics = []
 
     def sort_data(self, data: list[dict]) -> list[dict]:
         """Sort data based on current sort column and direction."""

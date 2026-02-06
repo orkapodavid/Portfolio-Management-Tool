@@ -1,5 +1,5 @@
 import reflex as rx
-from app.states.ui.ui_state import UIState
+from app.states.ui.performance_header_state import PerformanceHeaderState
 from app.states.types import KPIMetric, TopMover
 from app.constants import (
     POSITIVE_GREEN,
@@ -130,11 +130,11 @@ def summary_card(
 
 
 def portfolio_summary() -> rx.Component:
-    """Portfolio summary cards using UIState."""
+    """Portfolio summary cards using PerformanceHeaderState."""
     return rx.el.div(
         summary_card(
             "Total Value",
-            f"${UIState.portfolio_total_value:,.2f}",
+            f"${PerformanceHeaderState.portfolio_total_value:,.2f}",
             "vs last mo",
             "+5.2%",
             True,
@@ -142,18 +142,18 @@ def portfolio_summary() -> rx.Component:
         ),
         summary_card(
             "Daily Change",
-            f"${UIState.portfolio_daily_change_value:,.2f}",
+            f"${PerformanceHeaderState.portfolio_daily_change_value:,.2f}",
             "vs yest",
-            f"{UIState.portfolio_daily_change_value / UIState.portfolio_total_value * 100:.2f}%",
-            rx.cond(UIState.portfolio_daily_change_value >= 0, True, False),
+            f"{PerformanceHeaderState.portfolio_daily_change_value / PerformanceHeaderState.portfolio_total_value * 100:.2f}%",
+            rx.cond(PerformanceHeaderState.portfolio_daily_change_value >= 0, True, False),
             "blue",
         ),
         summary_card(
             "Total G/L",
-            f"${UIState.portfolio_total_gain_loss:,.2f}",
+            f"${PerformanceHeaderState.portfolio_total_gain_loss:,.2f}",
             "all time",
-            f"{UIState.portfolio_total_gain_loss_pct:.2f}%",
-            rx.cond(UIState.portfolio_total_gain_loss >= 0, True, False),
+            f"{PerformanceHeaderState.portfolio_total_gain_loss_pct:.2f}%",
+            rx.cond(PerformanceHeaderState.portfolio_total_gain_loss >= 0, True, False),
             "emerald",
         ),
         class_name="flex items-center gap-2",
@@ -166,7 +166,7 @@ def performance_header() -> rx.Component:
         rx.el.div(
             rx.el.div(
                 rx.el.div(
-                    rx.foreach(UIState.kpi_metrics, kpi_card),
+                    rx.foreach(PerformanceHeaderState.kpi_metrics, kpi_card),
                     class_name="flex flex-wrap md:flex-nowrap gap-0 overflow-visible flex-1",
                 ),
                 portfolio_summary(),
@@ -177,7 +177,7 @@ def performance_header() -> rx.Component:
                     rx.el.div(
                         rx.el.span(
                             rx.cond(
-                                UIState.show_top_movers,
+                                PerformanceHeaderState.show_top_movers,
                                 "Hide Top Movers",
                                 "Show Top Movers",
                             ),
@@ -185,7 +185,7 @@ def performance_header() -> rx.Component:
                         ),
                         rx.icon(
                             rx.cond(
-                                UIState.show_top_movers,
+                                PerformanceHeaderState.show_top_movers,
                                 "chevron-up",
                                 "chevron-down",
                             ),
@@ -193,23 +193,23 @@ def performance_header() -> rx.Component:
                         ),
                         class_name="flex items-center gap-1 text-gray-500",
                     ),
-                    on_click=UIState.toggle_top_movers,
+                    on_click=PerformanceHeaderState.toggle_top_movers,
                     class_name="w-full flex items-center justify-center py-0 bg-gray-100 border-y border-gray-200 hover:bg-gray-200 transition-colors h-[12px]",
                 ),
                 rx.cond(
-                    UIState.show_top_movers,
+                    PerformanceHeaderState.show_top_movers,
                     rx.el.div(
                         rx.el.div(
-                            mini_grid("Ops PnL", UIState.top_movers_ops),
-                            mini_grid("YTD PnL", UIState.top_movers_ytd),
+                            mini_grid("Ops PnL", PerformanceHeaderState.top_movers_ops),
+                            mini_grid("YTD PnL", PerformanceHeaderState.top_movers_ytd),
                             mini_grid(
                                 "Delta Leaders",
-                                UIState.top_movers_delta,
+                                PerformanceHeaderState.top_movers_delta,
                             ),
-                            mini_grid("Price Movers", UIState.top_movers_price),
+                            mini_grid("Price Movers", PerformanceHeaderState.top_movers_price),
                             mini_grid(
                                 "Volume Leaders",
-                                UIState.top_movers_volume,
+                                PerformanceHeaderState.top_movers_volume,
                             ),
                             class_name="flex flex-col md:flex-row gap-1 w-full p-1 bg-gray-100/30 overflow-x-auto",
                         ),
@@ -220,5 +220,6 @@ def performance_header() -> rx.Component:
             ),
             class_name="flex flex-col w-full items-start justify-between",
         ),
+        on_mount=PerformanceHeaderState.load_performance_data,
         class_name=f"bg-[{FINANCIAL_GREY}] shrink-0 shadow-sm border-b border-gray-300 sticky top-[{NAV_HEIGHT}] z-50 bg-opacity-100",
     )

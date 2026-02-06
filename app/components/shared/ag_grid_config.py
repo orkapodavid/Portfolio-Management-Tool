@@ -730,16 +730,38 @@ def grid_toolbar(
         )
         left_controls.append(search_input)
 
-    # Date picker
+    # Date picker - Premium redesign with glassmorphism and micro-interactions
     if show_date_picker and on_date_change:
         date_picker = rx.el.div(
-            rx.icon("calendar", size=12, class_name="text-gray-500 mr-1.5"),
+            # Gradient accent bar on hover
+            rx.el.div(
+                class_name="absolute inset-y-0 left-0 w-0.5 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-l opacity-0 group-hover:opacity-100 transition-opacity duration-200",
+            ),
+            # Calendar icon with subtle gradient background
+            rx.el.div(
+                rx.icon(
+                    "calendar-days",
+                    size=14,
+                    class_name="text-blue-500 group-hover:text-blue-600 transition-colors duration-200",
+                ),
+                class_name="flex items-center justify-center w-7 h-full bg-gradient-to-br from-blue-50 to-indigo-50 border-r border-gray-100 group-hover:from-blue-100 group-hover:to-indigo-100 transition-all duration-200",
+            ),
+            # Date input with improved styling
             rx.el.input(
                 type="date",
                 on_change=on_date_change,
-                class_name="bg-transparent text-[10px] font-bold text-gray-600 outline-none w-24 uppercase",
+                class_name="flex-1 bg-transparent text-[11px] font-semibold text-gray-700 outline-none px-2.5 h-full cursor-pointer appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer",
             ),
-            class_name="flex items-center bg-white border border-gray-200 rounded px-2 h-6 shadow-sm hover:border-blue-400 transition-colors cursor-pointer",
+            # Dropdown chevron indicator
+            rx.el.div(
+                rx.icon(
+                    "chevron-down",
+                    size=12,
+                    class_name="text-gray-400 group-hover:text-blue-500 transition-colors duration-200 group-hover:translate-y-0.5 transform",
+                ),
+                class_name="flex items-center justify-center pr-2",
+            ),
+            class_name="group relative flex items-center bg-white/90 backdrop-blur-sm border border-gray-200/80 rounded-lg h-7 min-w-[140px] shadow-sm hover:shadow-md hover:border-blue-300/60 hover:bg-white transition-all duration-200 overflow-hidden cursor-pointer",
         )
         left_controls.append(date_picker)
 
@@ -892,6 +914,7 @@ def grid_toolbar(
 
     # =========================================================================
     # STATUS BAR (optional - shows last updated time and auto-refresh toggle)
+    # Premium redesign with glassmorphism, live indicator, and gradient accents
     # =========================================================================
     has_status_bar = last_updated is not None or auto_refresh is not None
 
@@ -903,9 +926,40 @@ def grid_toolbar(
         if last_updated is not None:
             status_left.append(
                 rx.el.div(
-                    rx.icon("clock", size=10, class_name="text-gray-400 mr-1.5"),
-                    rx.el.span("Last Updated: ", class_name="text-gray-400"),
-                    rx.el.span(last_updated, class_name="text-gray-600 font-mono"),
+                    # Live pulse indicator (shows when auto-refresh is active)
+                    rx.cond(
+                        auto_refresh if auto_refresh is not None else True,
+                        rx.el.div(
+                            rx.el.div(
+                                class_name="absolute inset-0 bg-emerald-400 rounded-full animate-ping opacity-75",
+                            ),
+                            rx.el.div(
+                                class_name="relative w-2 h-2 bg-emerald-500 rounded-full",
+                            ),
+                            class_name="relative w-2 h-2 mr-2.5",
+                        ),
+                        rx.el.div(
+                            rx.el.div(
+                                class_name="w-2 h-2 bg-gray-300 rounded-full",
+                            ),
+                            class_name="relative w-2 h-2 mr-2.5",
+                        ),
+                    ),
+                    # Clock icon with subtle animation
+                    rx.el.div(
+                        rx.icon(
+                            "clock",
+                            size=12,
+                            class_name="text-slate-400",
+                        ),
+                        class_name="mr-1.5",
+                    ),
+                    # Label and timestamp
+                    rx.el.span("Last Updated", class_name="text-slate-400 mr-1.5"),
+                    rx.el.span(
+                        last_updated,
+                        class_name="font-mono font-semibold text-slate-600 bg-gradient-to-r from-slate-100 to-gray-100 px-2 py-0.5 rounded border border-slate-200/60",
+                    ),
                     class_name="flex items-center",
                 )
             )
@@ -913,20 +967,31 @@ def grid_toolbar(
         if auto_refresh is not None and on_auto_refresh_toggle is not None:
             status_right.append(
                 rx.el.div(
-                    rx.el.span("Auto Refresh", class_name="text-gray-500 mr-2"),
-                    rx.switch(
-                        checked=auto_refresh,
-                        on_change=on_auto_refresh_toggle,
-                        size="1",
+                    # Label with subtle styling
+                    rx.el.span(
+                        "Auto Refresh",
+                        class_name="text-slate-500 font-medium mr-2.5 select-none",
                     ),
-                    class_name="flex items-center",
+                    # Custom styled switch container
+                    rx.el.div(
+                        rx.switch(
+                            checked=auto_refresh,
+                            on_change=on_auto_refresh_toggle,
+                            size="1",
+                        ),
+                        class_name="[&_button]:shadow-inner [&_button[data-state='checked']]:bg-gradient-to-r [&_button[data-state='checked']]:from-emerald-500 [&_button[data-state='checked']]:to-teal-500",
+                    ),
+                    class_name="flex items-center bg-white/60 backdrop-blur-sm border border-slate-200/60 rounded-lg px-2.5 py-1 shadow-sm hover:shadow hover:border-slate-300/80 transition-all duration-200",
                 )
             )
 
         status_bar_content = rx.el.div(
+            # Left section
             rx.el.div(*status_left, class_name="flex items-center gap-4"),
+            # Right section
             rx.el.div(*status_right, class_name="flex items-center gap-4"),
-            class_name="flex items-center justify-between px-3 py-1 bg-[#FAFAFA] border-b border-gray-100 text-[10px] font-medium w-full",
+            # Container with glassmorphism effect
+            class_name="flex items-center justify-between px-4 py-1.5 bg-gradient-to-r from-slate-50/95 via-white/90 to-slate-50/95 backdrop-blur-sm border-b border-slate-200/60 text-[11px] font-medium w-full shadow-sm",
         )
 
     # =========================================================================
