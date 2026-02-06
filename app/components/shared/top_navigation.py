@@ -1,5 +1,6 @@
 import reflex as rx
 from app.states.ui.ui_state import UIState
+from app.states.ui.notification_sidebar_state import NotificationSidebarState
 from app.constants import NAV_HEIGHT, NAV_BG, ICON_NAV_SIZE
 
 
@@ -120,9 +121,9 @@ def top_navigation() -> rx.Component:
                             class_name="text-gray-400 group-hover:text-white",
                         ),
                         rx.cond(
-                            UIState.unread_count > 0,
+                            NotificationSidebarState.unread_count > 0,
                             rx.el.span(
-                                UIState.unread_count.to_string(),
+                                NotificationSidebarState.unread_count.to_string(),
                                 class_name=f"absolute -top-1 -right-1 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-red-500 text-[7px] font-black text-white ring-1 ring-[{NAV_BG}] animate-pulse",
                             ),
                         ),

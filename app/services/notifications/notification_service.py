@@ -12,6 +12,8 @@ from typing import Optional
 from datetime import datetime
 import random
 
+from app.constants import GridId
+
 logger = logging.getLogger(__name__)
 
 
@@ -51,8 +53,10 @@ class NotificationService:
         """
         logger.warning("Using mock notification data.")
         
-        # Mock notifications
+        # Mock notifications with navigation metadata
+        # Using GridId enum for consistent grid targeting
         all_notifications = [
+            # === MARKET DATA GRID NOTIFICATIONS ===
             {
                 "id": "1",
                 "category": "Alerts",
@@ -61,7 +65,12 @@ class NotificationService:
                 "time_ago": "2 mins ago",
                 "is_read": False,
                 "icon": "bell",
-                "color": "text-amber-500"
+                "color": "text-amber-500",
+                "module": "Market Data",
+                "subtab": "Market Data",
+                "row_id": "TSLA",
+                "grid_id": GridId.MARKET_DATA,
+                "ticker": "TSLA",
             },
             {
                 "id": "2",
@@ -71,7 +80,12 @@ class NotificationService:
                 "time_ago": "1 hour ago",
                 "is_read": False,
                 "icon": "wallet",
-                "color": "text-emerald-500"
+                "color": "text-emerald-500",
+                "module": "Market Data",
+                "subtab": "Market Data",
+                "row_id": "AAPL",
+                "grid_id": GridId.MARKET_DATA,
+                "ticker": "AAPL",
             },
             {
                 "id": "3",
@@ -81,8 +95,91 @@ class NotificationService:
                 "time_ago": "3 hours ago",
                 "is_read": True,
                 "icon": "newspaper",
-                "color": "text-blue-500"
+                "color": "text-blue-500",
+                "module": "Market Data",
+                "subtab": "Market Data",
+                "row_id": "MSFT",
+                "grid_id": GridId.MARKET_DATA,
+                "ticker": "MSFT",
             },
+            {
+                "id": "7",
+                "category": "Alerts",
+                "title": "Volume Spike",
+                "message": "NVDA trading volume 3x average",
+                "time_ago": "15 mins ago",
+                "is_read": False,
+                "icon": "trending-up",
+                "color": "text-orange-500",
+                "module": "Market Data",
+                "subtab": "Market Data",
+                "row_id": "NVDA",
+                "grid_id": GridId.MARKET_DATA,
+                "ticker": "NVDA",
+            },
+            {
+                "id": "8",
+                "category": "Alerts",
+                "title": "52-Week High",
+                "message": "GOOGL hit new 52-week high at $142.50",
+                "time_ago": "30 mins ago",
+                "is_read": False,
+                "icon": "arrow-up-circle",
+                "color": "text-green-500",
+                "module": "Market Data",
+                "subtab": "Market Data",
+                "row_id": "GOOGL",
+                "grid_id": GridId.MARKET_DATA,
+                "ticker": "GOOGL",
+            },
+            # === POSITIONS GRID NOTIFICATIONS ===
+            {
+                "id": "9",
+                "category": "Portfolio",
+                "title": "Position Update",
+                "message": "TKR0 position size updated after partial fill",
+                "time_ago": "45 mins ago",
+                "is_read": False,
+                "icon": "layers",
+                "color": "text-purple-500",
+                "module": "Positions",
+                "subtab": "Positions",
+                "row_id": "TKR0",
+                "grid_id": GridId.POSITIONS,
+                "ticker": "TKR0",
+            },
+            {
+                "id": "10",
+                "category": "Portfolio",
+                "title": "New Position",
+                "message": "TKR5 added to portfolio",
+                "time_ago": "2 hours ago",
+                "is_read": True,
+                "icon": "plus-circle",
+                "color": "text-teal-500",
+                "module": "Positions",
+                "subtab": "Positions",
+                "row_id": "TKR5",
+                "grid_id": GridId.POSITIONS,
+                "ticker": "TKR5",
+            },
+            # === PNL CHANGE GRID NOTIFICATIONS ===
+            {
+                "id": "11",
+                "category": "Alerts",
+                "title": "PnL Alert",
+                "message": "AAPL daily PnL exceeded threshold",
+                "time_ago": "10 mins ago",
+                "is_read": False,
+                "icon": "dollar-sign",
+                "color": "text-yellow-500",
+                "module": "PnL",
+                "subtab": "PnL Change",
+                "row_id": "AAPL",
+                "grid_id": GridId.PNL_CHANGE,
+                "ticker": "AAPL",
+            },
+            # === RISK GRID NOTIFICATIONS ===
             {
                 "id": "4",
                 "category": "Alerts",
@@ -91,8 +188,30 @@ class NotificationService:
                 "time_ago": "5 hours ago",
                 "is_read": True,
                 "icon": "alert-triangle",
-                "color": "text-red-500"
+                "color": "text-red-500",
+                "module": "Risk",
+                "subtab": "Delta Change",
+                "row_id": "TSLA",  # Uses ticker as row_id_key
+                "grid_id": GridId.DELTA_CHANGE,
+                "ticker": "TSLA",
             },
+            # === FX DATA GRID NOTIFICATIONS ===
+            {
+                "id": "12",
+                "category": "News",
+                "title": "FX Update",
+                "message": "USD/JPY crossed 150 level",
+                "time_ago": "20 mins ago",
+                "is_read": False,
+                "icon": "globe",
+                "color": "text-indigo-500",
+                "module": "Market Data",
+                "subtab": "FX Data",
+                "row_id": "USDJPY",  # Matches FX grid ticker format (no slash)
+                "grid_id": GridId.FX_DATA,
+                "ticker": "USD/JPY",  # Display name keeps slash
+            },
+            # === SYSTEM NOTIFICATIONS ===
             {
                 "id": "5",
                 "category": "System",
@@ -101,7 +220,27 @@ class NotificationService:
                 "time_ago": "1 day ago",
                 "is_read": True,
                 "icon": "settings",
-                "color": "text-gray-500"
+                "color": "text-gray-500",
+                "module": "Market Data",
+                "subtab": "Market Data",
+                "row_id": "GOOGL",
+                "grid_id": GridId.MARKET_DATA,
+                "ticker": "SYSTEM",
+            },
+            {
+                "id": "6",
+                "category": "System",
+                "title": "API Connected",
+                "message": "Bloomberg API connection restored",
+                "time_ago": "6 hours ago",
+                "is_read": True,
+                "icon": "check-circle",
+                "color": "text-green-500",
+                "module": "Market Data",
+                "subtab": "Market Data",
+                "row_id": "AMZN",
+                "grid_id": GridId.MARKET_DATA,
+                "ticker": "API",
             },
         ]
         
@@ -185,7 +324,11 @@ class NotificationService:
         title: str,
         message: str,
         icon: str = "bell",
-        color: str = "text-blue-500"
+        color: str = "text-blue-500",
+        module: str = "Market Data",
+        subtab: str = "Market Data",
+        row_id: str = "",
+        grid_id: str = GridId.MARKET_DATA,
     ) -> dict:
         """
         Create a new notification.
@@ -196,6 +339,10 @@ class NotificationService:
             message: Notification message
             icon: Icon name
             color: Color class
+            module: Target module for navigation
+            subtab: Target subtab for navigation
+            row_id: Row ID to highlight in grid
+            grid_id: Grid ID to target (use GridId enum)
             
         Returns:
             Created notification dict
@@ -212,7 +359,11 @@ class NotificationService:
             "time_ago": "Just now",
             "is_read": False,
             "icon": icon,
-            "color": color
+            "color": color,
+            "module": module,
+            "subtab": subtab,
+            "row_id": row_id,
+            "grid_id": grid_id,
         }
 
 

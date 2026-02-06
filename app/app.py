@@ -99,7 +99,8 @@ def index() -> rx.Component:
 app = rx.App(
     theme=rx.theme(appearance="light", accent_color="blue"),
     stylesheets=[
-        "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap",
+        "/notification_highlight.css",
     ],
 )
 app.add_page(index, route="/", on_load=UIState.redirect_to_default)

@@ -13,10 +13,7 @@ import reflex as rx
 from typing import Dict, List, Any
 import random
 from datetime import datetime
-from app.states.types import (
-    NotificationItem,
-    GenericTableItem,
-)
+from app.states.types import GenericTableItem
 
 
 class UIState(rx.State):
@@ -56,37 +53,6 @@ class UIState(rx.State):
         """Refreshes data for the active module."""
         # Placeholder for global refresh logic
         pass
-
-    # Notification state
-    notification_page: int = 1
-    notification_page_size: int = 5
-    notification_filter: str = "all"
-    notifications: List[NotificationItem] = []
-
-    @rx.var
-    def unread_count(self) -> int:
-        return len([n for n in self.notifications if not n.get("read", False)])
-
-    @rx.var
-    def filtered_notifications(self) -> List[NotificationItem]:
-        if self.notification_filter == "all":
-            return self.notifications
-        return [
-            n for n in self.notifications if n.get("type") == self.notification_filter
-        ]
-
-    @rx.var
-    def total_notification_pages(self) -> int:
-        count = len(self.filtered_notifications)
-        return (
-            count + self.notification_page_size - 1
-        ) // self.notification_page_size or 1
-
-    @rx.var
-    def paginated_notifications(self) -> List[NotificationItem]:
-        start = (self.notification_page - 1) * self.notification_page_size
-        end = start + self.notification_page_size
-        return self.filtered_notifications[start:end]
 
     # Module configuration
     MODULE_ICONS: Dict[str, str] = {
@@ -298,89 +264,10 @@ class UIState(rx.State):
     def export_data(self, format: str):
         self.is_export_dropdown_open = False
 
-    # Notification event handlers
-    @rx.event
-    def next_notification_page(self):
-        if self.notification_page < self.total_notification_pages:
-            self.notification_page += 1
-
-    @rx.event
-    def prev_notification_page(self):
-        if self.notification_page > 1:
-            self.notification_page -= 1
-
-    @rx.event
-    def set_notification_filter(self, filter_val: str):
-        self.notification_filter = filter_val
-        self.notification_page = 1
-
-    @rx.event
-    def mark_notification_read(self, notif_id: int):
-        for n in self.notifications:
-            if n.get("id") == notif_id:
-                n["read"] = True
-                break
-
-    @rx.event
-    def navigate_to_notification(self, notif_id: int):
-        self.mark_notification_read(notif_id)
-
-    @rx.event
-    def dismiss_notification(self, id: int):
-        """Removes a notification by ID."""
-        self.notifications = [n for n in self.notifications if n.get("id") != id]
-
-    @rx.event
-    def add_simulated_notification(self):
-        """Add a simulated notification for testing."""
-        new_id = max([n.get("id", 0) for n in self.notifications], default=0) + 1
-        types = ["alert", "info", "warning"]
-        tickers = ["AAPL", "MSFT", "GOOGL", "TSLA", "NVDA", "META"]
-        headers = ["Price Alert", "Volume Spike", "Risk Warning", "Settlement Notice"]
-
-        new_notification = {
-            "id": new_id,
-            "header": random.choice(headers),
-            "ticker": random.choice(tickers),
-            "timestamp": datetime.now().strftime("%I:%M %p"),
-            "instruction": f"Simulated notification #{new_id}",
-            "type": random.choice(types),
-            "read": False,
-        }
-        self.notifications = [new_notification] + self.notifications
-
     @rx.event
     def redirect_to_default(self):
         """Redirect to the default Market Data page when accessing root route."""
         return rx.redirect("/market-data/market-data")
-
-    @rx.event
-    async def load_notifications(self):
-        """Load notifications from NotificationService."""
-        try:
-            from app.services import NotificationService
-
-            service = NotificationService()
-            notifications = await service.get_notifications(limit=10)
-            self.notifications = [
-                {
-                    "id": int(n.get("id", i + 1)),
-                    "header": n.get("title", "Notification"),
-                    "ticker": n.get("message", "").split()[-1]
-                    if n.get("message")
-                    else "N/A",
-                    "timestamp": n.get("time_ago", "Just now"),
-                    "instruction": n.get("message", ""),
-                    "type": "alert" if n.get("category") == "Alerts" else "info",
-                    "read": n.get("is_read", False),
-                }
-                for i, n in enumerate(notifications)
-            ]
-        except Exception as e:
-            import logging
-
-            logging.exception(f"Error loading notifications: {e}")
-            self.notifications = []
 
     def sort_data(self, data: list[dict]) -> list[dict]:
         """Sort data based on current sort column and direction."""

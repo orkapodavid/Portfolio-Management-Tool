@@ -1,5 +1,5 @@
 import reflex as rx
-from app.states.ui.ui_state import UIState
+from app.states.ui.notification_sidebar_state import NotificationSidebarState
 from app.states.types import NotificationItem
 
 
@@ -40,7 +40,7 @@ def alert_card(notification: NotificationItem) -> rx.Component:
             ),
             rx.el.button(
                 rx.icon("circle-x", size=14),
-                on_click=UIState.dismiss_notification(notification["id"]),
+                on_click=NotificationSidebarState.dismiss_notification(notification["id"]),
                 class_name="text-gray-900/60 hover:text-black transition-colors",
             ),
             class_name="flex justify-between items-start mb-2",
@@ -63,13 +63,13 @@ def alert_card(notification: NotificationItem) -> rx.Component:
         rx.el.div(
             rx.el.button(
                 rx.icon("check", size=12),
-                on_click=UIState.mark_notification_read(notification["id"]),
+                on_click=NotificationSidebarState.mark_notification_read(notification["id"]),
                 title="Mark as read",
                 class_name="p-1 rounded hover:bg-white/60 text-gray-700 transition-colors",
             ),
             rx.el.button(
                 rx.icon("arrow-right", size=12),
-                on_click=lambda: UIState.navigate_to_notification(notification["id"]),
+                on_click=NotificationSidebarState.navigate_to_item(notification["id"]),
                 title="Go to details",
                 class_name="p-1 rounded hover:bg-white/60 text-gray-700 transition-colors",
             ),
@@ -87,12 +87,12 @@ def pagination_footer() -> rx.Component:
                 rx.el.span("Prev", class_name="ml-1"),
                 class_name="flex items-center",
             ),
-            on_click=UIState.prev_notification_page,
-            disabled=UIState.notification_page == 1,
+            on_click=NotificationSidebarState.prev_notification_page,
+            disabled=NotificationSidebarState.notification_page == 1,
             class_name="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-[9px] font-black uppercase tracking-tighter",
         ),
         rx.el.span(
-            f"{UIState.notification_page} / {UIState.total_notification_pages}",
+            f"{NotificationSidebarState.notification_page} / {NotificationSidebarState.total_notification_pages}",
             class_name="text-[10px] font-black text-gray-600 tabular-nums",
         ),
         rx.el.button(
@@ -101,8 +101,8 @@ def pagination_footer() -> rx.Component:
                 rx.icon("chevron-right", size=12),
                 class_name="flex items-center",
             ),
-            on_click=UIState.next_notification_page,
-            disabled=UIState.notification_page == UIState.total_notification_pages,
+            on_click=NotificationSidebarState.next_notification_page,
+            disabled=NotificationSidebarState.notification_page == NotificationSidebarState.total_notification_pages,
             class_name="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-[9px] font-black uppercase tracking-tighter",
         ),
         class_name="flex items-center justify-between px-3 py-2 border-t border-gray-200 bg-white/80 backdrop-blur-sm sticky bottom-0",
@@ -110,10 +110,10 @@ def pagination_footer() -> rx.Component:
 
 
 def filter_tab(label: str, filter_val: str) -> rx.Component:
-    is_active = UIState.notification_filter == filter_val
+    is_active = NotificationSidebarState.notification_filter == filter_val
     return rx.el.button(
         label,
-        on_click=lambda: UIState.set_notification_filter(filter_val),
+        on_click=lambda: NotificationSidebarState.set_notification_filter(filter_val),
         class_name=rx.cond(
             is_active,
             "px-2 py-1 bg-blue-600 text-white rounded text-[8px] font-black uppercase shadow-sm",
@@ -124,6 +124,9 @@ def filter_tab(label: str, filter_val: str) -> rx.Component:
 
 def notification_sidebar() -> rx.Component:
     """The right sidebar component for notifications (Region 4) with filtering."""
+    # Import UIState only for sidebar visibility toggle
+    from app.states.ui.ui_state import UIState
+
     return rx.el.aside(
         rx.el.div(
             rx.el.div(
@@ -136,7 +139,7 @@ def notification_sidebar() -> rx.Component:
                                     class_name="text-[10px] font-black text-gray-500 tracking-widest",
                                 ),
                                 rx.el.span(
-                                    UIState.unread_count.to_string(),
+                                    NotificationSidebarState.unread_count.to_string(),
                                     class_name="ml-2 bg-blue-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full",
                                 ),
                                 class_name="flex items-center",
@@ -148,7 +151,7 @@ def notification_sidebar() -> rx.Component:
                                         size=12,
                                         class_name="text-gray-400",
                                     ),
-                                    on_click=UIState.add_simulated_notification,
+                                    on_click=NotificationSidebarState.add_simulated_notification,
                                     title="Simulate Live Alert",
                                     class_name="hover:text-indigo-600 transition-colors",
                                 ),
@@ -166,9 +169,9 @@ def notification_sidebar() -> rx.Component:
                     rx.scroll_area(
                         rx.el.div(
                             rx.cond(
-                                UIState.paginated_notifications.length() > 0,
+                                NotificationSidebarState.paginated_notifications.length() > 0,
                                 rx.foreach(
-                                    UIState.paginated_notifications,
+                                    NotificationSidebarState.paginated_notifications,
                                     alert_card,
                                 ),
                                 rx.el.div(
@@ -202,5 +205,6 @@ def notification_sidebar() -> rx.Component:
                 "w-0 opacity-0 border-l-0 pointer-events-none fixed inset-y-0 right-0 md:static",
             )
             + " flex bg-[#F9F9F9] h-full shrink-0 flex-col z-40 overflow-hidden transition-all duration-300 ease-in-out",
-        )
+        ),
+        on_mount=NotificationSidebarState.load_notifications,
     )

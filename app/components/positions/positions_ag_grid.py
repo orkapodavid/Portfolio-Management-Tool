@@ -137,7 +137,7 @@ def positions_ag_grid() -> rx.Component:
             default_excel_export_params=get_default_export_params("positions"),
             default_csv_export_params=get_default_csv_export_params("positions"),
             quick_filter_text=PositionsGridState.search_text,
-            row_id_key="id",
+            row_id_key="ticker",
             enable_cell_flash=True,
         ),
         width="100%",

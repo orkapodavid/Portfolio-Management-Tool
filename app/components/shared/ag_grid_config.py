@@ -85,6 +85,8 @@ def create_standard_grid(
     enable_row_numbers: bool = False,
     enable_multi_select: bool = False,
     enable_compact_mode: bool = False,
+    # Notification navigation (enabled by default for consistency)
+    enable_notification_jump: bool = True,
     # Loading overlay (for force refresh pattern)
     loading: rx.Var[bool] | bool = False,
     loading_template: str = "<span class='ag-overlay-loading-center'>Loading...</span>",
@@ -114,6 +116,7 @@ def create_standard_grid(
         enable_cell_flash: Flash cells on value change, for real-time grids (default: False)
         enable_row_numbers: Show auto-numbered row column (default: False)
         enable_multi_select: Enable multi-row selection with checkboxes (default: False)
+        enable_notification_jump: Enable jump-to-row from notification sidebar (default: False)
 
         height: Grid height CSS value (default: "100%")
         width: Grid width CSS value (default: "100%")
@@ -174,6 +177,11 @@ def create_standard_grid(
     if enable_compact_mode:
         grid_props["row_height"] = COMPACT_ROW_HEIGHT
         grid_props["header_height"] = COMPACT_HEADER_HEIGHT
+
+    # Notification jump (wire on_grid_ready to check for pending highlights)
+    if enable_notification_jump:
+        from app.states.ui.notification_sidebar_state import NotificationSidebarState
+        grid_props["on_grid_ready"] = NotificationSidebarState.execute_pending_highlight(grid_id)
 
     # Loading overlay (for force refresh pattern)
     grid_props["loading"] = loading

@@ -534,7 +534,7 @@ class MarketDataService:
     async def get_market_data(self) -> list[dict]:
         """Get market data for dashboard. TODO: Replace with DB query."""
         logger.info("Returning mock market data")
-        tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
+        tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "NVDA"]
         return [
             {
                 "id": i + 1,

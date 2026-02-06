@@ -1,0 +1,30 @@
+/* Persistent notification highlight - visible until page change */
+.notification-highlight,
+.ag-row.notification-highlight {
+    background: linear-gradient(90deg, rgba(59, 130, 246, 0.25), rgba(168, 85, 247, 0.15)) !important;
+    border-left: 4px solid #3b82f6 !important;
+    position: relative;
+}
+
+/* Override cell backgrounds within highlighted rows */
+.notification-highlight .ag-cell,
+.ag-row.notification-highlight .ag-cell {
+    background: transparent !important;
+}
+
+/* Even higher specificity for stubborn AG Grid themes */
+.ag-row.ag-row-even.notification-highlight,
+.ag-row.ag-row-odd.notification-highlight {
+    background: linear-gradient(90deg, rgba(59, 130, 246, 0.25), rgba(168, 85, 247, 0.15)) !important;
+}
+
+.ag-row.ag-row-even.notification-highlight .ag-cell,
+.ag-row.ag-row-odd.notification-highlight .ag-cell {
+    background: transparent !important;
+}
+
+/* Ensure the highlight is visible even on hover */
+.ag-row.notification-highlight.ag-row-hover,
+.ag-row.notification-highlight:hover {
+    background: linear-gradient(90deg, rgba(59, 130, 246, 0.35), rgba(168, 85, 247, 0.25)) !important;
+}
