@@ -59,18 +59,30 @@ class EMSAOrderMixin(rx.State, mixin=True):
         """Simulate order fill updates (for demo/mock mode)."""
         if not self.emsa_orders:
             return
+        
+        # Create a NEW list (required for change detection)
+        new_list = list(self.emsa_orders)
+        
         # Pick a random order and update its filled quantity
-        idx = random.randint(0, len(self.emsa_orders) - 1)
-        order = dict(self.emsa_orders[idx])  # Create mutable copy
-        # Update filled amount
-        current_filled = int(order.get("emsa_filled", "0").replace(",", ""))
-        new_filled = current_filled + random.randint(100, 1000)
-        order["emsa_filled"] = f"{new_filled:,}"
-        # Immutable update for cell flash
-        self.emsa_orders = [
-            order if i == idx else self.emsa_orders[i]
-            for i in range(len(self.emsa_orders))
-        ]
+        idx = random.randint(0, len(new_list) - 1)
+        
+        # Create a NEW row dict (required for cell flash)
+        order = dict(new_list[idx])
+        
+        # Parse and update filled amount
+        try:
+            current_filled_str = str(order.get("emsa_filled", "0"))
+            current_filled = int(current_filled_str.replace(",", ""))
+            new_filled = current_filled + random.randint(100, 1000)
+            order["emsa_filled"] = f"{new_filled:,}"
+        except (ValueError, TypeError):
+            order["emsa_filled"] = f"{random.randint(1000, 5000):,}"
+        
+        # Replace the row in the new list
+        new_list[idx] = order
+        
+        # Assign new list to state (triggers change detection)
+        self.emsa_orders = new_list
         self.emsa_order_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     async def force_refresh_emsa_orders(self):

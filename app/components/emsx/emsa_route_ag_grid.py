@@ -39,26 +39,25 @@ def _get_column_defs() -> list:
     """Return column definitions for the EMSA route grid."""
     return [
         ag_grid.column_def(
-            field="sequence",
-            header_name="Sequence",
-            filter=AGFilters.text,
+            field="id",
+            header_name="ID",
+            filter=AGFilters.number,
+            min_width=70,
+            hide=True,  # Hidden unique identifier for row_id_key
+        ),
+        ag_grid.column_def(
+            field="order_id",
+            header_name="Order ID",
+            filter=AGFilters.number,
             min_width=90,
-            tooltip_field="sequence",
         ),
         ag_grid.column_def(
-            field="underlying",
-            header_name="Underlying",
+            field="route_id",
+            header_name="Route ID",
             filter=AGFilters.text,
             min_width=100,
-            tooltip_field="underlying",
-        ),
-        ag_grid.column_def(
-            field="ticker",
-            header_name="Ticker",
-            filter=AGFilters.text,
-            min_width=100,
-            tooltip_field="ticker",
-            pinned="left",  # Keep ticker visible while scrolling
+            tooltip_field="route_id",
+            pinned="left",  # Keep visible while scrolling
         ),
         ag_grid.column_def(
             field="broker",
@@ -68,49 +67,31 @@ def _get_column_defs() -> list:
             tooltip_field="broker",
         ),
         ag_grid.column_def(
-            field="pos_loc",
-            header_name="Pos Loc",
-            filter=AGFilters.text,
-            min_width=80,
-            tooltip_field="pos_loc",
+            field="quantity",
+            header_name="Quantity",
+            filter=AGFilters.number,
+            min_width=100,
         ),
         ag_grid.column_def(
-            field="side",
-            header_name="Side",
-            filter="agSetColumnFilter",  # Categorical column
-            min_width=70,
+            field="filled_quantity",
+            header_name="Filled Qty",
+            filter=AGFilters.number,
+            min_width=100,
+        ),
+        ag_grid.column_def(
+            field="avg_price",
+            header_name="Avg Price",
+            filter=AGFilters.number,
+            min_width=100,
         ),
         ag_grid.column_def(
             field="status",
             header_name="Status",
             filter="agSetColumnFilter",  # Categorical column
-            min_width=90,
-        ),
-        ag_grid.column_def(
-            field="emsa_amount",
-            header_name="EMSA Amount",
-            filter=AGFilters.number,
-            min_width=110,
-        ),
-        ag_grid.column_def(
-            field="emsa_routed",
-            header_name="EMSA Routed",
-            filter=AGFilters.number,
-            min_width=110,
-        ),
-        ag_grid.column_def(
-            field="emsa_working",
-            header_name="EMSA Working",
-            filter=AGFilters.number,
-            min_width=110,
-        ),
-        ag_grid.column_def(
-            field="emsa_filled",
-            header_name="EMSA Filled",
-            filter=AGFilters.number,
             min_width=100,
         ),
     ]
+
 
 
 # =============================================================================

@@ -58,15 +58,29 @@ class EMSARouteMixin(rx.State, mixin=True):
         """Simulate route fill updates (for demo/mock mode)."""
         if not self.emsa_routes:
             return
-        idx = random.randint(0, len(self.emsa_routes) - 1)
-        route = dict(self.emsa_routes[idx])
-        current_filled = int(route.get("filled_quantity", 0))
-        new_filled = current_filled + random.randint(50, 500)
-        route["filled_quantity"] = new_filled
-        self.emsa_routes = [
-            route if i == idx else self.emsa_routes[i]
-            for i in range(len(self.emsa_routes))
-        ]
+        
+        # Create a NEW list (required for change detection)
+        new_list = list(self.emsa_routes)
+        
+        # Pick a random route and update its filled quantity
+        idx = random.randint(0, len(new_list) - 1)
+        
+        # Create a NEW row dict (required for cell flash)
+        route = dict(new_list[idx])
+        
+        # Parse and update filled quantity
+        try:
+            current_filled = int(route.get("filled_quantity", 0))
+            new_filled = current_filled + random.randint(50, 500)
+            route["filled_quantity"] = new_filled
+        except (ValueError, TypeError):
+            route["filled_quantity"] = random.randint(500, 3000)
+        
+        # Replace the row in the new list
+        new_list[idx] = route
+        
+        # Assign new list to state (triggers change detection)
+        self.emsa_routes = new_list
         self.emsa_route_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     async def force_refresh_emsa_routes(self):
