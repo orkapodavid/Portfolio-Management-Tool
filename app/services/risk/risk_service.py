@@ -19,6 +19,11 @@ from pmt_core.models.common import Currency
 
 from app.ag_grid_constants import GridId
 from app.services.notifications.notification_registry import NotificationRegistry
+from app.services.notifications.notification_constants import (
+    NotificationCategory,
+    NotificationIcon,
+    NotificationColor,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -29,13 +34,13 @@ def _get_risk_notifications() -> list[dict]:
     return [
         {
             "id": "risk-001",
-            "category": "Alerts",
+            "category": NotificationCategory.ALERTS,
             "title": "Risk Alert",
             "message": "Portfolio delta exposure has increased by 15%",
             "time_ago": "5 hours ago",
             "is_read": True,
-            "icon": "alert-triangle",
-            "color": "text-red-500",
+            "icon": NotificationIcon.ALERT_TRIANGLE,
+            "color": NotificationColor.RED,
             "module": "Risk",
             "subtab": "Delta Change",
             "row_id": "TSLA",

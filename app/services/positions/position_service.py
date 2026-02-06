@@ -13,6 +13,11 @@ from pmt_core import PositionRecord
 
 from app.ag_grid_constants import GridId
 from app.services.notifications.notification_registry import NotificationRegistry
+from app.services.notifications.notification_constants import (
+    NotificationCategory,
+    NotificationIcon,
+    NotificationColor,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -20,20 +25,20 @@ logger = logging.getLogger(__name__)
 def _get_position_notifications() -> list[dict]:
     """
     Mock position-related notifications.
-    
+
     In production, these would be generated from real position events
     (new positions, updates, fills, etc.)
     """
     return [
         {
             "id": "pos-001",
-            "category": "Portfolio",
+            "category": NotificationCategory.PORTFOLIO,
             "title": "Position Update",
             "message": "TKR0 position size updated after partial fill",
             "time_ago": "45 mins ago",
             "is_read": False,
-            "icon": "layers",
-            "color": "text-purple-500",
+            "icon": NotificationIcon.LAYERS,
+            "color": NotificationColor.PURPLE,
             "module": "Positions",
             "subtab": "Positions",
             "row_id": "TKR0",
@@ -42,13 +47,13 @@ def _get_position_notifications() -> list[dict]:
         },
         {
             "id": "pos-002",
-            "category": "Portfolio",
+            "category": NotificationCategory.PORTFOLIO,
             "title": "New Position",
             "message": "TKR5 added to portfolio",
             "time_ago": "2 hours ago",
             "is_read": True,
-            "icon": "plus-circle",
-            "color": "text-teal-500",
+            "icon": NotificationIcon.PLUS_CIRCLE,
+            "color": NotificationColor.TEAL,
             "module": "Positions",
             "subtab": "Positions",
             "row_id": "TKR5",

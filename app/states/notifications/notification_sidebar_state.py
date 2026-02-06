@@ -16,6 +16,10 @@ from datetime import datetime
 
 from app.states.notifications.types import NotificationItem
 from app.ag_grid_constants import get_grid_row_id_key
+from app.services.notifications.notification_constants import (
+    NotificationType,
+    CATEGORY_TO_TYPE,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -35,16 +39,16 @@ class NotificationSidebarState(rx.State):
     notification_filter: str = "all"
 
     # Infinite scroll vars
-    visible_count: int = 20         # How many notifications currently shown
-    batch_size: int = 20            # How many to load per scroll
-    is_loading_more: bool = False   # Prevent multiple concurrent loads
+    visible_count: int = 20  # How many notifications currently shown
+    batch_size: int = 20  # How many to load per scroll
+    is_loading_more: bool = False  # Prevent multiple concurrent loads
 
     # Loading state
     is_loading: bool = False
 
     # Pending highlight for cross-page navigation
     pending_highlight: dict = {}
-    
+
     # Persistent highlight (until page change)
     highlighted_grid_id: str = ""
     highlighted_row_id: str = ""
@@ -67,7 +71,7 @@ class NotificationSidebarState(rx.State):
     @rx.var
     def sorted_notifications(self) -> List[NotificationItem]:
         """Sort notifications by priority (alerts first) then recency.
-        
+
         Priority order: alert > warning > info
         """
         priority_order = {"alert": 0, "warning": 1, "info": 2}
@@ -75,13 +79,13 @@ class NotificationSidebarState(rx.State):
         # Using enumerate to preserve original order within each priority group
         return sorted(
             self.filtered_notifications,
-            key=lambda n: priority_order.get(n.get("type", "info"), 2)
+            key=lambda n: priority_order.get(n.get("type", "info"), 2),
         )
 
     @rx.var
     def visible_notifications(self) -> List[NotificationItem]:
         """Return first N sorted notifications for lazy rendering."""
-        return self.sorted_notifications[:self.visible_count]
+        return self.sorted_notifications[: self.visible_count]
 
     @rx.var
     def has_more_notifications(self) -> bool:
@@ -110,12 +114,16 @@ class NotificationSidebarState(rx.State):
             # Transform to NotificationItem format expected by component
             self.notifications = [
                 {
-                    "id": str(n.get("id", i + 1)),  # Keep as string - IDs are now prefixed like 'sys-001'
+                    "id": str(
+                        n.get("id", i + 1)
+                    ),  # Keep as string - IDs are now prefixed like 'sys-001'
                     "header": n.get("title", "Notification"),
                     "ticker": n.get("ticker", n.get("row_id", "N/A")),
                     "timestamp": n.get("time_ago", "Just now"),
                     "instruction": n.get("message", ""),
-                    "type": "alert" if n.get("category") == "Alerts" else "info",
+                    "type": CATEGORY_TO_TYPE.get(
+                        n.get("category"), NotificationType.INFO
+                    ),
                     "read": n.get("is_read", False),
                     # Navigation metadata
                     "module": n.get("module", "Market Data"),
@@ -214,7 +222,7 @@ class NotificationSidebarState(rx.State):
         """
         Navigate to the relevant module/subtab and highlight the row.
         Called when clicking the arrow button on a notification.
-        
+
         Handles both cross-page navigation and same-page jumps.
         """
         # Find the notification
@@ -232,7 +240,7 @@ class NotificationSidebarState(rx.State):
 
         grid_id = notification.get("grid_id", "market_data_grid")
         row_id = notification.get("row_id", "0")
-        
+
         # Get the row_id_key for this grid from the centralized config
         row_id_key = get_grid_row_id_key(grid_id)
 
@@ -244,7 +252,7 @@ class NotificationSidebarState(rx.State):
         module_slug = module.lower().replace(" ", "-")
         subtab_slug = subtab.lower().replace(" ", "-")
         target_route = f"/{module_slug}/{subtab_slug}"
-        
+
         # Store pending highlight for when grid loads (for cross-page navigation)
         self.pending_highlight = {
             "grid_id": grid_id,
@@ -416,11 +424,11 @@ class NotificationSidebarState(rx.State):
             return null;
         }})()
         """
-        
+
         # Use callback to handle cross-page navigation via rx.redirect()
         return rx.call_script(
             check_and_navigate_script,
-            callback=NotificationSidebarState.handle_redirect_callback
+            callback=NotificationSidebarState.handle_redirect_callback,
         )
 
     @rx.event
@@ -434,27 +442,29 @@ class NotificationSidebarState(rx.State):
             return rx.redirect(target_route)
 
     @rx.event
-    def jump_to_row(self, row_id: str, grid_id: str = "market_data_grid", row_id_key: str = ""):
+    def jump_to_row(
+        self, row_id: str, grid_id: str = "market_data_grid", row_id_key: str = ""
+    ):
         """
         Jump to and flash a specific row in the grid, with persistent highlight.
         Uses DOM-based React Fiber traversal to access AG Grid API.
-        
+
         Args:
             row_id: The value to match (e.g., "AAPL", "0", "USD/JPY")
             grid_id: The grid identifier
             row_id_key: The field name to match against (e.g., "ticker", "id", "underlying")
                        If empty, uses the centralized config or defaults to direct getRowNode
-        
+
         Persistent highlight is achieved via global window state + periodic reapplication.
         """
         # Store the highlight state for clearing later
         self.highlighted_grid_id = grid_id
         self.highlighted_row_id = row_id
-        
+
         # Get row_id_key from config if not provided
         if not row_id_key:
             row_id_key = get_grid_row_id_key(grid_id)
-        
+
         script = f"""
         (() => {{
             console.log('Jump to row:', '{row_id}', 'in grid:', '{grid_id}', 'using key:', '{row_id_key}');
@@ -587,7 +597,7 @@ class NotificationSidebarState(rx.State):
         }})()
         """
         return rx.call_script(script)
-    
+
     @rx.event
     def clear_highlight(self):
         """
@@ -596,7 +606,7 @@ class NotificationSidebarState(rx.State):
         """
         self.highlighted_grid_id = ""
         self.highlighted_row_id = ""
-        
+
         # Remove CSS class from DOM and clear global state
         script = """
         (() => {
@@ -628,7 +638,7 @@ class NotificationSidebarState(rx.State):
         """
         Execute pending highlight for a grid.
         Called on grid ready event.
-        
+
         Checks two sources:
         1. Python state (self.pending_highlight) - for full-page navigation
         2. sessionStorage (__pmtPendingHighlight) - for SPA navigation via Next.js Router
@@ -673,10 +683,9 @@ class NotificationSidebarState(rx.State):
         }})()
         """
         return rx.call_script(
-            script,
-            callback=NotificationSidebarState.handle_sessionStorage_highlight
+            script, callback=NotificationSidebarState.handle_sessionStorage_highlight
         )
-    
+
     @rx.event
     def handle_sessionStorage_highlight(self, result: dict | None):
         """Handle result from sessionStorage check for pending highlight."""
@@ -686,4 +695,3 @@ class NotificationSidebarState(rx.State):
             row_id_key = result.get("row_id_key", "")
             if row_id and grid_id:
                 return self.jump_to_row(row_id, grid_id, row_id_key)
-

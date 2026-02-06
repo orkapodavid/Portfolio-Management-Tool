@@ -16,6 +16,11 @@ import yfinance as yf
 from app.services.shared.database_service import DatabaseService
 from app.ag_grid_constants import GridId
 from app.services.notifications.notification_registry import NotificationRegistry
+from app.services.notifications.notification_constants import (
+    NotificationCategory,
+    NotificationIcon,
+    NotificationColor,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -26,13 +31,13 @@ def _get_market_data_notifications() -> list[dict]:
     return [
         {
             "id": "mkt-001",
-            "category": "Alerts",
+            "category": NotificationCategory.ALERTS,
             "title": "Price Alert Triggered",
             "message": "TSLA has crossed above $200.00",
             "time_ago": "2 mins ago",
             "is_read": False,
-            "icon": "bell",
-            "color": "text-amber-500",
+            "icon": NotificationIcon.BELL,
+            "color": NotificationColor.AMBER,
             "module": "Market Data",
             "subtab": "Market Data",
             "row_id": "TSLA",
@@ -41,13 +46,13 @@ def _get_market_data_notifications() -> list[dict]:
         },
         {
             "id": "mkt-002",
-            "category": "Portfolio",
+            "category": NotificationCategory.PORTFOLIO,
             "title": "Trade Executed",
             "message": "Your order to buy 100 shares of AAPL has been filled at $189.50",
             "time_ago": "1 hour ago",
             "is_read": False,
-            "icon": "wallet",
-            "color": "text-emerald-500",
+            "icon": NotificationIcon.WALLET,
+            "color": NotificationColor.EMERALD,
             "module": "Market Data",
             "subtab": "Market Data",
             "row_id": "AAPL",
@@ -56,13 +61,13 @@ def _get_market_data_notifications() -> list[dict]:
         },
         {
             "id": "mkt-003",
-            "category": "News",
+            "category": NotificationCategory.NEWS,
             "title": "Market Update",
             "message": "S&P 500 reaches new all-time high amid strong earnings reports",
             "time_ago": "3 hours ago",
             "is_read": True,
-            "icon": "newspaper",
-            "color": "text-blue-500",
+            "icon": NotificationIcon.NEWSPAPER,
+            "color": NotificationColor.BLUE,
             "module": "Market Data",
             "subtab": "Market Data",
             "row_id": "MSFT",
@@ -71,13 +76,13 @@ def _get_market_data_notifications() -> list[dict]:
         },
         {
             "id": "mkt-004",
-            "category": "Alerts",
+            "category": NotificationCategory.ALERTS,
             "title": "Volume Spike",
             "message": "NVDA trading volume 3x average",
             "time_ago": "15 mins ago",
             "is_read": False,
-            "icon": "trending-up",
-            "color": "text-orange-500",
+            "icon": NotificationIcon.TRENDING_UP,
+            "color": NotificationColor.ORANGE,
             "module": "Market Data",
             "subtab": "Market Data",
             "row_id": "NVDA",
@@ -86,13 +91,13 @@ def _get_market_data_notifications() -> list[dict]:
         },
         {
             "id": "mkt-005",
-            "category": "Alerts",
+            "category": NotificationCategory.ALERTS,
             "title": "52-Week High",
             "message": "GOOGL hit new 52-week high at $142.50",
             "time_ago": "30 mins ago",
             "is_read": False,
-            "icon": "arrow-up-circle",
-            "color": "text-green-500",
+            "icon": NotificationIcon.ARROW_UP_CIRCLE,
+            "color": NotificationColor.GREEN,
             "module": "Market Data",
             "subtab": "Market Data",
             "row_id": "GOOGL",
@@ -107,13 +112,13 @@ def _get_fx_notifications() -> list[dict]:
     return [
         {
             "id": "fx-001",
-            "category": "News",
+            "category": NotificationCategory.NEWS,
             "title": "FX Update",
             "message": "USD/JPY crossed 150 level",
             "time_ago": "20 mins ago",
             "is_read": False,
-            "icon": "globe",
-            "color": "text-indigo-500",
+            "icon": NotificationIcon.GLOBE,
+            "color": NotificationColor.INDIGO,
             "module": "Market Data",
             "subtab": "FX Data",
             "row_id": "USDJPY",

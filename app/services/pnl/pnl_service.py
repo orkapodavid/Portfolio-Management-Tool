@@ -12,6 +12,11 @@ from pmt_core import PnLRecord
 
 from app.ag_grid_constants import GridId
 from app.services.notifications.notification_registry import NotificationRegistry
+from app.services.notifications.notification_constants import (
+    NotificationCategory,
+    NotificationIcon,
+    NotificationColor,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -22,13 +27,13 @@ def _get_pnl_notifications() -> list[dict]:
     return [
         {
             "id": "pnl-001",
-            "category": "Alerts",
+            "category": NotificationCategory.ALERTS,
             "title": "PnL Alert",
             "message": "AAPL daily PnL exceeded threshold",
             "time_ago": "10 mins ago",
             "is_read": False,
-            "icon": "dollar-sign",
-            "color": "text-yellow-500",
+            "icon": NotificationIcon.DOLLAR_SIGN,
+            "color": NotificationColor.YELLOW,
             "module": "PnL",
             "subtab": "PnL Change",
             "row_id": "AAPL",
