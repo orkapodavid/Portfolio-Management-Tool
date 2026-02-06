@@ -437,71 +437,85 @@ def simulate_emsa_order_update(self):
 
 ---
 
-#### 4.3 Events Grids (3) — Static
+#### 4.3 Events Grids (3) — Static ✅ COMPLETE
 
 Event calendar and stream data is reference data → use **Force Refresh** pattern.
 
 | Grid | File | Mixin | `last_updated` | Refresh | `row_id_key` |
 |------|------|-------|:--------------:|:-------:|:------------:|
-| Event Calendar | [event_calendar_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/events/event_calendar_ag_grid.py) | `EventsState` | [ ] | [ ] force | [ ] `id` |
-| Event Stream | [event_stream_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/events/event_stream_ag_grid.py) | `EventsState` | [ ] | [ ] force | [ ] `id` |
-| Reverse Inquiry | [reverse_inquiry_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/events/reverse_inquiry_ag_grid.py) | `EventsState` | [ ] | [ ] force | [ ] `id` |
+| Event Calendar | [event_calendar_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/events/event_calendar_ag_grid.py) | `EventCalendarMixin` | ✅ | ✅ auto | ✅ `ticker` |
+| Event Stream | [event_stream_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/events/event_stream_ag_grid.py) | `EventStreamMixin` | ✅ | ✅ auto | ✅ `ticker` |
+| Reverse Inquiry | [reverse_inquiry_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/events/reverse_inquiry_ag_grid.py) | `ReverseInquiryMixin` | ✅ | ✅ auto | ✅ `ticker` |
 
-**Mixin additions needed in `EventsState`:**
-```python
-# app/states/events/events_state.py
-event_calendar_last_updated: str = "—"
-is_loading_event_calendar: bool = False
-
-event_stream_last_updated: str = "—"
-is_loading_event_stream: bool = False
-
-reverse_inquiry_last_updated: str = "—"
-is_loading_reverse_inquiry: bool = False
-```
+**Mixin files created in `app/states/events/mixins/`:**
+- `event_calendar_mixin.py`
+- `event_stream_mixin.py`
+- `reverse_inquiry_mixin.py`
 
 ---
 
-#### 4.4 Instruments Grids (5) — Static
+#### 4.4 Instruments Grids (5) — Static ✅ COMPLETE
 
 Instrument reference data → use **Force Refresh** pattern.
 
 | Grid | File | Mixin | `last_updated` | Refresh | `row_id_key` |
 |------|------|-------|:--------------:|:-------:|:------------:|
-| Instrument Data | [instrument_data_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/instruments/instrument_data_ag_grid.py) | `InstrumentState` | [ ] | [ ] force | [ ] `deal_num` |
-| Instrument Term | [instrument_term_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/instruments/instrument_term_ag_grid.py) | `InstrumentState` | [ ] | [ ] force | [ ] `id` |
-| Special Term | [special_term_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/instruments/special_term_ag_grid.py) | `InstrumentState` | [ ] | [ ] force | [ ] `id` |
-| Stock Screener | [stock_screener_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/instruments/stock_screener_ag_grid.py) | `InstrumentState` | [ ] | [ ] force | [ ] `ticker` |
-| Ticker Data | [ticker_data_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/instruments/ticker_data_ag_grid.py) | `InstrumentState` | [ ] | [ ] force | [ ] `ticker` |
+| Instrument Data | [instrument_data_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/instruments/instrument_data_ag_grid.py) | `InstrumentDataMixin` | ✅ | ✅ auto | ✅ `deal_num` |
+| Instrument Term | [instrument_term_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/instruments/instrument_term_ag_grid.py) | `InstrumentTermsMixin` | ✅ | ✅ auto | ✅ `id` |
+| Special Term | [special_term_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/instruments/special_term_ag_grid.py) | `SpecialTermsMixin` | ✅ | ✅ auto | ✅ `id` |
+| Stock Screener | [stock_screener_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/instruments/stock_screener_ag_grid.py) | `StockScreenerMixin` | ✅ | ✅ auto | ✅ `ticker` |
+| Ticker Data | [ticker_data_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/instruments/ticker_data_ag_grid.py) | `TickerDataMixin` | ✅ | ✅ auto | ✅ `ticker` |
+
+**Mixin files created in `app/states/instruments/mixins/`:**
+- `ticker_data_mixin.py`
+- `stock_screener_mixin.py`
+- `special_terms_mixin.py`
+- `instrument_data_mixin.py`
+- `instrument_terms_mixin.py`
 
 ---
 
-#### 4.5 Operations Grids (2) — Static
+#### 4.5 Operations Grids (2) — Static ✅ COMPLETE
 
 Operations tracking data → use **Force Refresh** pattern.
 
 | Grid | File | Mixin | `last_updated` | Refresh | `row_id_key` |
 |------|------|-------|:--------------:|:-------:|:------------:|
-| Daily Procedure Check | [daily_procedure_check_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/operations/daily_procedure_check_ag_grid.py) | `OperationsState` | [ ] | [ ] force | [ ] `id` |
-| Operation Process | [operation_process_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/operations/operation_process_ag_grid.py) | `OperationsState` | [ ] | [ ] force | [ ] `id` |
+| Daily Procedure Check | [daily_procedure_check_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/operations/daily_procedure_check_ag_grid.py) | `DailyProceduresMixin` | ✅ | ✅ auto | ✅ `id` |
+| Operation Process | [operation_process_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/operations/operation_process_ag_grid.py) | `OperationProcessesMixin` | ✅ | ✅ auto | ✅ `id` |
+
+**Mixin files created in `app/states/operations/mixins/`:**
+- `daily_procedures_mixin.py`
+- `operation_processes_mixin.py`
 
 ---
 
-#### 4.6 Portfolio Tools Grids (9) — Static
+#### 4.6 Portfolio Tools Grids (9) — Static ✅ COMPLETE
 
 Portfolio reference and configuration data → use **Force Refresh** pattern.
 
 | Grid | File | Mixin | `last_updated` | Refresh | `row_id_key` |
 |------|------|-------|:--------------:|:-------:|:------------:|
-| CB Installments | [cb_installments_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/portfolio_tools/cb_installments_ag_grid.py) | `PortfolioToolsState` | [ ] | [ ] force | [ ] `id` |
-| Coming Resets | [coming_resets_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/portfolio_tools/coming_resets_ag_grid.py) | `PortfolioToolsState` | [ ] | [ ] force | [ ] `id` |
-| Deal Indication | [deal_indication_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/portfolio_tools/deal_indication_ag_grid.py) | `PortfolioToolsState` | [ ] | [ ] force | [ ] `id` |
-| Excess Amount | [excess_amount_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/portfolio_tools/excess_amount_ag_grid.py) | `PortfolioToolsState` | [ ] | [ ] force | [ ] `id` |
-| Pay to Hold | [pay_to_hold_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/portfolio_tools/pay_to_hold_ag_grid.py) | `PortfolioToolsState` | [ ] | [ ] force | [ ] `id` |
-| PO Settlement | [po_settlement_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/portfolio_tools/po_settlement_ag_grid.py) | `PortfolioToolsState` | [ ] | [ ] force | [ ] `id` |
-| Reset Dates | [reset_dates_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/portfolio_tools/reset_dates_ag_grid.py) | `PortfolioToolsState` | [ ] | [ ] force | [ ] `id` |
-| Short ECL | [short_ecl_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/portfolio_tools/short_ecl_ag_grid.py) | `PortfolioToolsState` | [ ] | [ ] force | [ ] `id` |
-| Stock Borrow | [stock_borrow_ag_grid.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/components/portfolio_tools/stock_borrow_ag_grid.py) | `PortfolioToolsState` | [ ] | [ ] force | [ ] `ticker` |
+| CB Installments | [cb_installments_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/portfolio_tools/cb_installments_ag_grid.py) | `CBInstallmentsMixin` | ✅ | ✅ auto | ✅ `id` |
+| Coming Resets | [coming_resets_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/portfolio_tools/coming_resets_ag_grid.py) | `ComingResetsMixin` | ✅ | ✅ auto | ✅ `id` |
+| Deal Indication | [deal_indication_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/portfolio_tools/deal_indication_ag_grid.py) | `DealIndicationMixin` | ✅ | ✅ auto | ✅ `id` |
+| Excess Amount | [excess_amount_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/portfolio_tools/excess_amount_ag_grid.py) | `ExcessAmountMixin` | ✅ | ✅ auto | ✅ `id` |
+| Pay to Hold | [pay_to_hold_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/portfolio_tools/pay_to_hold_ag_grid.py) | `PayToHoldMixin` | ✅ | ✅ auto | ✅ `ticker` |
+| PO Settlement | [po_settlement_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/portfolio_tools/po_settlement_ag_grid.py) | `POSettlementMixin` | ✅ | ✅ auto | ✅ `id` |
+| Reset Dates | [reset_dates_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/portfolio_tools/reset_dates_ag_grid.py) | `ResetDatesMixin` | ✅ | ✅ auto | ✅ `id` |
+| Short ECL | [short_ecl_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/portfolio_tools/short_ecl_ag_grid.py) | `ShortECLMixin` | ✅ | ✅ auto | ✅ `id` |
+| Stock Borrow | [stock_borrow_ag_grid.py](file:///home/kuro/Desktop/projects/Portfolio-Management-Tool/app/components/portfolio_tools/stock_borrow_ag_grid.py) | `StockBorrowMixin` | ✅ | ✅ auto | ✅ `ticker` |
+
+**Mixin files created in `app/states/portfolio_tools/mixins/`:**
+- `pay_to_hold_mixin.py`
+- `short_ecl_mixin.py`
+- `stock_borrow_mixin.py`
+- `po_settlement_mixin.py`
+- `deal_indication_mixin.py`
+- `reset_dates_mixin.py`
+- `coming_resets_mixin.py`
+- `cb_installments_mixin.py`
+- `excess_amount_mixin.py`
 
 ---
 
