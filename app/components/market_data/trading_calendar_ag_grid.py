@@ -2,12 +2,16 @@
 Trading Calendar AG-Grid Component.
 
 Migrated to use create_standard_grid factory with cell flash and full toolbar support.
+Includes a FROM/TO date range filter bar.
 """
 
 import reflex as rx
 from reflex_ag_grid import ag_grid, AGFilters
 from app.states.market_data.market_data_state import MarketDataState
-from app.components.shared.ag_grid_config import create_standard_grid
+from app.components.shared.ag_grid_config import (
+    create_standard_grid,
+    filter_date_range_bar,
+)
 
 
 # =============================================================================
@@ -138,6 +142,24 @@ def _get_column_defs() -> list:
 
 
 # =============================================================================
+# FILTER BAR — Date range pickers (uses shared filter_date_range_bar)
+# =============================================================================
+
+
+def _filter_bar() -> rx.Component:
+    """Filter bar with FROM / TO date pickers."""
+    return filter_date_range_bar(
+        from_value=MarketDataState.trading_calendar_from_date,
+        to_value=MarketDataState.trading_calendar_to_date,
+        on_from_change=MarketDataState.set_trading_calendar_from_date,
+        on_to_change=MarketDataState.set_trading_calendar_to_date,
+        on_apply=MarketDataState.apply_trading_calendar_filters,
+        has_active_filters=MarketDataState.trading_calendar_has_active_filters,
+        on_clear=MarketDataState.clear_trading_calendar_filters,
+    )
+
+
+# =============================================================================
 # MAIN COMPONENT
 # =============================================================================
 
@@ -171,10 +193,13 @@ def trading_calendar_ag_grid() -> rx.Component:
             # Status bar — timestamp from mixin
             last_updated=MarketDataState.trading_calendar_last_updated,
         ),
+        # Filter bar — date range pickers
+        _filter_bar(),
         create_standard_grid(
             grid_id=_GRID_ID,
             row_data=MarketDataState.trading_calendar,
             column_defs=_get_column_defs(),
+            row_id_key="id",  # Unique row ID — enables delta updates
             enable_cell_flash=True,  # Enable for market data
             enable_row_numbers=True,
             enable_multi_select=True,
@@ -188,4 +213,6 @@ def trading_calendar_ag_grid() -> rx.Component:
         width="100%",
         height="100%",
         spacing="0",
+        on_mount=MarketDataState.load_trading_calendar,
     )
+

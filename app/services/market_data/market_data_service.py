@@ -740,25 +740,71 @@ class MarketDataService:
             for i, p in enumerate(pairs)
         ]
 
-    async def get_trading_calendar(self) -> list[dict]:
-        """Get trading calendar for dashboard. TODO: Replace with DB query."""
-        logger.info("Returning mock trading calendar data")
-        return [
-            {
-                "id": 1,
-                "trade_date": "2026-01-11",
-                "day_of_week": "Saturday",
-                "usa": "Closed",
-                "hkg": "Closed",
-                "jpn": "Closed",
-                "aus": "Closed",
-                "nzl": "Closed",
-                "kor": "Closed",
-                "chn": "Closed",
-                "twn": "Closed",
-                "ind": "Closed",
-            },
+    async def get_trading_calendar(
+        self,
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> list[dict]:
+        """Get trading calendar, filtered by optional date range.
+
+        Args:
+            start_date: Start date inclusive (YYYY-MM-DD, optional)
+            end_date: End date inclusive (YYYY-MM-DD, optional)
+
+        Returns:
+            List of trading calendar entries matching the filters.
+        """
+        logger.info(
+            f"Querying trading calendar — start_date={start_date}, end_date={end_date}"
+        )
+
+        base_date = datetime.now()
+        num_days = 60  # 2 months of calendar data
+
+        # Day-of-week names
+        day_names = [
+            "Monday", "Tuesday", "Wednesday", "Thursday",
+            "Friday", "Saturday", "Sunday",
         ]
+
+        result = []
+        row_id = 0
+        for day in range(num_days):
+            trade_dt = base_date - timedelta(days=day)
+            trade_date = trade_dt.strftime("%Y-%m-%d")
+            weekday = trade_dt.weekday()  # 0=Mon … 6=Sun
+
+            # Apply date range filter at "query" level
+            if start_date and trade_date < start_date:
+                continue
+            if end_date and trade_date > end_date:
+                continue
+
+            is_weekend = weekday >= 5
+            # Simulate per-market open/closed (weekends always closed)
+            status_open = "Open"
+            status_closed = "Closed"
+
+            row_id += 1
+            result.append(
+                {
+                    "id": row_id,
+                    "trade_date": trade_date,
+                    "day_of_week": day_names[weekday],
+                    "usa": status_closed if is_weekend else status_open,
+                    "hkg": status_closed if is_weekend else status_open,
+                    "jpn": status_closed if is_weekend else status_open,
+                    "aus": status_closed if is_weekend else status_open,
+                    "nzl": status_closed if is_weekend else status_open,
+                    "kor": status_closed if is_weekend else status_open,
+                    "chn": status_closed if is_weekend else status_open,
+                    "twn": status_closed if is_weekend else status_open,
+                    "ind": status_closed if is_weekend else status_open,
+                }
+            )
+
+        logger.info(f"Trading calendar — {len(result)} rows")
+        return result
 
     async def get_market_hours(self) -> list[dict]:
         """Get market hours for dashboard. TODO: Replace with DB query."""
