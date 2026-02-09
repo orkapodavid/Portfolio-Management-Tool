@@ -549,7 +549,7 @@ Portfolio reference and configuration data → use **Force Refresh** pattern.
    - [ ] **REMOVE** any `filtered_*` computed vars that reference `current_search_query`
 
 > [!WARNING]
-> **Search/filtering is handled by AG Grid** via `quick_filter_text` prop in `ag_grid_config.py`.
+> **Search/filtering is handled by AG Grid** via `quick_filter_text` prop in the `ag_grid_config` package (`grid_factory.py`).
 > **Do NOT use** `current_search_query` in mixins or main state — it's obsolete.
 > **Do NOT create** `filtered_*` computed vars — they cause redundant filtering.
 > Use raw data directly: `row_data=EMSXState.emsa_orders` and let AG Grid filter client-side.

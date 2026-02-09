@@ -231,8 +231,14 @@ rx.script(grid_state_script(_STORAGE_KEY, _GRID_ID))
 - `risk_inputs_ag_grid.py`
 - `risk_measures_ag_grid.py`
 
-### shared/ (1)
-- `ag_grid_config.py` — Factory and utilities
+### shared/ — `ag_grid_config/` package
+- `ag_grid_config/__init__.py` — Re-exports all 16 public symbols
+- `ag_grid_config/constants.py` — Status bar, default col defs, overlay, compact dims
+- `ag_grid_config/grid_factory.py` — `create_standard_grid()` factory
+- `ag_grid_config/export_helpers.py` — Excel/CSV export params and JS helpers
+- `ag_grid_config/state_persistence.py` — `grid_state_script()` localStorage persistence
+- `ag_grid_config/toolbar.py` — `grid_toolbar()` unified toolbar component
+- `ag_grid_config/filter_bar.py` — `filter_date_range_bar()`, CSS constants
 
 ---
 

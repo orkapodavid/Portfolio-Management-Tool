@@ -1,184 +1,228 @@
-# AG Grid Configuration Guide
+# AG Grid Config Package
 
-This module provides a standardized factory for AG Grid components with consistent UX across all grids.
+> **Location:** `app/components/shared/ag_grid_config/`
+>
+> Shared AG Grid configuration for consistent UX across all 48+ grid components.
 
-**File**: `app/components/shared/ag_grid_config.py`
+## Package Structure
 
----
+```
+app/components/shared/ag_grid_config/
+├── __init__.py            # Re-exports all 16 public symbols (backward-compatible)
+├── constants.py           # Universal config: status bar, default col defs, overlay
+├── grid_factory.py        # create_standard_grid() factory function
+├── export_helpers.py      # Excel/CSV export params, JS helpers
+├── state_persistence.py   # grid_state_script() — localStorage save/restore/reset
+├── toolbar.py             # grid_toolbar() — unified toolbar component
+└── filter_bar.py          # filter_date_range_bar(), filter_date_input(), CSS constants
+```
 
-## Quick Start
+### Import Pattern (unchanged)
+
+All imports go through the package `__init__.py` — **callers never import sub-modules directly**:
 
 ```python
 from app.components.shared.ag_grid_config import (
     create_standard_grid,
-    grid_toolbar,
     grid_state_script,
+    grid_toolbar,
+    get_default_export_params,
+    get_default_csv_export_params,
+    filter_date_range_bar,
+    FILTER_BTN_CLASS,
+)
+```
+
+---
+
+## Module Reference
+
+### `constants.py` — Universal Configuration
+
+| Symbol | Type | Description |
+|--------|------|-------------|
+| `STANDARD_STATUS_BAR` | `dict` | Status bar config (total/filtered row count panels) |
+| `STANDARD_DEFAULT_COL_DEF` | `dict` | Default col def (sortable, resizable, filterable, floating filters) |
+| `ENHANCED_DEFAULT_COL_DEF` | `dict` | Extended default col def with enterprise features (animations, context menu) |
+| `NO_ROWS_TEMPLATE` | `str` | HTML template for empty grid overlay |
+| `COMPACT_ROW_HEIGHT` | `int` | Row height in compact mode (28px) |
+| `COMPACT_HEADER_HEIGHT` | `int` | Header height in compact mode (32px) |
+
+---
+
+### `grid_factory.py` — `create_standard_grid()`
+
+Factory function that wraps `reflex_ag_grid.ag_grid` with standardized defaults.
+
+```python
+create_standard_grid(
+    grid_id: str,                        # Required. Unique DOM id
+    row_data: rx.Var[list[dict]],        # Required. Data source
+    column_defs: list,                   # Required. AG Grid column definitions
+    *,
+    # Tier 2 options:
+    enable_cell_flash: bool = False,     # Real-time grids (market data, PnL, risk)
+    enable_row_numbers: bool = False,    # Auto-numbered first column
+    enable_multi_select: bool = False,   # Checkbox selection
+    enable_compact_mode: bool = False,   # Dense rows (28px)
+    row_id_key: str = "id",             # Unique row identifier field
+    # Export params:
+    default_excel_export_params=None,
+    default_csv_export_params=None,
+    # AG Grid passthrough:
+    **kwargs,                            # Additional AG Grid props
+)
+```
+
+---
+
+### `export_helpers.py` — Export Parameters
+
+| Symbol | Description |
+|--------|-------------|
+| `get_default_export_params(page_name)` | Returns Excel export params with timestamped filename |
+| `get_default_csv_export_params(page_name)` | Returns CSV export params with timestamped filename |
+
+Internal helpers (used by `toolbar.py`):
+- `_get_export_excel_js(page_name)` — JavaScript snippet for toolbar Excel button
+
+---
+
+### `state_persistence.py` — `grid_state_script()`
+
+Generates JavaScript for localStorage-based column state persistence.
+
+```python
+grid_state_script(storage_key: str, grid_id: str) -> str
+```
+
+Produces three global functions:
+- `saveGridState_{key}()` — Save column order, widths, sort, filter to localStorage
+- `restoreGridState_{key}()` — Restore saved state
+- `resetGridState_{key}()` — Clear saved state and reset grid to defaults
+
+---
+
+### `toolbar.py` — `grid_toolbar()`
+
+Unified toolbar component. Visual layout:
+
+```
+[Generate] [Excel] [↻] [🔍 Search...]     [Compact] | [Save] [Restore] [Reset]
+```
+
+Key parameters:
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `storage_key` | `str` | Required | localStorage key for save/restore/reset |
+| `page_name` | `str` | Required | Prefix for export filenames |
+| `search_value` | `rx.Var[str]` | `None` | Quick filter search binding |
+| `on_search_change` | `Callable` | `None` | Search input handler |
+| `show_generate` | `bool` | `False` | Show Generate dropdown |
+| `show_refresh` | `bool` | `False` | Show Refresh button |
+| `show_compact_toggle` | `bool` | `False` | Show Compact mode toggle |
+| `grid_id` | `str` | `None` | Required for compact toggle |
+| `show_excel` | `bool` | `True` | Show Excel export button |
+| `show_save` | `bool` | `True` | Show Save Layout button |
+| `show_restore` | `bool` | `True` | Show Restore Layout button |
+| `show_reset` | `bool` | `True` | Show Reset Layout button |
+| `last_updated` | `rx.Var[str]` | `None` | Timestamp for status bar |
+| `auto_refresh` | `rx.Var[bool]` | `None` | Auto-refresh toggle state |
+| `on_auto_refresh_toggle` | `Callable` | `None` | Auto-refresh toggle handler |
+
+---
+
+### `filter_bar.py` — Date Range Filter Bar
+
+| Symbol | Type | Description |
+|--------|------|-------------|
+| `filter_date_range_bar(...)` | `Component` | Full FROM/TO date filter bar with Apply/Clear buttons |
+| `filter_date_input(...)` | `Component` | Single date input with label and calendar icon |
+| `FILTER_LABEL_CLASS` | `str` | Tailwind class string for filter labels |
+| `FILTER_INPUT_CLASS` | `str` | Tailwind class string for filter inputs |
+| `FILTER_BTN_CLASS` | `str` | Tailwind class string for filter buttons |
+
+**`filter_date_range_bar` parameters:**
+
+```python
+filter_date_range_bar(
+    from_value: rx.Var[str],          # FROM date value binding
+    to_value: rx.Var[str],            # TO date value binding
+    on_from_change: Callable,         # FROM date change handler
+    on_to_change: Callable,           # TO date change handler
+    on_apply: Callable,               # Apply filter handler
+    has_active_filters: rx.Var[bool], # Show/hide Clear button
+    on_clear: Callable,               # Clear filter handler
+)
+```
+
+---
+
+## Complete Usage Example
+
+```python
+from app.components.shared.ag_grid_config import (
+    create_standard_grid,
+    grid_state_script,
+    grid_toolbar,
+    get_default_export_params,
+    get_default_csv_export_params,
+    filter_date_range_bar,
 )
 
-def my_grid() -> rx.Component:
-    return rx.fragment(
-        rx.script(grid_state_script("my_grid_state", "my_grid")),
+_STORAGE_KEY = "my_grid_state"
+_GRID_ID = "my_grid"
+
+def my_grid_component() -> rx.Component:
+    return rx.vstack(
+        # 1. State persistence script
+        rx.script(grid_state_script(_STORAGE_KEY, _GRID_ID)),
+        # 2. Toolbar
         grid_toolbar(
-            storage_key="my_grid_state",
-            page_name="my_report",
-            search_value=State.search,
-            on_search_change=State.set_search,
+            storage_key=_STORAGE_KEY,
+            page_name="my_table",
+            search_value=MyState.search_text,
+            on_search_change=MyState.set_search,
+            on_search_clear=MyState.clear_search,
+            grid_id=_GRID_ID,
+            show_compact_toggle=True,
+            last_updated=MyState.last_updated,
+            auto_refresh=MyState.auto_refresh,
+            on_auto_refresh_toggle=MyState.toggle_auto_refresh,
         ),
+        # 3. Optional filter bar
+        filter_date_range_bar(
+            from_value=MyState.from_date,
+            to_value=MyState.to_date,
+            on_from_change=MyState.set_from_date,
+            on_to_change=MyState.set_to_date,
+            on_apply=MyState.apply_filters,
+            has_active_filters=MyState.has_filters,
+            on_clear=MyState.clear_filters,
+        ),
+        # 4. Grid
         create_standard_grid(
-            grid_id="my_grid",
-            row_data=State.data,
-            column_defs=columns,
-            row_id_key="id",  # Required for delta updates
-            loading=State.is_loading,
+            grid_id=_GRID_ID,
+            row_data=MyState.data,
+            column_defs=_get_column_defs(),
+            enable_cell_flash=True,
+            enable_row_numbers=True,
+            enable_multi_select=True,
+            default_excel_export_params=get_default_export_params("my_table"),
+            default_csv_export_params=get_default_csv_export_params("my_table"),
+            quick_filter_text=MyState.search_text,
         ),
+        width="100%",
+        height="100%",
+        spacing="0",
     )
 ```
 
 ---
 
-## `create_standard_grid()` - Factory Function
+## Related Documentation
 
-Creates AG Grid with Tier 1 universal enhancements enabled by default.
-
-### Parameters
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `grid_id` | `str` | required | Unique grid identifier |
-| `row_data` | `rx.Var` | required | State variable with row data |
-| `column_defs` | `list[dict]` | required | Column definitions |
-| `row_id_key` | `str` | `"id"` | Field for unique row ID (required for updates) |
-| **Tier 1 (default on)** ||||
-| `enable_status_bar` | `bool` | `True` | Status bar with row counts |
-| `enable_range_selection` | `bool` | `True` | Drag-selection of cell ranges |
-| `enable_floating_filters` | `bool` | `True` | Quick-filter row under headers |
-| `enable_no_rows_overlay` | `bool` | `True` | Message when data is empty |
-| **Tier 2 (opt-in)** ||||
-| `enable_cell_flash` | `bool` | `False` | Flash cells on value change |
-| `enable_row_numbers` | `bool` | `False` | Auto-numbered row column |
-| `enable_multi_select` | `bool` | `False` | Multi-row selection with checkboxes |
-| `enable_compact_mode` | `bool` | `False` | Dense row height (28px) |
-| `enable_notification_jump` | `bool` | `True` | Jump-to-row from sidebar |
-| **Loading** ||||
-| `loading` | `rx.Var[bool]` | `False` | Shows loading overlay |
-| `loading_template` | `str` | `"Loading..."` | Custom loading HTML |
-
----
-
-## `grid_toolbar()` - Unified Toolbar
-
-Combines search, export, and layout controls above the grid.
-
-### Visual Layout
-```
-[Generate▼] [Excel] [↻] [🔍 Search...] [📅 Date] │ [Compact] │ [Save] [Restore] [Reset]
-```
-
-### Parameters
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `storage_key` | `str` | localStorage key for grid state |
-| `page_name` | `str` | Export filename prefix |
-| `search_value` | `rx.Var[str]` | Search text state |
-| `on_search_change` | `Callable` | Search handler |
-| `show_generate` | `bool` | Show Generate dropdown |
-| `generate_items` | `list[str]` | Dropdown menu items |
-| `on_generate` | `Callable` | Generate item click handler |
-| `show_refresh` | `bool` | Show Refresh button |
-| `on_refresh` | `Callable` | Refresh handler |
-| `is_loading` | `rx.Var[bool]` | Loading spinner state |
-| `show_date_picker` | `bool` | Show date input |
-| `show_compact_toggle` | `bool` | Show Compact mode button |
-| `grid_id` | `str` | Required if `show_compact_toggle=True` |
-| `last_updated` | `rx.Var[str]` | Shows status bar with timestamp |
-| `auto_refresh` | `rx.Var[bool]` | Auto-refresh toggle state |
-
----
-
-## `grid_state_script()` - State Persistence
-
-Generates JavaScript for localStorage-based grid state persistence (columns, filters, sort).
-
-```python
-rx.script(grid_state_script("my_grid_state", "my_grid"))
-```
-
-### Generated Functions
-- `saveGridState_{key}()` - Save state to localStorage
-- `restoreGridState_{key}()` - Restore state with flex fix
-- `resetGridState_{key}()` - Reset to defaults
-- Auto-restore on page load (polling for SPA)
-
----
-
-## Export Helpers
-
-### `get_default_export_params(page_name: str)`
-Excel export params with timestamped filename and selected-rows-only filtering.
-
-```python
-create_standard_grid(
-    ...,
-    default_excel_export_params=get_default_export_params("pnl_full"),
-)
-# Exports: pnl_full_20260207_1430.xlsx
-```
-
----
-
-## Constants
-
-| Constant | Value | Description |
-|----------|-------|-------------|
-| `STANDARD_STATUS_BAR` | dict | Status bar with row counts + aggregation |
-| `ENHANCED_DEFAULT_COL_DEF` | dict | Sortable, resizable, filter + floating filter |
-| `STANDARD_DEFAULT_COL_DEF` | dict | Sortable, resizable, filter (no floating) |
-| `COMPACT_ROW_HEIGHT` | `28` | Dense row height (default ~42px) |
-| `COMPACT_HEADER_HEIGHT` | `32` | Compact header height |
-
----
-
-## v35 Migration Notes
-
-AG Grid v35 introduced breaking changes handled by the wrapper:
-
-| v32 (Old) | v35 (Current) |
-|-----------|---------------|
-| `row_selection="multiple"` | `rowSelection.mode: "multiRow"` |
-| `enable_cell_change_flash` | `defaultColDef.enableCellChangeFlash` |
-| `enable_range_selection` | `cell_selection=True` |
-| CSS-based theming | JS theme objects (`theme="quartz"`) |
-
-The `reflex_ag_grid` wrapper automatically transforms props to v35 format.
-
----
-
-## Enterprise Features
-
-| Feature | Prop |
-|---------|------|
-| Range Selection | `cell_selection=True` |
-| Advanced Filter | `enable_advanced_filter=True` |
-| Status Bar | `status_bar=STANDARD_STATUS_BAR` |
-| Excel Export | Context menu or `exportDataAsExcel()` |
-| Row Grouping | `rowGroup=True` in column def |
-
----
-
-## Troubleshooting
-
-### Grid API not found
-The wrapper uses React Fiber traversal to access AG Grid API:
-```javascript
-const wrapper = document.querySelector('#grid_id .ag-root-wrapper');
-const key = Object.keys(wrapper).find(k => k.startsWith('__reactFiber'));
-```
-
-### Props not recognized after changes
-```bash
-uv sync --reinstall-package reflex-ag-grid
-```
-
-### Loading overlay not showing
-Ensure `loading` is a reactive state variable, not a static boolean.
+- [AG Grid Factory Migration](../prompts/ag_grid_factory_migration_prompt.md) — Tier 2 options, column defs, value formatting, troubleshooting
+- [AG Grid Wrapper Spec](ag-grid-reflex-wrapper-spec.md) — Low-level `reflex_ag_grid` wrapper reference (v35)
+- [Status Bar Rollout](../todos/ag_grids/status_bar_rollout.md) — Status bar and auto-refresh implementation

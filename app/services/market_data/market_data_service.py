@@ -9,9 +9,12 @@ This service handles market data fetching from various sources including:
 
 import asyncio
 import logging
+import threading
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 import yfinance as yf
+from cachetools import TTLCache
+from cachetools.keys import hashkey
 
 from app.services.shared.database_service import DatabaseService
 from app.ag_grid_constants import GridId
@@ -143,6 +146,13 @@ class MarketDataService:
     - Database (for cached data)
     - Other market data providers
     """
+
+    # Class-level TTL cache for historical data (shared across instances).
+    # The service is instantiated fresh per state call, so instance-level
+    # caches would be garbage-collected immediately.
+    # maxsize=256 query combinations, ttl=3600s (1 hour).
+    _historical_cache: TTLCache = TTLCache(maxsize=256, ttl=3600)
+    _historical_cache_lock = threading.Lock()
 
     def __init__(self, db_service: Optional[DatabaseService] = None):
         """
@@ -383,54 +393,97 @@ class MarketDataService:
 
         return result
 
+    @staticmethod
+    def _historical_cache_key(
+        tickers: list[str] | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ):
+        """Build a hashable cache key from filter params.
+
+        Lists are unhashable, so we convert tickers to a frozenset.
+        """
+        ticker_key = frozenset(tickers) if tickers else frozenset()
+        return hashkey(ticker_key, start_date or "", end_date or "")
+
     async def get_historical_data(
         self,
-        ticker: str = None,
-        start_date: str = None,
-        end_date: str = None,
-        period: str = "1mo",
+        tickers: list[str] | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
     ) -> list[dict]:
         """
-        Fetch historical market data for a ticker.
+        Fetch historical market data, filtered by tickers and date range.
+
+        Results are cached via cachetools TTLCache (256 entries, 1h TTL).
+        Note: @cachedmethod doesn't support async, so we manage the cache
+        manually while still leveraging TTLCache's eviction and TTL.
 
         Args:
-            ticker: Ticker symbol (optional - returns mock data for multiple tickers if not provided)
-            start_date: Start date (YYYY-MM-DD) - not used with period
-            end_date: End date (YYYY-MM-DD) - not used with period
-            period: Period string for yfinance
+            tickers: List of ticker symbols (optional — all tickers if empty/None)
+            start_date: Start date inclusive (YYYY-MM-DD, optional)
+            end_date: End date inclusive (YYYY-MM-DD, optional)
 
         Returns:
-            List of historical data points
+            List of historical data points matching the filters
         """
-        if ticker:
-            return await self.fetch_stock_history(ticker, period=period)
+        key = self._historical_cache_key(tickers, start_date, end_date)
 
-        # Return mock historical data for multiple tickers when no ticker specified
-        logger.info("Returning mock historical data for multiple tickers")
-        tickers = ["AAPL", "MSFT", "GOOGL", "TSLA", "NVDA"]
-        from datetime import datetime, timedelta
+        with self._historical_cache_lock:
+            if key in self._historical_cache:
+                logger.debug(f"Historical data cache HIT for {key}")
+                return self._historical_cache[key]
+
+        # --- Mock data generation (simulates DB query) ---
+        # TODO: Replace with actual DB query once database integration is complete
+        logger.info(
+            f"Querying historical data — tickers={tickers}, "
+            f"start_date={start_date}, end_date={end_date}"
+        )
+
+        all_tickers = ["AAPL", "MSFT", "GOOGL", "TSLA", "NVDA"]
+        query_tickers = tickers if tickers else all_tickers
 
         base_date = datetime.now()
+        # Generate 30 days of mock data to make date filtering meaningful
+        num_days = 30
 
         result = []
-        for i, tkr in enumerate(tickers):
-            for day in range(5):
+        row_id = 0
+        for i, tkr in enumerate(query_tickers):
+            # Find the original index for consistent pricing
+            orig_idx = all_tickers.index(tkr) if tkr in all_tickers else i
+            for day in range(num_days):
                 trade_date = (base_date - timedelta(days=day)).strftime("%Y-%m-%d")
+
+                # Apply date range filter at "query" level
+                if start_date and trade_date < start_date:
+                    continue
+                if end_date and trade_date > end_date:
+                    continue
+
+                row_id += 1
                 result.append(
                     {
-                        "id": i * 5 + day + 1,
+                        "id": row_id,
                         "trade_date": trade_date,
                         "ticker": tkr,
-                        "vwap_price": f"{150 + i * 50 + day:.2f}",
-                        "last_price": f"{151 + i * 50 + day:.2f}",
-                        "last_volume": f"{(i + 1) * 1000000:,}",
-                        "chg_1d_pct": f"{(-1 + i * 0.5):.2f}%",
+                        "vwap_price": f"{150 + orig_idx * 50 + day:.2f}",
+                        "last_price": f"{151 + orig_idx * 50 + day:.2f}",
+                        "last_volume": f"{(orig_idx + 1) * 1000000:,}",
+                        "chg_1d_pct": f"{(-1 + orig_idx * 0.5):.2f}%",
                         "created_by": "system",
                         "created_time": datetime.now().isoformat(),
                         "updated_by": "system",
                         "update": "Active",
                     }
                 )
+
+        with self._historical_cache_lock:
+            self._historical_cache[key] = result
+
+        logger.info(f"Historical data fetched & cached — {len(result)} rows")
+
         return result
 
     async def get_fx_rates(self, currency_pairs: list[str]) -> list[dict]:
@@ -687,25 +740,71 @@ class MarketDataService:
             for i, p in enumerate(pairs)
         ]
 
-    async def get_trading_calendar(self) -> list[dict]:
-        """Get trading calendar for dashboard. TODO: Replace with DB query."""
-        logger.info("Returning mock trading calendar data")
-        return [
-            {
-                "id": 1,
-                "trade_date": "2026-01-11",
-                "day_of_week": "Saturday",
-                "usa": "Closed",
-                "hkg": "Closed",
-                "jpn": "Closed",
-                "aus": "Closed",
-                "nzl": "Closed",
-                "kor": "Closed",
-                "chn": "Closed",
-                "twn": "Closed",
-                "ind": "Closed",
-            },
+    async def get_trading_calendar(
+        self,
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> list[dict]:
+        """Get trading calendar, filtered by optional date range.
+
+        Args:
+            start_date: Start date inclusive (YYYY-MM-DD, optional)
+            end_date: End date inclusive (YYYY-MM-DD, optional)
+
+        Returns:
+            List of trading calendar entries matching the filters.
+        """
+        logger.info(
+            f"Querying trading calendar — start_date={start_date}, end_date={end_date}"
+        )
+
+        base_date = datetime.now()
+        num_days = 60  # 2 months of calendar data
+
+        # Day-of-week names
+        day_names = [
+            "Monday", "Tuesday", "Wednesday", "Thursday",
+            "Friday", "Saturday", "Sunday",
         ]
+
+        result = []
+        row_id = 0
+        for day in range(num_days):
+            trade_dt = base_date - timedelta(days=day)
+            trade_date = trade_dt.strftime("%Y-%m-%d")
+            weekday = trade_dt.weekday()  # 0=Mon … 6=Sun
+
+            # Apply date range filter at "query" level
+            if start_date and trade_date < start_date:
+                continue
+            if end_date and trade_date > end_date:
+                continue
+
+            is_weekend = weekday >= 5
+            # Simulate per-market open/closed (weekends always closed)
+            status_open = "Open"
+            status_closed = "Closed"
+
+            row_id += 1
+            result.append(
+                {
+                    "id": row_id,
+                    "trade_date": trade_date,
+                    "day_of_week": day_names[weekday],
+                    "usa": status_closed if is_weekend else status_open,
+                    "hkg": status_closed if is_weekend else status_open,
+                    "jpn": status_closed if is_weekend else status_open,
+                    "aus": status_closed if is_weekend else status_open,
+                    "nzl": status_closed if is_weekend else status_open,
+                    "kor": status_closed if is_weekend else status_open,
+                    "chn": status_closed if is_weekend else status_open,
+                    "twn": status_closed if is_weekend else status_open,
+                    "ind": status_closed if is_weekend else status_open,
+                }
+            )
+
+        logger.info(f"Trading calendar — {len(result)} rows")
+        return result
 
     async def get_market_hours(self) -> list[dict]:
         """Get market hours for dashboard. TODO: Replace with DB query."""
