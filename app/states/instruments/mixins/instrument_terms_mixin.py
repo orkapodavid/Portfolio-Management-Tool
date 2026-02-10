@@ -8,7 +8,7 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import DatabaseService
+from app.services import InstrumentsService
 from app.states.instruments.types import InstrumentTermItem
 
 
@@ -24,10 +24,10 @@ class InstrumentTermsMixin(rx.State, mixin=True):
     instrument_terms_auto_refresh: bool = True
 
     async def load_instrument_terms_data(self):
-        """Load Instrument Terms data from DatabaseService."""
+        """Load Instrument Terms data from InstrumentsService."""
         self.is_loading_instrument_terms = True
         try:
-            service = DatabaseService()
+            service = InstrumentsService()
             self.instrument_terms = await service.get_instrument_terms()
             self.instrument_terms_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
@@ -84,7 +84,7 @@ class InstrumentTermsMixin(rx.State, mixin=True):
         yield
         await asyncio.sleep(0.3)
         try:
-            service = DatabaseService()
+            service = InstrumentsService()
             self.instrument_terms = await service.get_instrument_terms()
             self.instrument_terms_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"

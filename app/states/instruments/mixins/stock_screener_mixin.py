@@ -8,7 +8,7 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import DatabaseService
+from app.services import InstrumentsService
 from app.states.instruments.types import StockScreenerItem
 
 
@@ -24,10 +24,10 @@ class StockScreenerMixin(rx.State, mixin=True):
     stock_screener_auto_refresh: bool = True
 
     async def load_stock_screener_data(self):
-        """Load Stock Screener data from DatabaseService."""
+        """Load Stock Screener data from InstrumentsService."""
         self.is_loading_stock_screener = True
         try:
-            service = DatabaseService()
+            service = InstrumentsService()
             self.stock_screener = await service.get_stock_screener()
             self.stock_screener_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
@@ -100,7 +100,7 @@ class StockScreenerMixin(rx.State, mixin=True):
         yield
         await asyncio.sleep(0.3)
         try:
-            service = DatabaseService()
+            service = InstrumentsService()
             self.stock_screener = await service.get_stock_screener()
             self.stock_screener_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"

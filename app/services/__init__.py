@@ -31,6 +31,11 @@ from app.services.shared.database_service import DatabaseService
 from app.services.shared.performance_header_service import PerformanceHeaderService
 from app.services.shared import finance_service
 from app.services.events.reverse_inquiry_service import ReverseInquiryService
+from app.services.events.event_calendar_service import EventCalendarService
+from app.services.events.event_stream_service import EventStreamService
+from app.services.operations.operations_service import OperationsService
+from app.services.instruments.instruments_service import InstrumentsService
+from app.services.reconciliation.reconciliation_service import ReconciliationService
 
 __all__ = [
     "PnLService",
@@ -47,5 +52,10 @@ __all__ = [
     "PerformanceHeaderService",
     "finance_service",
     "ReverseInquiryService",
+    "EventCalendarService",
+    "EventStreamService",
+    "OperationsService",
+    "InstrumentsService",
+    "ReconciliationService",
 ]
 

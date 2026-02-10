@@ -5,7 +5,7 @@ Uses force refresh button instead of auto-refresh for static data.
 """
 
 import reflex as rx
-from app.services import DatabaseService
+from app.services import ReconciliationService
 from app.states.reconciliation.types import FailedTradeItem
 
 
@@ -28,7 +28,7 @@ class FailedTradesMixin(rx.State, mixin=True):
         self.is_loading_failed_trades = True
         self.failed_trades_error = ""
         try:
-            service = DatabaseService()
+            service = ReconciliationService()
             self.failed_trades = await service.get_failed_trades()
         except Exception as e:
             self.failed_trades_error = str(e)

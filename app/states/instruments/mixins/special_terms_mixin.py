@@ -8,7 +8,7 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import DatabaseService
+from app.services import InstrumentsService
 from app.states.instruments.types import SpecialTermItem
 
 
@@ -24,10 +24,10 @@ class SpecialTermsMixin(rx.State, mixin=True):
     special_terms_auto_refresh: bool = True
 
     async def load_special_terms_data(self):
-        """Load Special Terms data from DatabaseService."""
+        """Load Special Terms data from InstrumentsService."""
         self.is_loading_special_terms = True
         try:
-            service = DatabaseService()
+            service = InstrumentsService()
             self.special_terms = await service.get_special_terms()
             self.special_terms_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
@@ -91,7 +91,7 @@ class SpecialTermsMixin(rx.State, mixin=True):
         yield
         await asyncio.sleep(0.3)
         try:
-            service = DatabaseService()
+            service = InstrumentsService()
             self.special_terms = await service.get_special_terms()
             self.special_terms_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"

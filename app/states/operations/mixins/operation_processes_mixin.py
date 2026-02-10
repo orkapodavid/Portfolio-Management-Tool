@@ -8,7 +8,7 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import DatabaseService
+from app.services import OperationsService
 from app.states.operations.types import OperationProcessItem
 
 
@@ -24,10 +24,10 @@ class OperationProcessesMixin(rx.State, mixin=True):
     operation_processes_auto_refresh: bool = True
 
     async def load_operation_processes_data(self):
-        """Load Operation Processes data from DatabaseService."""
+        """Load Operation Processes data from OperationsService."""
         self.is_loading_operation_processes = True
         try:
-            service = DatabaseService()
+            service = OperationsService()
             self.operation_processes = await service.get_operation_processes()
             self.operation_processes_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
@@ -97,7 +97,7 @@ class OperationProcessesMixin(rx.State, mixin=True):
         yield
         await asyncio.sleep(0.3)
         try:
-            service = DatabaseService()
+            service = OperationsService()
             self.operation_processes = await service.get_operation_processes()
             self.operation_processes_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"

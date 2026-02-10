@@ -5,7 +5,7 @@ Uses force refresh button instead of auto-refresh for static data.
 """
 
 import reflex as rx
-from app.services import DatabaseService
+from app.services import ReconciliationService
 from app.states.reconciliation.types import SettlementReconItem
 
 
@@ -28,7 +28,7 @@ class SettlementReconMixin(rx.State, mixin=True):
         self.is_loading_settlement_recon = True
         self.settlement_recon_error = ""
         try:
-            service = DatabaseService()
+            service = ReconciliationService()
             self.settlement_recon = await service.get_settlement_recon()
         except Exception as e:
             self.settlement_recon_error = str(e)

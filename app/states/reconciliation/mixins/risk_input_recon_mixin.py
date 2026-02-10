@@ -5,7 +5,7 @@ Uses force refresh button instead of auto-refresh for static data.
 """
 
 import reflex as rx
-from app.services import DatabaseService
+from app.services import ReconciliationService
 from app.states.reconciliation.types import RiskInputReconItem
 
 
@@ -28,7 +28,7 @@ class RiskInputReconMixin(rx.State, mixin=True):
         self.is_loading_risk_input_recon = True
         self.risk_input_recon_error = ""
         try:
-            service = DatabaseService()
+            service = ReconciliationService()
             self.risk_input_recon = await service.get_risk_input_recon()
         except Exception as e:
             self.risk_input_recon_error = str(e)

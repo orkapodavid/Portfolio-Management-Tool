@@ -8,7 +8,7 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import DatabaseService
+from app.services import InstrumentsService
 from app.states.instruments.types import TickerDataItem
 
 
@@ -24,10 +24,10 @@ class TickerDataMixin(rx.State, mixin=True):
     ticker_data_auto_refresh: bool = True
 
     async def load_ticker_data(self):
-        """Load Ticker Data from DatabaseService."""
+        """Load Ticker Data from InstrumentsService."""
         self.is_loading_ticker_data = True
         try:
-            service = DatabaseService()
+            service = InstrumentsService()
             self.ticker_data = await service.get_ticker_data()
             self.ticker_data_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
@@ -99,7 +99,7 @@ class TickerDataMixin(rx.State, mixin=True):
         yield
         await asyncio.sleep(0.3)
         try:
-            service = DatabaseService()
+            service = InstrumentsService()
             self.ticker_data = await service.get_ticker_data()
             self.ticker_data_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
