@@ -97,21 +97,23 @@ class PerformanceHeaderState(rx.State):
             from app.services.shared.performance_header_service import (
                 PerformanceHeaderService,
             )
+            from app.services.market_data.market_data_service import MarketDataService
 
-            service = PerformanceHeaderService()
+            perf_service = PerformanceHeaderService()
+            market_service = MarketDataService()
 
-            # Load KPI metrics
-            self.kpi_metrics = await service.get_kpi_metrics()
+            # Load KPI metrics (from core via PerformanceHeaderService)
+            self.kpi_metrics = await perf_service.get_kpi_metrics()
 
-            # Load top movers for all categories
-            self.top_movers_ops = await service.get_top_movers("ops")
-            self.top_movers_ytd = await service.get_top_movers("ytd")
-            self.top_movers_delta = await service.get_top_movers("delta")
-            self.top_movers_price = await service.get_top_movers("price")
-            self.top_movers_volume = await service.get_top_movers("volume")
+            # Load top movers for all categories (from MarketDataService)
+            self.top_movers_ops = await market_service.get_top_movers("ops")
+            self.top_movers_ytd = await market_service.get_top_movers("ytd")
+            self.top_movers_delta = await market_service.get_top_movers("delta")
+            self.top_movers_price = await market_service.get_top_movers("price")
+            self.top_movers_volume = await market_service.get_top_movers("volume")
 
-            # Load portfolio holdings
-            self.portfolio_holdings = await service.get_portfolio_holdings()
+            # Load portfolio holdings (from core via PerformanceHeaderService)
+            self.portfolio_holdings = await perf_service.get_portfolio_holdings()
 
             logger.info("Performance header data loaded successfully")
         except Exception as e:

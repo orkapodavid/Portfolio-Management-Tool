@@ -2,7 +2,8 @@ import reflex as rx
 import plotly.graph_objects as go
 import plotly.express as px
 import pandas as pd
-import numpy as np
+
+from pmt_core.services.pricing import BondPricer
 
 
 class PricerBondState(rx.State):
@@ -18,73 +19,48 @@ class PricerBondState(rx.State):
     # The Chart Figure
     figure: go.Figure = go.Figure()
 
+    def _get_pricer(self) -> BondPricer:
+        """Get a BondPricer instance with current parameters."""
+        return BondPricer(coupon_rate=self.coupon_rate)
+
     def update_chart(self):
         """Regenerate the chart based on axes selection."""
+        pricer = self._get_pricer()
 
-        # 1. GENERATE MOCK DATA
-        # We need a range of values to create a surface
-        maturities = np.linspace(1, 30, 30)  # 1 to 30 years
-        yields = np.linspace(2, 8, 30)  # 2% to 8% yield
-
-        # 2. LOGIC SWITCH: 2D vs 3D
         if self.z_axis == "None":
-            # --- 2D SCENARIO (Simple Line/Scatter) ---
-            # Just create a simple curve for the current view
-            df = pd.DataFrame(
-                {
-                    "Maturity": maturities,
-                    "Yield": np.log(maturities) + 2,  # Mock curve
-                    "Price": 100 - maturities,
-                }
-            )
+            # --- 2D SCENARIO ---
+            curve_data = pricer.generate_curve_data(self.x_axis, self.y_axis)
 
-            # Map selection to dataframe columns
-            x_col = self.x_axis
-            y_col = self.y_axis
-
-            # Create 2D Line Chart
-            # Handle Duration mapping if selected
-            if x_col == "Duration":
-                # Mock duration
-                df["Duration"] = df["Maturity"] * 0.8
+            df = pd.DataFrame({
+                curve_data["x_label"]: curve_data["x_values"],
+                curve_data["y_label"]: curve_data["y_values"],
+            })
 
             fig = px.line(
-                df, x=x_col, y=y_col, title=f"{y_col} vs {x_col}", markers=True
+                df,
+                x=curve_data["x_label"],
+                y=curve_data["y_label"],
+                title=f"{curve_data['y_label']} vs {curve_data['x_label']}",
+                markers=True,
             )
             fig.update_layout(
-                template="plotly_white", height=500, margin=dict(l=20, r=20, t=50, b=20)
+                template="plotly_white",
+                height=500,
+                margin=dict(l=20, r=20, t=50, b=20),
             )
             self.figure = fig
 
         else:
-            # --- 3D SCENARIO (Surface Plot) ---
-            # CRITICAL: Create a Meshgrid (Matrix) for Surface Plots
-            # X_grid and Y_grid become 2D arrays covering every combination
-            X_grid, Y_grid = np.meshgrid(maturities, yields)
+            # --- 3D SCENARIO ---
+            surface = pricer.generate_surface_data(self.z_axis)
 
-            # Calculate Z based on the Z-Axis selection using mathematical relationships
-            # This ensures we get a nice smooth surface shape
-            if self.z_axis == "Coupon":
-                # Mock formula: Price/Coupon sensitivity
-                # Z = (X * Y) / 10 + curve
-                Z_grid = (X_grid * Y_grid) / 5 + np.sin(X_grid / 5) * 5
-                colorscale = "Viridis"
-            elif self.z_axis == "Convexity":
-                # Mock formula: Convexity shape (usually a smile or bowl)
-                Z_grid = (Y_grid - 5) ** 2 + (X_grid / 10)
-                colorscale = "Plasma"
-            else:
-                Z_grid = X_grid * Y_grid
-                colorscale = "Blues"
-
-            # Create 3D Surface Plot
             fig = go.Figure(
                 data=[
                     go.Surface(
-                        x=X_grid,
-                        y=Y_grid,
-                        z=Z_grid,
-                        colorscale=colorscale,
+                        x=surface["X_grid"],
+                        y=surface["Y_grid"],
+                        z=surface["Z_grid"],
+                        colorscale=surface["colorscale"],
                         colorbar=dict(title=self.z_axis),
                     )
                 ]
@@ -98,12 +74,8 @@ class PricerBondState(rx.State):
                     xaxis_title=self.x_axis,
                     yaxis_title=self.y_axis,
                     zaxis_title=self.z_axis,
-                    aspectratio=dict(
-                        x=1, y=1, z=0.7
-                    ),  # Flattens z-axis slightly for better view
-                    camera=dict(
-                        eye=dict(x=1.5, y=1.5, z=1.2)  # Set default camera angle
-                    ),
+                    aspectratio=dict(x=1, y=1, z=0.7),
+                    camera=dict(eye=dict(x=1.5, y=1.5, z=1.2)),
                 ),
                 margin=dict(l=10, r=10, t=50, b=10),
             )

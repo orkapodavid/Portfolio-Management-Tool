@@ -1,20 +1,8 @@
 """
 Portfolio Management Tool - Services Layer
 
-This module provides services for:
-- Database connectivity and query execution
-- Market data fetching (Bloomberg, databases, Yahoo Finance)
-- Position data management
-- P&L calculation
-- Risk metrics and Greeks calculation
-- Bloomberg EMSX order management
-- Compliance and regulatory data
-
-Each service can integrate with the existing PyQt business logic from source/.
-
-Note: finance_service.py module is deprecated. Use MarketDataService class instead.
-
-Services layer - all domain services re-exported for convenience.
+Re-exports all domain services for use by Reflex states.
+Each service module is a pure re-export from pmt_core.
 """
 
 from app.services.pnl.pnl_service import PnLService
@@ -29,13 +17,16 @@ from app.services.notifications.notification_registry import NotificationRegistr
 from app.services.user.user_service import UserService
 from app.services.shared.database_service import DatabaseService
 from app.services.shared.performance_header_service import PerformanceHeaderService
-from app.services.shared import finance_service
+
 from app.services.events.reverse_inquiry_service import ReverseInquiryService
 from app.services.events.event_calendar_service import EventCalendarService
 from app.services.events.event_stream_service import EventStreamService
 from app.services.operations.operations_service import OperationsService
 from app.services.instruments.instruments_service import InstrumentsService
 from app.services.reconciliation.reconciliation_service import ReconciliationService
+
+# Import notification providers to ensure registration at startup
+import app.services.notifications.notification_providers  # noqa: F401
 
 __all__ = [
     "PnLService",
@@ -50,7 +41,7 @@ __all__ = [
     "UserService",
     "DatabaseService",
     "PerformanceHeaderService",
-    "finance_service",
+
     "ReverseInquiryService",
     "EventCalendarService",
     "EventStreamService",
@@ -58,4 +49,3 @@ __all__ = [
     "InstrumentsService",
     "ReconciliationService",
 ]
-
