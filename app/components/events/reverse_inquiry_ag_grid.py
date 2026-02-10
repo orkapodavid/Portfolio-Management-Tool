@@ -3,12 +3,18 @@ Reverse Inquiry AG-Grid Component.
 
 AG-Grid based implementation for reverse inquiry table, replacing legacy rx.el.table.
 Migrated to use create_standard_grid factory with full toolbar support.
+Includes a position date selector that triggers database reload.
 """
 
 import reflex as rx
 from reflex_ag_grid import ag_grid, AGFilters
 from app.states.events.events_state import EventsState
-from app.components.shared.ag_grid_config import create_standard_grid
+from app.components.shared.ag_grid_config import (
+    create_standard_grid,
+    filter_date_input,
+    FILTER_LABEL_CLASS,
+    FILTER_INPUT_CLASS,
+)
 
 
 # =============================================================================
@@ -90,6 +96,38 @@ def _get_column_defs() -> list:
 
 
 # =============================================================================
+# POSITION DATE FILTER BAR
+# =============================================================================
+
+
+def _position_date_bar() -> rx.Component:
+    """Position date selector bar — triggers data reload on change."""
+    return rx.el.div(
+        rx.el.div(
+            rx.el.div(
+                rx.icon("calendar", size=14, class_name="text-gray-400"),
+                rx.el.span(
+                    "POSITION DATE",
+                    class_name=FILTER_LABEL_CLASS,
+                ),
+                rx.el.input(
+                    type="date",
+                    value=EventsState.reverse_inquiry_position_date,
+                    on_change=EventsState.set_reverse_inquiry_position_date,
+                    class_name=f"{FILTER_INPUT_CLASS} w-[150px]",
+                ),
+                class_name="flex items-center gap-2",
+            ),
+            class_name="flex items-center justify-between w-full",
+        ),
+        class_name=(
+            "px-3 py-2 bg-gradient-to-r from-gray-50/80 to-slate-50/80 "
+            "border border-gray-100 rounded-lg backdrop-blur-sm"
+        ),
+    )
+
+
+# =============================================================================
 # MAIN COMPONENT
 # =============================================================================
 
@@ -103,6 +141,7 @@ def reverse_inquiry_ag_grid() -> rx.Component:
     Reverse Inquiry AG-Grid component.
 
     Displays reverse inquiry data with full toolbar support:
+    - Position date selector (defaults to today, auto-reloads on change)
     - Quick filter search across all columns
     - Excel export button
     - Full grid state persistence (columns + filters + sort)
@@ -134,6 +173,8 @@ def reverse_inquiry_ag_grid() -> rx.Component:
             on_refresh=EventsState.force_refresh_reverse_inquiry,
             is_loading=EventsState.is_loading_reverse_inquiry,
         ),
+        # Position date selector bar
+        _position_date_bar(),
         # Grid with factory pattern
         create_standard_grid(
             grid_id=_GRID_ID,
@@ -150,4 +191,5 @@ def reverse_inquiry_ag_grid() -> rx.Component:
         width="100%",
         height="100%",
         spacing="0",
+        on_mount=EventsState.load_reverse_inquiry_data,
     )

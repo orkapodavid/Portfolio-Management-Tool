@@ -30,6 +30,7 @@ from app.services.user.user_service import UserService
 from app.services.shared.database_service import DatabaseService
 from app.services.shared.performance_header_service import PerformanceHeaderService
 from app.services.shared import finance_service
+from app.services.events.reverse_inquiry_service import ReverseInquiryService
 
 __all__ = [
     "PnLService",
@@ -45,5 +46,6 @@ __all__ = [
     "DatabaseService",
     "PerformanceHeaderService",
     "finance_service",
+    "ReverseInquiryService",
 ]
 

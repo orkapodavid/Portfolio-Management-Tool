@@ -12,6 +12,7 @@ from pmt_core.services.reports import ReportService
 from pmt_core.services.positions import PositionService
 from pmt_core.services.pnl import PnLService
 from pmt_core.services.compliance import ComplianceService
+from pmt_core.services.events import ReverseInquiryService
 
 __all__ = [
     "PricingService",
@@ -19,4 +20,5 @@ __all__ = [
     "PositionService",
     "PnLService",
     "ComplianceService",
+    "ReverseInquiryService",
 ]

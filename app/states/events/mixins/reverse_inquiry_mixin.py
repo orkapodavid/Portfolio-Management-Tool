@@ -1,20 +1,21 @@
 """
 Reverse Inquiry Mixin - Tab-specific state for Reverse Inquiry data.
 
-Provides auto-refresh background task and force refresh functionality.
+Provides position date selector, auto-refresh background task,
+and force refresh functionality.
 """
 
 import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import DatabaseService
+from app.services import ReverseInquiryService
 from app.states.events.types import ReverseInquiryItem
 
 
 class ReverseInquiryMixin(rx.State, mixin=True):
     """
-    Mixin providing Reverse Inquiry data state with auto-refresh.
+    Mixin providing Reverse Inquiry data state with position date selector.
     """
 
     # Reverse Inquiry data
@@ -23,12 +24,22 @@ class ReverseInquiryMixin(rx.State, mixin=True):
     reverse_inquiry_last_updated: str = "—"
     reverse_inquiry_auto_refresh: bool = True
 
+    # Position date — defaults to today
+    reverse_inquiry_position_date: str = ""
+
+    def _ensure_position_date(self) -> str:
+        """Return position_date or today if empty."""
+        if not self.reverse_inquiry_position_date:
+            self.reverse_inquiry_position_date = datetime.now().strftime("%Y-%m-%d")
+        return self.reverse_inquiry_position_date
+
     async def load_reverse_inquiry_data(self):
-        """Load Reverse Inquiry data from DatabaseService."""
+        """Load Reverse Inquiry data from ReverseInquiryService."""
         self.is_loading_reverse_inquiry = True
         try:
-            service = DatabaseService()
-            self.reverse_inquiry = await service.get_reverse_inquiry()
+            pos_date = self._ensure_position_date()
+            service = ReverseInquiryService()
+            self.reverse_inquiry = await service.get_reverse_inquiry(pos_date)
             self.reverse_inquiry_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -38,6 +49,11 @@ class ReverseInquiryMixin(rx.State, mixin=True):
             logging.exception(f"Error loading reverse inquiry data: {e}")
         finally:
             self.is_loading_reverse_inquiry = False
+
+    async def set_reverse_inquiry_position_date(self, value: str):
+        """Set position date and reload data."""
+        self.reverse_inquiry_position_date = value
+        await self.load_reverse_inquiry_data()
 
     @rx.event(background=True)
     async def start_reverse_inquiry_auto_refresh(self):
@@ -76,10 +92,10 @@ class ReverseInquiryMixin(rx.State, mixin=True):
             if "deal_point" in new_row and new_row["deal_point"]:
                 try:
                     # Parse the value and add small random change
-                    val_str = str(new_row["deal_point"]).replace("%", "").replace(",", "")
+                    val_str = str(new_row["deal_point"]).replace("bps", "").replace(",", "").strip()
                     val = float(val_str)
                     new_val = round(val * random.uniform(0.98, 1.02), 2)
-                    new_row["deal_point"] = f"{new_val:.2f}%"
+                    new_row["deal_point"] = f"{new_val:.0f} bps"
                 except (ValueError, TypeError):
                     pass
 
@@ -96,8 +112,9 @@ class ReverseInquiryMixin(rx.State, mixin=True):
         yield  # Send loading state to client immediately
         await asyncio.sleep(0.3)
         try:
-            service = DatabaseService()
-            self.reverse_inquiry = await service.get_reverse_inquiry()
+            pos_date = self._ensure_position_date()
+            service = ReverseInquiryService()
+            self.reverse_inquiry = await service.get_reverse_inquiry(pos_date)
             self.reverse_inquiry_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

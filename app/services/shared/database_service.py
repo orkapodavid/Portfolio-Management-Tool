@@ -645,24 +645,8 @@ class DatabaseService:
             for i in range(8)
         ]
 
-    async def get_reverse_inquiry(self) -> list[dict]:
-        """Get reverse inquiry data. TODO: Replace with DB query."""
-        logger.info("Returning mock reverse inquiry data")
-        tickers = ["AAPL", "MSFT", "TSLA", "NVDA"]
-        agents = ["Goldman Sachs", "Morgan Stanley", "JP Morgan", "Citibank"]
-        return [
-            {
-                "id": i + 1,
-                "ticker": tickers[i % len(tickers)],
-                "company": f"{tickers[i % len(tickers)]} Inc.",
-                "inquiry_date": f"2026-01-{5 + i}",
-                "expiry_date": f"2026-02-{5 + i}",
-                "deal_point": f"{(i + 1) * 50} bps",
-                "agent": agents[i % len(agents)],
-                "notes": f"Inquiry for {tickers[i % len(tickers)]} position",
-            }
-            for i in range(6)
-        ]
+
+
 
 
 # Example usage (for testing):
