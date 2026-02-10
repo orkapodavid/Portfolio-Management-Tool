@@ -103,23 +103,5 @@ class PositionService:
     async def get_trade_summary(
         self, start_date: Optional[str] = None, end_date: Optional[str] = None
     ) -> list[PositionRecord]:
-        """Get trade summary for date range."""
-        # Mock data for trade summary
-        return [
-            {
-                "id": i,
-                "deal_num": f"TDEAL{i:03d}",
-                "detail_id": f"TD{i:03d}",
-                "ticker": f"TRD{i}",
-                "underlying": f"TRD{i} US Equity",
-                "account_id": f"ACC00{i % 3 + 1}",
-                "company_name": f"Trade Co {i}",
-                "sec_id": f"TSEC{i:06d}",
-                "sec_type": ["Equity", "Warrant", "Bond"][i % 3],
-                "subtype": ["Common", "Call", "Corporate"][i % 3],
-                "currency": "USD",
-                "closing_date": "2026-01-31",
-                "divisor": f"{1.0 + i * 0.05:.4f}",
-            }
-            for i in range(8)
-        ]
+        """Get trade summary. Delegates to core."""
+        return await self.core_service.get_trade_summary(start_date, end_date)

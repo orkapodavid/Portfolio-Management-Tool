@@ -16,6 +16,11 @@ from pmt_core.services.events import ReverseInquiryService, EventCalendarService
 from pmt_core.services.operations import OperationsService
 from pmt_core.services.instruments import InstrumentsService
 from pmt_core.services.reconciliation import ReconciliationService
+from pmt_core.services.market_data import MarketDataService as CoreMarketDataService
+from pmt_core.services.risk import RiskService as CoreRiskService
+from pmt_core.services.portfolio_tools import PortfolioToolsService as CorePortfolioToolsService
+from pmt_core.services.emsx import EMSXService as CoreEMSXService
+from pmt_core.services.user import UserService as CoreUserService
 
 __all__ = [
     "PricingService",
@@ -29,4 +34,10 @@ __all__ = [
     "OperationsService",
     "InstrumentsService",
     "ReconciliationService",
+    "CoreMarketDataService",
+    "CoreRiskService",
+    "CorePortfolioToolsService",
+    "CoreEMSXService",
+    "CoreUserService",
 ]
+

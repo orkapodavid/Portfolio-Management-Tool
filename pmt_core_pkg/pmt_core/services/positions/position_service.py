@@ -50,3 +50,29 @@ class PositionService:
         """Get bond positions only."""
         positions = await self.repository.get_positions(position_date)
         return [p for p in positions if p.get("sec_type") in ["Bond", "Convertible"]]
+
+    async def get_trade_summary(
+        self,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+    ) -> list[dict]:
+        """Get trade summary for date range. TODO: Replace with DB query."""
+        logger.info("Returning mock trade summary data")
+        return [
+            {
+                "id": i,
+                "deal_num": f"TDEAL{i:03d}",
+                "detail_id": f"TD{i:03d}",
+                "ticker": f"TRD{i}",
+                "underlying": f"TRD{i} US Equity",
+                "account_id": f"ACC00{i % 3 + 1}",
+                "company_name": f"Trade Co {i}",
+                "sec_id": f"TSEC{i:06d}",
+                "sec_type": ["Equity", "Warrant", "Bond"][i % 3],
+                "subtype": ["Common", "Call", "Corporate"][i % 3],
+                "currency": "USD",
+                "closing_date": "2026-01-31",
+                "divisor": f"{1.0 + i * 0.05:.4f}",
+            }
+            for i in range(8)
+        ]

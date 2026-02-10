@@ -5,16 +5,17 @@ This service handles market data fetching from various sources including:
 - Yahoo Finance (for real-time data during development)
 - Bloomberg (via PyQt Bloomberg connector) - TODO for production
 - Database (cached market data)
+
+Delegates core data methods to pmt_core.services.market_data.MarketDataService.
 """
 
 import asyncio
 import logging
-import threading
 from typing import Optional
-from datetime import datetime, timedelta
+from datetime import datetime
 import yfinance as yf
-from cachetools import TTLCache
-from cachetools.keys import hashkey
+
+from pmt_core.services.market_data import MarketDataService as CoreMarketDataService
 
 from app.services.shared.database_service import DatabaseService
 from app.ag_grid_constants import GridId
@@ -141,18 +142,8 @@ class MarketDataService:
     Service for fetching real-time and historical market data.
 
     Currently uses Yahoo Finance for development/testing.
-    Can be extended to integrate with:
-    - Bloomberg Terminal (via PyQt bloomberg connector)
-    - Database (for cached data)
-    - Other market data providers
+    Delegates core data methods to pmt_core MarketDataService.
     """
-
-    # Class-level TTL cache for historical data (shared across instances).
-    # The service is instantiated fresh per state call, so instance-level
-    # caches would be garbage-collected immediately.
-    # maxsize=256 query combinations, ttl=3600s (1 hour).
-    _historical_cache: TTLCache = TTLCache(maxsize=256, ttl=3600)
-    _historical_cache_lock = threading.Lock()
 
     def __init__(self, db_service: Optional[DatabaseService] = None):
         """
@@ -162,6 +153,9 @@ class MarketDataService:
             db_service: Optional database service for cached data
         """
         self.db = db_service or DatabaseService()
+        self.core_service = CoreMarketDataService()
+
+    # === Yahoo Finance integration (stays in app layer) ===
 
     async def fetch_stock_data(self, symbol: str) -> dict:
         """
@@ -286,16 +280,7 @@ class MarketDataService:
             return []
 
     def _extract_stock_info(self, symbol: str, info: dict) -> dict:
-        """
-        Helper to extract relevant fields from yfinance info dict.
-
-        Args:
-            symbol: Stock ticker symbol
-            info: yfinance info dictionary
-
-        Returns:
-            Normalized stock information dictionary
-        """
+        """Helper to extract relevant fields from yfinance info dict."""
         current_price = (
             info.get("currentPrice") or info.get("regularMarketPrice") or 0.0
         )
@@ -355,56 +340,11 @@ class MarketDataService:
             return 0.0
         return (current - previous) / previous * 100
 
-    # Legacy methods for backward compatibility with existing mock structure
+    # === Delegated to core service ===
+
     async def get_realtime_market_data(self, tickers: list[str]) -> list[dict]:
-        """
-        Fetch real-time market data for given tickers.
-
-        This is a wrapper around fetch_multiple_stocks for compatibility
-        with the original method signature.
-
-        Args:
-            tickers: List of ticker symbols
-
-        Returns:
-            List of dictionaries with market data
-        """
-        stock_data = await self.fetch_multiple_stocks(tickers)
-
-        # Convert to list format
-        result = []
-        for ticker, data in stock_data.items():
-            result.append(
-                {
-                    "id": hash(ticker),
-                    "ticker": ticker,
-                    "listed_shares": "1,000,000",  # Not available from yfinance
-                    "last_volume": data.get("volume", "0"),
-                    "last_price": str(data.get("current_price", 0.0)),
-                    "vwap_price": str(data.get("current_price", 0.0)),
-                    "bid": str(data.get("current_price", 0.0) * 0.9995),
-                    "ask": str(data.get("current_price", 0.0) * 1.0005),
-                    "chg_1d_pct": f"{data.get('daily_change_pct', 0.0):+.2f}%",
-                    "implied_vol_pct": "25.0%",  # Not available from yfinance
-                    "market_status": "Open",
-                    "created_by": "system",
-                }
-            )
-
-        return result
-
-    @staticmethod
-    def _historical_cache_key(
-        tickers: list[str] | None = None,
-        start_date: str | None = None,
-        end_date: str | None = None,
-    ):
-        """Build a hashable cache key from filter params.
-
-        Lists are unhashable, so we convert tickers to a frozenset.
-        """
-        ticker_key = frozenset(tickers) if tickers else frozenset()
-        return hashkey(ticker_key, start_date or "", end_date or "")
+        """Fetch real-time market data for given tickers. Delegates to core."""
+        return await self.core_service.get_realtime_market_data(tickers)
 
     async def get_historical_data(
         self,
@@ -412,454 +352,45 @@ class MarketDataService:
         start_date: str | None = None,
         end_date: str | None = None,
     ) -> list[dict]:
-        """
-        Fetch historical market data, filtered by tickers and date range.
-
-        Results are cached via cachetools TTLCache (256 entries, 1h TTL).
-        Note: @cachedmethod doesn't support async, so we manage the cache
-        manually while still leveraging TTLCache's eviction and TTL.
-
-        Args:
-            tickers: List of ticker symbols (optional — all tickers if empty/None)
-            start_date: Start date inclusive (YYYY-MM-DD, optional)
-            end_date: End date inclusive (YYYY-MM-DD, optional)
-
-        Returns:
-            List of historical data points matching the filters
-        """
-        key = self._historical_cache_key(tickers, start_date, end_date)
-
-        with self._historical_cache_lock:
-            if key in self._historical_cache:
-                logger.debug(f"Historical data cache HIT for {key}")
-                return self._historical_cache[key]
-
-        # --- Mock data generation (simulates DB query) ---
-        # TODO: Replace with actual DB query once database integration is complete
-        logger.info(
-            f"Querying historical data — tickers={tickers}, "
-            f"start_date={start_date}, end_date={end_date}"
-        )
-
-        all_tickers = ["AAPL", "MSFT", "GOOGL", "TSLA", "NVDA"]
-        query_tickers = tickers if tickers else all_tickers
-
-        base_date = datetime.now()
-        # Generate 30 days of mock data to make date filtering meaningful
-        num_days = 30
-
-        result = []
-        row_id = 0
-        for i, tkr in enumerate(query_tickers):
-            # Find the original index for consistent pricing
-            orig_idx = all_tickers.index(tkr) if tkr in all_tickers else i
-            for day in range(num_days):
-                trade_date = (base_date - timedelta(days=day)).strftime("%Y-%m-%d")
-
-                # Apply date range filter at "query" level
-                if start_date and trade_date < start_date:
-                    continue
-                if end_date and trade_date > end_date:
-                    continue
-
-                row_id += 1
-                result.append(
-                    {
-                        "id": row_id,
-                        "trade_date": trade_date,
-                        "ticker": tkr,
-                        "vwap_price": f"{150 + orig_idx * 50 + day:.2f}",
-                        "last_price": f"{151 + orig_idx * 50 + day:.2f}",
-                        "last_volume": f"{(orig_idx + 1) * 1000000:,}",
-                        "chg_1d_pct": f"{(-1 + orig_idx * 0.5):.2f}%",
-                        "created_by": "system",
-                        "created_time": datetime.now().isoformat(),
-                        "updated_by": "system",
-                        "update": "Active",
-                    }
-                )
-
-        with self._historical_cache_lock:
-            self._historical_cache[key] = result
-
-        logger.info(f"Historical data fetched & cached — {len(result)} rows")
-
-        return result
+        """Fetch historical market data. Delegates to core."""
+        return await self.core_service.get_historical_data(tickers, start_date, end_date)
 
     async def get_fx_rates(self, currency_pairs: list[str]) -> list[dict]:
-        """
-        Fetch FX rates for currency pairs.
-
-        Args:
-            currency_pairs: List of currency pairs (e.g., ['EURUSD', 'GBPUSD'])
-
-        Returns:
-            List of FX rate data
-
-        TODO: Implement using Bloomberg or database.
-        """
-        logger.warning("Using mock FX data. Implement real integration!")
-
-        mock_data = []
-        for pair in currency_pairs:
-            mock_data.append(
-                {
-                    "ticker": pair,
-                    "last_price": "1.1000",
-                    "bid": "1.0995",
-                    "ask": "1.1005",
-                    "created_by": "system",
-                    "created_time": datetime.now().isoformat(),
-                }
-            )
-
-        return mock_data
+        """Fetch FX rates for currency pairs. Delegates to core."""
+        return await self.core_service.get_fx_rates(currency_pairs)
 
     async def subscribe_to_tickers(self, tickers: list[str]) -> bool:
         """
         Subscribe to real-time updates for tickers.
-
-        This would typically establish a Bloomberg subscription
-        or websocket connection for live data.
-
-        Args:
-            tickers: List of tickers to subscribe to
-
-        Returns:
-            bool: True if subscription successful
-
         TODO: Implement Bloomberg subscription logic.
         """
         logger.info(f"Mock subscription to tickers: {tickers}")
         return True
 
     async def get_top_movers(self, category: str = "ops") -> list[dict]:
-        """
-        Get top movers data for dashboard.
-
-        Args:
-            category: Category of top movers ('ops', 'ytd', 'delta', 'price', 'volume')
-
-        Returns:
-            List of top mover dictionaries
-        """
-        logger.info(f"Returning mock top movers data for category: {category}")
-
-        movers_data = {
-            "ops": [
-                {
-                    "ticker": "NVDA",
-                    "name": "NVIDIA",
-                    "value": "+$2.4M",
-                    "change": "+12%",
-                    "is_positive": True,
-                },
-                {
-                    "ticker": "AAPL",
-                    "name": "Apple",
-                    "value": "+$1.8M",
-                    "change": "+5%",
-                    "is_positive": True,
-                },
-                {
-                    "ticker": "TSLA",
-                    "name": "Tesla",
-                    "value": "-$1.2M",
-                    "change": "-8%",
-                    "is_positive": False,
-                },
-                {
-                    "ticker": "META",
-                    "name": "Meta",
-                    "value": "+$950K",
-                    "change": "+3%",
-                    "is_positive": True,
-                },
-            ],
-            "ytd": [
-                {
-                    "ticker": "NVDA",
-                    "name": "NVIDIA",
-                    "value": "+$45M",
-                    "change": "+180%",
-                    "is_positive": True,
-                },
-                {
-                    "ticker": "META",
-                    "name": "Meta",
-                    "value": "+$28M",
-                    "change": "+120%",
-                    "is_positive": True,
-                },
-                {
-                    "ticker": "AAPL",
-                    "name": "Apple",
-                    "value": "+$15M",
-                    "change": "+45%",
-                    "is_positive": True,
-                },
-                {
-                    "ticker": "MSFT",
-                    "name": "Microsoft",
-                    "value": "+$12M",
-                    "change": "+35%",
-                    "is_positive": True,
-                },
-            ],
-            "delta": [
-                {
-                    "ticker": "TSLA",
-                    "name": "Tesla",
-                    "value": "+15K",
-                    "change": "+8%",
-                    "is_positive": True,
-                },
-                {
-                    "ticker": "GOOGL",
-                    "name": "Google",
-                    "value": "-12K",
-                    "change": "-5%",
-                    "is_positive": False,
-                },
-                {
-                    "ticker": "AMZN",
-                    "name": "Amazon",
-                    "value": "+8K",
-                    "change": "+3%",
-                    "is_positive": True,
-                },
-                {
-                    "ticker": "NFLX",
-                    "name": "Netflix",
-                    "value": "-5K",
-                    "change": "-2%",
-                    "is_positive": False,
-                },
-            ],
-            "price": [
-                {
-                    "ticker": "SMCI",
-                    "name": "Super Micro",
-                    "value": "$985.2",
-                    "change": "+25%",
-                    "is_positive": True,
-                },
-                {
-                    "ticker": "ARM",
-                    "name": "ARM Holdings",
-                    "value": "$142.5",
-                    "change": "+18%",
-                    "is_positive": True,
-                },
-                {
-                    "ticker": "SNOW",
-                    "name": "Snowflake",
-                    "value": "$160.1",
-                    "change": "-15%",
-                    "is_positive": False,
-                },
-                {
-                    "ticker": "PLTR",
-                    "name": "Palantir",
-                    "value": "$24.5",
-                    "change": "+2.1%",
-                    "is_positive": True,
-                },
-            ],
-            "volume": [
-                {
-                    "ticker": "TSLA",
-                    "name": "Tesla",
-                    "value": "98M",
-                    "change": "+15%",
-                    "is_positive": True,
-                },
-                {
-                    "ticker": "AAPL",
-                    "name": "Apple",
-                    "value": "54M",
-                    "change": "-5%",
-                    "is_positive": False,
-                },
-                {
-                    "ticker": "AMD",
-                    "name": "AMD",
-                    "value": "45M",
-                    "change": "+25%",
-                    "is_positive": True,
-                },
-                {
-                    "ticker": "F",
-                    "name": "Ford",
-                    "value": "32M",
-                    "change": "+2%",
-                    "is_positive": True,
-                },
-            ],
-        }
-        return movers_data.get(category, movers_data["ops"])
+        """Get top movers data. Delegates to core."""
+        return await self.core_service.get_top_movers(category)
 
     async def get_market_data(self) -> list[dict]:
-        """Get market data for dashboard. TODO: Replace with DB query."""
-        logger.info("Returning mock market data")
-        tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "NVDA"]
-        return [
-            {
-                "id": i + 1,
-                "ticker": t,
-                "listed_shares": "1,000,000",
-                "last_volume": "54.2M",
-                "last_price": "182.50",
-                "vwap_price": "182.25",
-                "bid": "182.45",
-                "ask": "182.55",
-                "chg_1d_pct": "+0.5%",
-                "implied_vol_pct": "25.0%",
-                "market_status": "Open",
-                "created_by": "system",
-            }
-            for i, t in enumerate(tickers)
-        ]
+        """Get market data. Delegates to core."""
+        return await self.core_service.get_market_data()
 
     async def get_fx_data(self) -> list[dict]:
-        """Get FX data for dashboard. TODO: Replace with DB query."""
-        logger.info("Returning mock FX data")
-        pairs = ["EURUSD", "GBPUSD", "USDJPY", "USDCNY", "AUDUSD"]
-        return [
-            {
-                "id": i + 1,
-                "ticker": p,
-                "last_price": "1.1000",
-                "bid": "1.0995",
-                "ask": "1.1005",
-                "created_by": "system",
-                "created_time": datetime.now().isoformat(),
-                "updated_by": "system",
-                "update": "",
-            }
-            for i, p in enumerate(pairs)
-        ]
+        """Get FX data. Delegates to core."""
+        return await self.core_service.get_fx_data()
 
     async def get_trading_calendar(
         self,
         start_date: str | None = None,
         end_date: str | None = None,
     ) -> list[dict]:
-        """Get trading calendar, filtered by optional date range.
-
-        Args:
-            start_date: Start date inclusive (YYYY-MM-DD, optional)
-            end_date: End date inclusive (YYYY-MM-DD, optional)
-
-        Returns:
-            List of trading calendar entries matching the filters.
-        """
-        logger.info(
-            f"Querying trading calendar — start_date={start_date}, end_date={end_date}"
-        )
-
-        base_date = datetime.now()
-        num_days = 60  # 2 months of calendar data
-
-        # Day-of-week names
-        day_names = [
-            "Monday", "Tuesday", "Wednesday", "Thursday",
-            "Friday", "Saturday", "Sunday",
-        ]
-
-        result = []
-        row_id = 0
-        for day in range(num_days):
-            trade_dt = base_date - timedelta(days=day)
-            trade_date = trade_dt.strftime("%Y-%m-%d")
-            weekday = trade_dt.weekday()  # 0=Mon … 6=Sun
-
-            # Apply date range filter at "query" level
-            if start_date and trade_date < start_date:
-                continue
-            if end_date and trade_date > end_date:
-                continue
-
-            is_weekend = weekday >= 5
-            # Simulate per-market open/closed (weekends always closed)
-            status_open = "Open"
-            status_closed = "Closed"
-
-            row_id += 1
-            result.append(
-                {
-                    "id": row_id,
-                    "trade_date": trade_date,
-                    "day_of_week": day_names[weekday],
-                    "usa": status_closed if is_weekend else status_open,
-                    "hkg": status_closed if is_weekend else status_open,
-                    "jpn": status_closed if is_weekend else status_open,
-                    "aus": status_closed if is_weekend else status_open,
-                    "nzl": status_closed if is_weekend else status_open,
-                    "kor": status_closed if is_weekend else status_open,
-                    "chn": status_closed if is_weekend else status_open,
-                    "twn": status_closed if is_weekend else status_open,
-                    "ind": status_closed if is_weekend else status_open,
-                }
-            )
-
-        logger.info(f"Trading calendar — {len(result)} rows")
-        return result
+        """Get trading calendar. Delegates to core."""
+        return await self.core_service.get_trading_calendar(start_date, end_date)
 
     async def get_market_hours(self) -> list[dict]:
-        """Get market hours for dashboard. TODO: Replace with DB query."""
-        logger.info("Returning mock market hours data")
-        return [
-            {
-                "id": 1,
-                "market": "NYSE",
-                "ticker": "SPY",
-                "session": "Regular",
-                "local_time": "09:30-16:00",
-                "session_period": "Morning",
-                "is_open": "Yes",
-                "timezone": "EST",
-            },
-        ]
+        """Get market hours. Delegates to core."""
+        return await self.core_service.get_market_hours()
 
     async def get_ticker_data(self) -> list[dict]:
-        """Get reference ticker data for dashboard. TODO: Replace with DB query."""
-        logger.info("Returning mock ticker data")
-        return [
-            {
-                "id": 1,
-                "ticker": "AAPL",
-                "currency": "USD",
-                "fx_rate": "1.00",
-                "sector": "Technology",
-                "company": "Apple Inc.",
-                "po_lead_manager": "GS",
-                "fmat_cap": "2.95T",
-                "smkt_cap": "2.95T",
-                "chg_1d_pct": "+0.5%",
-                "dtl": "0",
-            },
-        ]
-
-
-# Example usage
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-
-    async def test_market_data():
-        service = MarketDataService()
-
-        # Test single stock fetch
-        data = await service.fetch_stock_data("AAPL")
-        print(f"Single stock data: {data}")
-
-        # Test multiple stocks
-        tickers = ["AAPL", "MSFT", "GOOGL"]
-        multi_data = await service.fetch_multiple_stocks(tickers)
-        print(f"Multiple stocks: {multi_data}")
-
-        # Test historical data
-        history = await service.fetch_stock_history("AAPL", period="1mo")
-        print(f"Historical data: {history[:3]}")
-
-    asyncio.run(test_market_data())
+        """Get reference ticker data. Delegates to core."""
+        return await self.core_service.get_ticker_data()

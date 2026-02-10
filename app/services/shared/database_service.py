@@ -184,85 +184,6 @@ class DatabaseService:
             logger.error(f"Database connection test failed: {e}")
             return False
 
-    # ========================================
-    # Compliance Data Methods
-    # ========================================
-
-    async def get_restricted_list(self) -> list[dict]:
-        """Get restricted list data. TODO: Replace with DB query."""
-        logger.info("Returning mock restricted list data")
-        tickers = ["AAPL", "TSLA", "NVDA", "META", "GOOGL", "AMD"]
-        return [
-            {
-                "id": i + 1,
-                "ticker": tickers[i % len(tickers)],
-                "company_name": f"{tickers[i % len(tickers)]} Inc.",
-                "restriction_type": ["Hard", "Soft", "Watch"][i % 3],
-                "start_date": "2026-01-01",
-                "end_date": "2026-12-31",
-                "reason": ["MNPI", "Insider", "Regulatory"][i % 3],
-                "added_by": "Compliance Team",
-            }
-            for i in range(8)
-        ]
-
-    async def get_undertakings(self) -> list[dict]:
-        """Get undertakings data. TODO: Replace with DB query."""
-        logger.info("Returning mock undertakings data")
-        tickers = ["AAPL", "MSFT", "TSLA", "NVDA", "META"]
-        return [
-            {
-                "id": i + 1,
-                "deal_num": f"DEAL{i + 1:03d}",
-                "ticker": tickers[i % len(tickers)],
-                "company_name": f"{tickers[i % len(tickers)]} Inc.",
-                "undertaking_type": ["Lock-up", "Standstill", "Voting"][i % 3],
-                "start_date": "2025-06-01",
-                "end_date": "2026-06-01",
-                "restriction_pct": f"{20 + (i * 5)}%",
-                "status": ["Active", "Pending", "Expired"][i % 3],
-            }
-            for i in range(6)
-        ]
-
-    async def get_beneficial_ownership(self) -> list[dict]:
-        """Get beneficial ownership data. TODO: Replace with DB query."""
-        logger.info("Returning mock beneficial ownership data")
-        tickers = ["AAPL", "TSLA", "NVDA", "AMD", "META", "GOOGL"]
-        return [
-            {
-                "id": i + 1,
-                "ticker": tickers[i % len(tickers)],
-                "company_name": f"{tickers[i % len(tickers)]} Inc.",
-                "ownership_pct": f"{(i + 1) * 0.5:.2f}%",
-                "shares_owned": f"{(i + 1) * 100000:,}",
-                "threshold": "5.00%",
-                "filing_required": "Yes" if (i + 1) * 0.5 > 4.5 else "No",
-                "last_updated": "2026-01-11",
-            }
-            for i in range(10)
-        ]
-
-    async def get_monthly_exercise_limits(self) -> list[dict]:
-        """Get monthly exercise limits data. TODO: Replace with DB query."""
-        logger.info("Returning mock monthly exercise limits data")
-        tickers = ["AAPL", "TSLA", "NVDA", "META"]
-        return [
-            {
-                "id": i + 1,
-                "deal_num": f"DEAL{i + 1:03d}",
-                "ticker": tickers[i % len(tickers)],
-                "company_name": f"{tickers[i % len(tickers)]} Inc.",
-                "month": f"2026-{(i % 12) + 1:02d}",
-                "exercise_limit": f"{(i + 1) * 10000:,}",
-                "exercised_qty": f"{(i + 1) * 5000:,}",
-                "remaining_qty": f"{(i + 1) * 5000:,}",
-                "limit_type": ["Soft", "Hard"][i % 2],
-            }
-            for i in range(8)
-        ]
-
-
 
 # Example usage (for testing):
 if __name__ == "__main__":
@@ -275,3 +196,4 @@ if __name__ == "__main__":
         print("✅ Database connection successful!")
     else:
         print("❌ Database connection failed. Check your .env configuration.")
+
