@@ -4,13 +4,15 @@ Core Warrant Pricer for Portfolio Management Tool.
 Provides warrant pricing calculations and data generation:
 - Fair value calculation (intrinsic + time value)
 - Greeks (delta, gamma)
+- Expected discount
 - Moneyness checks
 - Payoff curves and volatility surfaces
 
-TODO: Replace mock formulas with real pricing engine (Black-Scholes, etc.)
+TODO: Replace mock formulas with real pricing engine (Black-Scholes / Monte Carlo).
 """
 
 import logging
+import math
 
 import numpy as np
 
@@ -21,13 +23,66 @@ class WarrantPricer:
     """
     Core warrant pricing calculations.
 
-    Provides fair value, Greeks, and chart data generation.
+    Provides fair value, Greeks, expected discount,
+    and chart data generation.
     Currently uses simplified mock formulas.
     """
 
+    def price_warrant(
+        self,
+        spot_price: float,
+        strike_price: float,
+        volatility: float = 0.3,
+        interest_rate: float = 0.005,
+        borrow_rate_bps: int = 0,
+        time_to_maturity_years: float = 1.0,
+        min_exe_disc: float = 0.0,
+        reset_lookback_days: int = 10,
+        reset_multiplier: float = 0.9,
+        seed: int = 0,
+        trial_num: int = 5,
+        simulation_num: int = 100,
+        jump_lambda: float = 0.0,
+        jump_mean: float = 0.0,
+        jump_std_dev: float = 0.2,
+        currency: str = "JPY",
+    ) -> dict:
+        """
+        Full warrant pricing with all parameters.
+
+        Returns dict with fair_value, delta, expected_discount, currency.
+        Currently uses mock Black-Scholes-like approximation.
+        """
+        # Mock pricing: intrinsic + time value with vol/rate adjustments
+        intrinsic = max(0.0, spot_price - strike_price)
+        time_value = spot_price * volatility * math.sqrt(max(time_to_maturity_years, 0.001)) * 0.4
+        borrow_cost = spot_price * (borrow_rate_bps / 10000.0) * time_to_maturity_years
+        rate_adj = interest_rate * spot_price * time_to_maturity_years * 0.1
+
+        fair_value = intrinsic + time_value - borrow_cost + rate_adj
+        fair_value = max(fair_value, 0.01)
+
+        # Delta: sigmoid based on moneyness
+        moneyness = spot_price / strike_price if strike_price > 0 else 1.0
+        delta = 1.0 / (1.0 + math.exp(-10.0 * (moneyness - 1.0)))
+        delta = round(delta, 2)
+
+        # Expected discount
+        if spot_price > 0:
+            expected_discount = ((fair_value - intrinsic) / spot_price) * 100
+        else:
+            expected_discount = 0.0
+
+        return {
+            "fair_value": round(fair_value, 2),
+            "delta": delta,
+            "expected_discount": round(expected_discount, 2),
+            "currency": currency,
+        }
+
     def calculate_fair_value(self, spot_price: float, strike_price: float) -> float:
         """
-        Calculate warrant fair value.
+        Quick fair value for chart generation.
 
         Args:
             spot_price: Current spot price

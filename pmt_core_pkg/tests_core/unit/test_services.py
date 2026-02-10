@@ -3,74 +3,7 @@ Tests for pmt_core.services module.
 """
 
 import pytest
-from pmt_core.services import PricingService, ReportService
-
-
-class TestPricingService:
-    """Tests for PricingService."""
-
-    def test_pricing_service_instantiation(self):
-        """Test PricingService can be instantiated."""
-        service = PricingService()
-        assert service is not None
-
-    def test_price_bond(self):
-        """Test price_bond returns expected structure."""
-        service = PricingService()
-        result = service.price_bond(
-            instrument_id="BOND001",
-            face_value=1000.0,
-            coupon_rate=0.05,
-            maturity_date="2030-01-01",
-        )
-        assert "instrument_id" in result
-        assert "price" in result
-        assert "duration" in result
-        assert result["instrument_id"] == "BOND001"
-
-    def test_price_warrant(self):
-        """Test price_warrant returns expected structure."""
-        service = PricingService()
-        result = service.price_warrant(
-            instrument_id="WARRANT001",
-            underlying_price=100.0,
-            strike_price=110.0,
-            expiry_date="2025-06-30",
-            volatility=0.3,
-            risk_free_rate=0.05,
-        )
-        assert "instrument_id" in result
-        assert "price" in result
-        assert "delta" in result
-        assert "gamma" in result
-        assert "vega" in result
-        assert result["instrument_id"] == "WARRANT001"
-
-    def test_calculate_greeks(self):
-        """Test calculate_greeks returns Greek values."""
-        service = PricingService()
-        result = service.calculate_greeks(
-            instrument_id="OPT001",
-            instrument_type="option",
-        )
-        assert "delta" in result
-        assert "gamma" in result
-        assert "vega" in result
-        assert "theta" in result
-
-    def test_price_convertible_bond(self):
-        """Test price_convertible_bond returns combined valuation."""
-        service = PricingService()
-        result = service.price_convertible_bond(
-            instrument_id="CB001",
-            face_value=1000.0,
-            conversion_ratio=10.0,
-            underlying_price=95.0,
-        )
-        assert "total_price" in result
-        assert "bond_value" in result
-        assert "option_value" in result
-        assert "parity" in result
+from pmt_core.services import ReportService
 
 
 class TestReportService:

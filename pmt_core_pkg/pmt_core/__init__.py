@@ -33,7 +33,6 @@ from pmt_core.exceptions import (
 )
 
 from pmt_core.services import (
-    PricingService,
     ReportService,
 )
 
@@ -60,6 +59,5 @@ __all__ = [
     "ServiceUnavailableError",
     "AuthenticationError",
     # Services
-    "PricingService",
     "ReportService",
 ]
