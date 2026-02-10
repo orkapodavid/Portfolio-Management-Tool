@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 
 import reflex as rx
 from app.services import RiskService
@@ -22,13 +23,23 @@ class DeltaChangeMixin(rx.State, mixin=True):
     delta_change_sort_column: str = ""
     delta_change_sort_direction: str = "asc"
 
+    # Position date — defaults to today
+    delta_change_position_date: str = ""
+
+    def _ensure_delta_change_date(self) -> str:
+        """Return position_date or today if empty."""
+        if not self.delta_change_position_date:
+            self.delta_change_position_date = datetime.now().strftime("%Y-%m-%d")
+        return self.delta_change_position_date
+
     async def load_delta_change_data(self):
         """Load Delta Change data from RiskService."""
         self.is_loading_delta_change = True
         self.delta_change_error = ""
         try:
+            pos_date = self._ensure_delta_change_date()
             service = RiskService()
-            self.delta_changes = await service.get_delta_changes()
+            self.delta_changes = await service.get_delta_changes(pos_date)
         except Exception as e:
             self.delta_change_error = str(e)
             import logging
@@ -36,9 +47,35 @@ class DeltaChangeMixin(rx.State, mixin=True):
             logging.exception(f"Error loading delta change data: {e}")
         finally:
             self.is_loading_delta_change = False
-            from datetime import datetime
+            self.delta_change_last_updated = datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
 
-            self.delta_change_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    async def set_delta_change_position_date(self, value: str):
+        """Set position date and reload data."""
+        self.delta_change_position_date = value
+        await self.load_delta_change_data()
+
+    async def force_refresh_delta_change(self):
+        """Force refresh delta change data with loading overlay."""
+        if self.is_loading_delta_change:
+            return  # Debounce
+        self.is_loading_delta_change = True
+        yield  # Send loading state to client immediately
+        await asyncio.sleep(0.3)
+        try:
+            pos_date = self._ensure_delta_change_date()
+            service = RiskService()
+            self.delta_changes = await service.get_delta_changes(pos_date)
+            self.delta_change_last_updated = datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+        except Exception as e:
+            import logging
+
+            logging.exception(f"Error refreshing delta change: {e}")
+        finally:
+            self.is_loading_delta_change = False
 
     @rx.event(background=True)
     async def start_delta_change_auto_refresh(self):
@@ -62,7 +99,6 @@ class DeltaChangeMixin(rx.State, mixin=True):
             return
 
         import random
-        from datetime import datetime
 
         # Create a new list to trigger change detection
         new_list = list(self.delta_changes)

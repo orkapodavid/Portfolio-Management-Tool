@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 
 import reflex as rx
 from app.services import RiskService
@@ -22,13 +23,23 @@ class RiskMeasuresMixin(rx.State, mixin=True):
     risk_measures_sort_column: str = ""
     risk_measures_sort_direction: str = "asc"
 
+    # Position date — defaults to today
+    risk_measures_position_date: str = ""
+
+    def _ensure_risk_measures_date(self) -> str:
+        """Return position_date or today if empty."""
+        if not self.risk_measures_position_date:
+            self.risk_measures_position_date = datetime.now().strftime("%Y-%m-%d")
+        return self.risk_measures_position_date
+
     async def load_risk_measures_data(self):
         """Load Risk Measures data from RiskService."""
         self.is_loading_risk_measures = True
         self.risk_measures_error = ""
         try:
+            pos_date = self._ensure_risk_measures_date()
             service = RiskService()
-            self.risk_measures = await service.get_risk_measures()
+            self.risk_measures = await service.get_risk_measures(pos_date)
         except Exception as e:
             self.risk_measures_error = str(e)
             import logging
@@ -36,9 +47,35 @@ class RiskMeasuresMixin(rx.State, mixin=True):
             logging.exception(f"Error loading risk measures data: {e}")
         finally:
             self.is_loading_risk_measures = False
-            from datetime import datetime
+            self.risk_measures_last_updated = datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
 
-            self.risk_measures_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    async def set_risk_measures_position_date(self, value: str):
+        """Set position date and reload data."""
+        self.risk_measures_position_date = value
+        await self.load_risk_measures_data()
+
+    async def force_refresh_risk_measures(self):
+        """Force refresh risk measures data with loading overlay."""
+        if self.is_loading_risk_measures:
+            return  # Debounce
+        self.is_loading_risk_measures = True
+        yield  # Send loading state to client immediately
+        await asyncio.sleep(0.3)
+        try:
+            pos_date = self._ensure_risk_measures_date()
+            service = RiskService()
+            self.risk_measures = await service.get_risk_measures(pos_date)
+            self.risk_measures_last_updated = datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+        except Exception as e:
+            import logging
+
+            logging.exception(f"Error refreshing risk measures: {e}")
+        finally:
+            self.is_loading_risk_measures = False
 
     @rx.event(background=True)
     async def start_risk_measures_auto_refresh(self):
@@ -62,7 +99,6 @@ class RiskMeasuresMixin(rx.State, mixin=True):
             return
 
         import random
-        from datetime import datetime
 
         # Create a new list to trigger change detection
         new_list = list(self.risk_measures)

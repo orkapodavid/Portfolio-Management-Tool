@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 
 import reflex as rx
 from app.services import PositionService
@@ -20,13 +21,25 @@ class TradeSummaryMixin(rx.State, mixin=True):
 
     trade_summary_search: str = ""
 
+    # Position date — defaults to today
+    trade_summary_position_date: str = ""
+
+    def _ensure_trade_summary_date(self) -> str:
+        """Return position_date or today if empty."""
+        if not self.trade_summary_position_date:
+            self.trade_summary_position_date = datetime.now().strftime("%Y-%m-%d")
+        return self.trade_summary_position_date
+
     async def load_trade_summary_data(self):
         """Load trade summary data."""
         self.is_loading_trade_summaries = True
         self.trade_summary_error = ""
         try:
+            pos_date = self._ensure_trade_summary_date()
             service = PositionService()
-            self.trade_summaries = await service.get_trade_summary()
+            self.trade_summaries = await service.get_trade_summary(
+                start_date=pos_date, end_date=pos_date
+            )
         except Exception as e:
             self.trade_summary_error = str(e)
             import logging
@@ -34,9 +47,37 @@ class TradeSummaryMixin(rx.State, mixin=True):
             logging.exception(f"Error loading trade summary: {e}")
         finally:
             self.is_loading_trade_summaries = False
-            from datetime import datetime
+            self.trade_summary_last_updated = datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
 
-            self.trade_summary_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    async def set_trade_summary_position_date(self, value: str):
+        """Set position date and reload data."""
+        self.trade_summary_position_date = value
+        await self.load_trade_summary_data()
+
+    async def force_refresh_trade_summary(self):
+        """Force refresh trade summary data with loading overlay."""
+        if self.is_loading_trade_summaries:
+            return  # Debounce
+        self.is_loading_trade_summaries = True
+        yield  # Send loading state to client immediately
+        await asyncio.sleep(0.3)
+        try:
+            pos_date = self._ensure_trade_summary_date()
+            service = PositionService()
+            self.trade_summaries = await service.get_trade_summary(
+                start_date=pos_date, end_date=pos_date
+            )
+            self.trade_summary_last_updated = datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+        except Exception as e:
+            import logging
+
+            logging.exception(f"Error refreshing trade summary: {e}")
+        finally:
+            self.is_loading_trade_summaries = False
 
     @rx.event(background=True)
     async def start_trade_summary_auto_refresh(self):
@@ -45,7 +86,7 @@ class TradeSummaryMixin(rx.State, mixin=True):
         async with self:
             if len(self.trade_summaries) == 0:
                 await self.load_trade_summary_data()
-        
+
         while True:
             async with self:
                 if not self.trade_summary_auto_refresh:
@@ -65,7 +106,6 @@ class TradeSummaryMixin(rx.State, mixin=True):
             return
 
         import random
-        from datetime import datetime
 
         # Immutable update for cell flash
         new_list = list(self.trade_summaries)
@@ -76,7 +116,9 @@ class TradeSummaryMixin(rx.State, mixin=True):
             if "divisor" in new_row and new_row["divisor"]:
                 try:
                     val = float(new_row["divisor"])
-                    new_row["divisor"] = str(round(val * random.uniform(0.99, 1.01), 4))
+                    new_row["divisor"] = str(
+                        round(val * random.uniform(0.99, 1.01), 4)
+                    )
                 except (ValueError, TypeError):
                     pass
             new_list[idx] = new_row

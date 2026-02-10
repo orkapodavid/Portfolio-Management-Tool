@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 
 import reflex as rx
 from app.services import PnLService
@@ -22,13 +23,23 @@ class PnLChangeMixin(rx.State, mixin=True):
     pnl_change_sort_column: str = ""
     pnl_change_sort_direction: str = "asc"
 
+    # Position date — defaults to today
+    pnl_change_position_date: str = ""
+
+    def _ensure_pnl_change_date(self) -> str:
+        """Return position_date or today if empty."""
+        if not self.pnl_change_position_date:
+            self.pnl_change_position_date = datetime.now().strftime("%Y-%m-%d")
+        return self.pnl_change_position_date
+
     async def load_pnl_change_data(self):
         """Load P&L Change data from PnLService."""
         self.is_loading_pnl_change = True
         self.pnl_change_error = ""
         try:
+            pos_date = self._ensure_pnl_change_date()
             service = PnLService()
-            self.pnl_change_list = await service.get_pnl_changes()
+            self.pnl_change_list = await service.get_pnl_changes(pos_date)
         except Exception as e:
             self.pnl_change_error = str(e)
             import logging
@@ -36,9 +47,31 @@ class PnLChangeMixin(rx.State, mixin=True):
             logging.exception(f"Error loading P&L change data: {e}")
         finally:
             self.is_loading_pnl_change = False
-            from datetime import datetime
-
             self.pnl_change_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    async def set_pnl_change_position_date(self, value: str):
+        """Set position date and reload data."""
+        self.pnl_change_position_date = value
+        await self.load_pnl_change_data()
+
+    async def force_refresh_pnl_change(self):
+        """Force refresh PnL change data with loading overlay."""
+        if self.is_loading_pnl_change:
+            return  # Debounce
+        self.is_loading_pnl_change = True
+        yield  # Send loading state to client immediately
+        await asyncio.sleep(0.3)
+        try:
+            pos_date = self._ensure_pnl_change_date()
+            service = PnLService()
+            self.pnl_change_list = await service.get_pnl_changes(pos_date)
+            self.pnl_change_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        except Exception as e:
+            import logging
+
+            logging.exception(f"Error refreshing PnL change: {e}")
+        finally:
+            self.is_loading_pnl_change = False
 
     @rx.event(background=True)
     async def start_pnl_change_auto_refresh(self):
@@ -62,7 +95,6 @@ class PnLChangeMixin(rx.State, mixin=True):
             return
 
         import random
-        from datetime import datetime
 
         # Create a new list to trigger change detection
         new_list = list(self.pnl_change_list)

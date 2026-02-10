@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 
 import reflex as rx
 from app.services import PositionService
@@ -20,13 +21,23 @@ class PositionsMixin(rx.State, mixin=True):
 
     positions_search: str = ""
 
+    # Position date — defaults to today
+    positions_position_date: str = ""
+
+    def _ensure_positions_date(self) -> str:
+        """Return position_date or today if empty."""
+        if not self.positions_position_date:
+            self.positions_position_date = datetime.now().strftime("%Y-%m-%d")
+        return self.positions_position_date
+
     async def load_positions_data(self):
         """Load positions data."""
         self.is_loading_positions = True
         self.positions_error = ""
         try:
+            pos_date = self._ensure_positions_date()
             service = PositionService()
-            self.positions = await service.get_positions()
+            self.positions = await service.get_positions(pos_date)
         except Exception as e:
             self.positions_error = str(e)
             import logging
@@ -34,9 +45,31 @@ class PositionsMixin(rx.State, mixin=True):
             logging.exception(f"Error loading positions: {e}")
         finally:
             self.is_loading_positions = False
-            from datetime import datetime
-
             self.positions_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    async def set_positions_position_date(self, value: str):
+        """Set position date and reload data."""
+        self.positions_position_date = value
+        await self.load_positions_data()
+
+    async def force_refresh_positions(self):
+        """Force refresh positions data with loading overlay."""
+        if self.is_loading_positions:
+            return  # Debounce
+        self.is_loading_positions = True
+        yield  # Send loading state to client immediately
+        await asyncio.sleep(0.3)
+        try:
+            pos_date = self._ensure_positions_date()
+            service = PositionService()
+            self.positions = await service.get_positions(pos_date)
+            self.positions_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        except Exception as e:
+            import logging
+
+            logging.exception(f"Error refreshing positions: {e}")
+        finally:
+            self.is_loading_positions = False
 
     @rx.event(background=True)
     async def start_positions_auto_refresh(self):

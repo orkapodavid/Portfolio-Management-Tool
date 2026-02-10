@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 
 import reflex as rx
 from app.services import PnLService
@@ -20,13 +21,23 @@ class PnLCurrencyMixin(rx.State, mixin=True):
     # Filters
     pnl_currency_search: str = ""
 
+    # Position date — defaults to today
+    pnl_currency_position_date: str = ""
+
+    def _ensure_pnl_currency_date(self) -> str:
+        """Return position_date or today if empty."""
+        if not self.pnl_currency_position_date:
+            self.pnl_currency_position_date = datetime.now().strftime("%Y-%m-%d")
+        return self.pnl_currency_position_date
+
     async def load_pnl_currency_data(self):
         """Load P&L Currency data from PnLService."""
         self.is_loading_pnl_currency = True
         self.pnl_currency_error = ""
         try:
+            pos_date = self._ensure_pnl_currency_date()
             service = PnLService()
-            self.pnl_currency_list = await service.get_currency_pnl()
+            self.pnl_currency_list = await service.get_pnl_by_currency(pos_date)
         except Exception as e:
             self.pnl_currency_error = str(e)
             import logging
@@ -34,9 +45,35 @@ class PnLCurrencyMixin(rx.State, mixin=True):
             logging.exception(f"Error loading P&L currency data: {e}")
         finally:
             self.is_loading_pnl_currency = False
-            from datetime import datetime
+            self.pnl_currency_last_updated = datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
 
-            self.pnl_currency_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    async def set_pnl_currency_position_date(self, value: str):
+        """Set position date and reload data."""
+        self.pnl_currency_position_date = value
+        await self.load_pnl_currency_data()
+
+    async def force_refresh_pnl_currency(self):
+        """Force refresh PnL currency data with loading overlay."""
+        if self.is_loading_pnl_currency:
+            return  # Debounce
+        self.is_loading_pnl_currency = True
+        yield  # Send loading state to client immediately
+        await asyncio.sleep(0.3)
+        try:
+            pos_date = self._ensure_pnl_currency_date()
+            service = PnLService()
+            self.pnl_currency_list = await service.get_pnl_by_currency(pos_date)
+            self.pnl_currency_last_updated = datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+        except Exception as e:
+            import logging
+
+            logging.exception(f"Error refreshing PnL currency: {e}")
+        finally:
+            self.is_loading_pnl_currency = False
 
     @rx.event(background=True)
     async def start_pnl_currency_auto_refresh(self):
@@ -60,7 +97,6 @@ class PnLCurrencyMixin(rx.State, mixin=True):
             return
 
         import random
-        from datetime import datetime
 
         # Create a new list to trigger change detection
         new_list = list(self.pnl_currency_list)

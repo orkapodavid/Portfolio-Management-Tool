@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 
 import reflex as rx
 from app.services import PnLService
@@ -22,13 +23,23 @@ class PnLSummaryMixin(rx.State, mixin=True):
     pnl_summary_sort_column: str = ""
     pnl_summary_sort_direction: str = "asc"
 
+    # Position date — defaults to today
+    pnl_summary_position_date: str = ""
+
+    def _ensure_pnl_summary_date(self) -> str:
+        """Return position_date or today if empty."""
+        if not self.pnl_summary_position_date:
+            self.pnl_summary_position_date = datetime.now().strftime("%Y-%m-%d")
+        return self.pnl_summary_position_date
+
     async def load_pnl_summary_data(self):
         """Load P&L Summary data from PnLService."""
         self.is_loading_pnl_summary = True
         self.pnl_summary_error = ""
         try:
+            pos_date = self._ensure_pnl_summary_date()
             service = PnLService()
-            self.pnl_summary_list = await service.get_pnl_summary()
+            self.pnl_summary_list = await service.get_pnl_summary(pos_date)
         except Exception as e:
             self.pnl_summary_error = str(e)
             import logging
@@ -36,9 +47,35 @@ class PnLSummaryMixin(rx.State, mixin=True):
             logging.exception(f"Error loading P&L summary data: {e}")
         finally:
             self.is_loading_pnl_summary = False
-            from datetime import datetime
+            self.pnl_summary_last_updated = datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
 
-            self.pnl_summary_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    async def set_pnl_summary_position_date(self, value: str):
+        """Set position date and reload data."""
+        self.pnl_summary_position_date = value
+        await self.load_pnl_summary_data()
+
+    async def force_refresh_pnl_summary(self):
+        """Force refresh PnL summary data with loading overlay."""
+        if self.is_loading_pnl_summary:
+            return  # Debounce
+        self.is_loading_pnl_summary = True
+        yield  # Send loading state to client immediately
+        await asyncio.sleep(0.3)
+        try:
+            pos_date = self._ensure_pnl_summary_date()
+            service = PnLService()
+            self.pnl_summary_list = await service.get_pnl_summary(pos_date)
+            self.pnl_summary_last_updated = datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+        except Exception as e:
+            import logging
+
+            logging.exception(f"Error refreshing PnL summary: {e}")
+        finally:
+            self.is_loading_pnl_summary = False
 
     @rx.event(background=True)
     async def start_pnl_summary_auto_refresh(self):
@@ -62,7 +99,6 @@ class PnLSummaryMixin(rx.State, mixin=True):
             return
 
         import random
-        from datetime import datetime
 
         # Create a new list to trigger change detection
         new_list = list(self.pnl_summary_list)

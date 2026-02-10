@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 
 import reflex as rx
 from app.services import PnLService
@@ -20,13 +21,23 @@ class PnLFullMixin(rx.State, mixin=True):
     # Filters
     pnl_full_search: str = ""
 
+    # Position date — defaults to today
+    pnl_full_position_date: str = ""
+
+    def _ensure_pnl_full_date(self) -> str:
+        """Return position_date or today if empty."""
+        if not self.pnl_full_position_date:
+            self.pnl_full_position_date = datetime.now().strftime("%Y-%m-%d")
+        return self.pnl_full_position_date
+
     async def load_pnl_full_data(self):
         """Load P&L Full data from PnLService."""
         self.is_loading_pnl_full = True
         self.pnl_full_error = ""
         try:
+            pos_date = self._ensure_pnl_full_date()
             service = PnLService()
-            self.pnl_full_list = await service.get_pnl_full()
+            self.pnl_full_list = await service.get_pnl_full(pos_date)
         except Exception as e:
             self.pnl_full_error = str(e)
             import logging
@@ -34,9 +45,31 @@ class PnLFullMixin(rx.State, mixin=True):
             logging.exception(f"Error loading P&L full data: {e}")
         finally:
             self.is_loading_pnl_full = False
-            from datetime import datetime
-
             self.pnl_full_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    async def set_pnl_full_position_date(self, value: str):
+        """Set position date and reload data."""
+        self.pnl_full_position_date = value
+        await self.load_pnl_full_data()
+
+    async def force_refresh_pnl_full(self):
+        """Force refresh PnL full data with loading overlay."""
+        if self.is_loading_pnl_full:
+            return  # Debounce
+        self.is_loading_pnl_full = True
+        yield  # Send loading state to client immediately
+        await asyncio.sleep(0.3)
+        try:
+            pos_date = self._ensure_pnl_full_date()
+            service = PnLService()
+            self.pnl_full_list = await service.get_pnl_full(pos_date)
+            self.pnl_full_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        except Exception as e:
+            import logging
+
+            logging.exception(f"Error refreshing PnL full: {e}")
+        finally:
+            self.is_loading_pnl_full = False
 
     @rx.event(background=True)
     async def start_pnl_full_auto_refresh(self):
@@ -60,7 +93,6 @@ class PnLFullMixin(rx.State, mixin=True):
             return
 
         import random
-        from datetime import datetime
 
         # Create a new list to trigger change detection
         new_list = list(self.pnl_full_list)
