@@ -2,12 +2,17 @@
 Special Term AG-Grid Component.
 
 Migrated to use create_standard_grid factory with full toolbar support.
+Includes a position date selector that triggers database reload.
 """
 
 import reflex as rx
 from reflex_ag_grid import ag_grid, AGFilters
 from app.states.instruments.instrument_state import InstrumentState
-from app.components.shared.ag_grid_config import create_standard_grid
+from app.components.shared.ag_grid_config import (
+    create_standard_grid,
+    FILTER_LABEL_CLASS,
+    FILTER_INPUT_CLASS,
+)
 
 
 # =============================================================================
@@ -90,6 +95,38 @@ def _get_column_defs() -> list:
 
 
 # =============================================================================
+# POSITION DATE FILTER BAR
+# =============================================================================
+
+
+def _position_date_bar() -> rx.Component:
+    """Position date selector bar — triggers data reload on change."""
+    return rx.el.div(
+        rx.el.div(
+            rx.el.div(
+                rx.icon("calendar", size=14, class_name="text-gray-400"),
+                rx.el.span(
+                    "POSITION DATE",
+                    class_name=FILTER_LABEL_CLASS,
+                ),
+                rx.el.input(
+                    type="date",
+                    value=InstrumentState.special_terms_position_date,
+                    on_change=InstrumentState.set_special_terms_position_date,
+                    class_name=f"{FILTER_INPUT_CLASS} w-[150px]",
+                ),
+                class_name="flex items-center gap-2",
+            ),
+            class_name="flex items-center justify-between w-full",
+        ),
+        class_name=(
+            "px-3 py-2 bg-gradient-to-r from-gray-50/80 to-slate-50/80 "
+            "border border-gray-100 rounded-lg backdrop-blur-sm"
+        ),
+    )
+
+
+# =============================================================================
 # MAIN COMPONENT
 # =============================================================================
 
@@ -121,6 +158,8 @@ def special_term_ag_grid() -> rx.Component:
             on_refresh=InstrumentState.force_refresh_special_terms,
             is_loading=InstrumentState.is_loading_special_terms,
         ),
+        # Position date selector bar
+        _position_date_bar(),
         create_standard_grid(
             grid_id=_GRID_ID,
             row_data=InstrumentState.special_terms,
@@ -137,3 +176,4 @@ def special_term_ag_grid() -> rx.Component:
         height="100%",
         spacing="0",
     )
+

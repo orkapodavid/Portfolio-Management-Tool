@@ -23,12 +23,22 @@ class SpecialTermsMixin(rx.State, mixin=True):
     special_terms_last_updated: str = "—"
     special_terms_auto_refresh: bool = True
 
+    # Position date — defaults to today
+    special_terms_position_date: str = ""
+
+    def _ensure_special_terms_date(self) -> str:
+        """Return position_date or today if empty."""
+        if not self.special_terms_position_date:
+            self.special_terms_position_date = datetime.now().strftime("%Y-%m-%d")
+        return self.special_terms_position_date
+
     async def load_special_terms_data(self):
         """Load Special Terms data from InstrumentsService."""
         self.is_loading_special_terms = True
         try:
+            pos_date = self._ensure_special_terms_date()
             service = InstrumentsService()
-            self.special_terms = await service.get_special_terms()
+            self.special_terms = await service.get_special_terms(pos_date)
             self.special_terms_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -38,6 +48,11 @@ class SpecialTermsMixin(rx.State, mixin=True):
             logging.exception(f"Error loading special terms data: {e}")
         finally:
             self.is_loading_special_terms = False
+
+    async def set_special_terms_position_date(self, value: str):
+        """Set position date and reload data."""
+        self.special_terms_position_date = value
+        await self.load_special_terms_data()
 
     @rx.event(background=True)
     async def start_special_terms_auto_refresh(self):
@@ -91,8 +106,9 @@ class SpecialTermsMixin(rx.State, mixin=True):
         yield
         await asyncio.sleep(0.3)
         try:
+            pos_date = self._ensure_special_terms_date()
             service = InstrumentsService()
-            self.special_terms = await service.get_special_terms()
+            self.special_terms = await service.get_special_terms(pos_date)
             self.special_terms_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

@@ -212,9 +212,9 @@ class InstrumentsService:
             for i in range(len(tickers))
         ]
 
-    async def get_special_terms(self) -> list[dict[str, Any]]:
+    async def get_special_terms(self, position_date: str = "") -> list[dict[str, Any]]:
         """Get special terms data. TODO: Replace with DB query."""
-        logger.info("Returning mock special terms data")
+        logger.info("Returning mock special terms data for date: %s", position_date)
         return [
             {
                 "id": 1,
