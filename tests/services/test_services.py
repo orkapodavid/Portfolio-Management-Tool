@@ -59,11 +59,7 @@ class TestServiceImports:
 
         assert NotificationService is not None
 
-    def test_import_database_service(self):
-        """Test DatabaseService can be imported."""
-        from app.services import DatabaseService
 
-        assert DatabaseService is not None
 
 
 class TestServiceInstantiation:

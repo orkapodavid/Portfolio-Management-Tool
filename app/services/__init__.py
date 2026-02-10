@@ -15,7 +15,6 @@ from app.services.emsx.emsx_service import EMSXService
 from app.services.notifications.notification_service import NotificationService
 from app.services.notifications.notification_registry import NotificationRegistry
 from app.services.user.user_service import UserService
-from app.services.shared.database_service import DatabaseService
 from app.services.shared.performance_header_service import PerformanceHeaderService
 
 from app.services.events.reverse_inquiry_service import ReverseInquiryService
@@ -39,7 +38,6 @@ __all__ = [
     "NotificationService",
     "NotificationRegistry",
     "UserService",
-    "DatabaseService",
     "PerformanceHeaderService",
 
     "ReverseInquiryService",
