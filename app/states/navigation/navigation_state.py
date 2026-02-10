@@ -49,7 +49,7 @@ class NavigationState(rx.State):
     }
 
     MODULE_CATEGORIES: ClassVar[dict[str, list[str]]] = {
-        "Trading": ["Market Data", "Positions", "Orders", "EMSA"],
+        "Trading": ["Market Data", "Positions", "Orders"],
         "Analytics": ["PnL", "Risk"],
         "Operations": ["Recon", "Compliance", "Operations"],
         "Reference": ["Instruments", "Events", "Portfolio Tools"],

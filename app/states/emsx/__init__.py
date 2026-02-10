@@ -1,1 +1,1 @@
-from app.states.emsx.types import EMSAOrderItem, EMSXRouteItem
+from app.states.emsx.types import EMSXOrderItem, EMSXRouteItem

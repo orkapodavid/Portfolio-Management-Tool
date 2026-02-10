@@ -67,7 +67,7 @@ from app.components.risk import (
     pricer_warrant_view,
     pricer_bond_view,
 )
-from app.components.emsx import emsa_order_ag_grid, emsa_route_ag_grid
+from app.components.emsx import emsx_order_ag_grid, emsx_route_ag_grid
 
 
 def table_header_cell(
@@ -378,7 +378,7 @@ def workspace_controls() -> rx.Component:
                                     rx.cond(
                                         UIState.active_module == "Orders",
                                         rx.fragment(
-                                            generate_menu_item("New EMSA Order"),
+                                            generate_menu_item("New EMSX Order"),
                                             generate_menu_item("Route Orders"),
                                         ),
                                         rx.fragment(
@@ -652,8 +652,8 @@ def contextual_workspace() -> rx.Component:
             "Orders",
             rx.match(
                 UIState.active_subtab,
-                ("EMSX Order", emsa_order_ag_grid()),
-                ("EMSX Route", emsa_route_ag_grid()),
+                ("EMSX Order", emsx_order_ag_grid()),
+                ("EMSX Route", emsx_route_ag_grid()),
                 mock_data_table(),
             ),
         ),

@@ -654,7 +654,7 @@ app.add_page(
     emsx_order_page,
     route="/orders",
     on_load=[
-        EMSXState.load_emsa_data,
+        EMSXState.load_emsx_data,
         lambda: UIState.set_module("Orders"),
         lambda: UIState.set_subtab("EMSX Order"),
     ],
@@ -663,7 +663,7 @@ app.add_page(
     emsx_order_page,
     route="/orders/emsx-order",
     on_load=[
-        EMSXState.load_emsa_data,
+        EMSXState.load_emsx_data,
         lambda: UIState.set_module("Orders"),
         lambda: UIState.set_subtab("EMSX Order"),
     ],
@@ -672,7 +672,7 @@ app.add_page(
     emsx_route_page,
     route="/orders/emsx-route",
     on_load=[
-        EMSXState.load_emsa_data,
+        EMSXState.load_emsx_data,
         lambda: UIState.set_module("Orders"),
         lambda: UIState.set_subtab("EMSX Route"),
     ],

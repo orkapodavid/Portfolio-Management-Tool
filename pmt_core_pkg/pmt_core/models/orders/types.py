@@ -11,7 +11,7 @@ class OrderRecord(TypedDict):
     """
     Order data structure for EMSX trading orders.
 
-    Aligned with: EMSAOrderItem from app/states/types.py
+    Aligned with: EMSXOrderItem from app/states/types.py
 
     Source: trading_tab/emsx_order.report.ini, emsx_order_class.py
     Data: Live EMSX via EMSXOrderWorker + DB fallback

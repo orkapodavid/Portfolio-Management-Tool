@@ -44,10 +44,10 @@ class EMSXService:
                 "pos_loc": ["NY", "LN", "HK"][i % 3],
                 "side": sides[i % 2],
                 "status": statuses[i % len(statuses)],
-                "emsa_amount": f"{random.randint(1000, 100000):,}",
-                "emsa_routed": f"{random.randint(0, 50000):,}",
-                "emsa_working": f"{random.randint(0, 30000):,}",
-                "emsa_filled": f"{random.randint(0, 20000):,}",
+                "emsx_amount": f"{random.randint(1000, 100000):,}",
+                "emsx_routed": f"{random.randint(0, 50000):,}",
+                "emsx_working": f"{random.randint(0, 30000):,}",
+                "emsx_filled": f"{random.randint(0, 20000):,}",
             }
             for i, ticker in enumerate(tickers * 2)  # 10 records
         ]

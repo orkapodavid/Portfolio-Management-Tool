@@ -115,8 +115,8 @@ Complete list of all pages and tabs in the Portfolio Management Tool web applica
 ### Orders Module
 | Tab | Route | Page Function | State |
 |-----|-------|---------------|-------|
-| EMSX Order | `/orders/emsx-order` | `emsx_order_page` | `EMSXState.load_emsa_data` |
-| EMSX Route | `/orders/emsx-route` | `emsx_route_page` | `EMSXState.load_emsa_data` |
+| EMSX Order | `/orders/emsx-order` | `emsx_order_page` | `EMSXState.load_emsx_data` |
+| EMSX Route | `/orders/emsx-route` | `emsx_route_page` | `EMSXState.load_emsx_data` |
 
 ---
 

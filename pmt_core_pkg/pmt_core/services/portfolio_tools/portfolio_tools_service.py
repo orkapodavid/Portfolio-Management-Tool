@@ -112,11 +112,11 @@ class PortfolioToolsService:
                 "sl_rate": "0.25%",
                 "pth_amount_sod": "1,250",
                 "pth_amount": "1,250",
-                "emsa_order": "",
-                "emsa_remark": "",
-                "emsa_working": "",
-                "emsa_order_col": "",
-                "emsa_filled": "",
+                "emsx_order": "",
+                "emsx_remark": "",
+                "emsx_working": "",
+                "emsx_order_col": "",
+                "emsx_filled": "",
             },
         ]
 

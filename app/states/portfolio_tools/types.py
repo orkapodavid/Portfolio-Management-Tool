@@ -17,11 +17,11 @@ class PayToHoldItem(TypedDict):
     sl_rate: str
     pth_amount_sod: str
     pth_amount: str
-    emsa_order: str
-    emsa_remark: str
-    emsa_working: str
-    emsa_order_col: str
-    emsa_filled: str
+    emsx_order: str
+    emsx_remark: str
+    emsx_working: str
+    emsx_order_col: str
+    emsx_filled: str
 
 
 class ShortECLItem(TypedDict):

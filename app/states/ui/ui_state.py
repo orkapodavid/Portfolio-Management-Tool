@@ -70,7 +70,7 @@ class UIState(rx.State):
     }
 
     MODULE_CATEGORIES: Dict[str, List[str]] = {
-        "Trading": ["Market Data", "Positions", "Orders", "EMSA"],
+        "Trading": ["Market Data", "Positions", "Orders"],
         "Analytics": ["PnL", "Risk"],
         "Operations": ["Recon", "Compliance", "Operations"],
         "Reference": ["Instruments", "Events", "Portfolio Tools"],

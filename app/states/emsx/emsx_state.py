@@ -2,18 +2,18 @@
 EMSX State - Module-specific state for EMSX/Orders data
 
 Handles all EMSX/orders-related data:
-- EMSX Orders (via EMSAOrderMixin)
-- EMSX Routes (via EMSARouteMixin)
+- EMSX Orders (via EMSXOrderMixin)
+- EMSX Routes (via EMSXRouteMixin)
 
 Architecture follows the mixin pattern for per-tab state management.
 """
 
 import reflex as rx
 
-from app.states.emsx.mixins import EMSAOrderMixin, EMSARouteMixin
+from app.states.emsx.mixins import EMSXOrderMixin, EMSXRouteMixin
 
 
-class EMSXState(EMSAOrderMixin, EMSARouteMixin, rx.State):
+class EMSXState(EMSXOrderMixin, EMSXRouteMixin, rx.State):
     """
     Main EMSX module state.
     Inherits from all EMSX subtab mixins to provide unified interface.
@@ -37,17 +37,17 @@ class EMSXState(EMSAOrderMixin, EMSARouteMixin, rx.State):
 
     async def on_load(self):
         """Called when EMSX view loads."""
-        await self.load_emsa_data()
+        await self.load_emsx_data()
         # Start auto-refresh if enabled
-        if self.emsa_order_auto_refresh:
-            return type(self).start_emsa_order_auto_refresh
-        if self.emsa_route_auto_refresh:
-            return type(self).start_emsa_route_auto_refresh
+        if self.emsx_order_auto_refresh:
+            return type(self).start_emsx_order_auto_refresh
+        if self.emsx_route_auto_refresh:
+            return type(self).start_emsx_route_auto_refresh
 
-    async def load_emsa_data(self):
-        """Load all EMSA data (orders and routes) from both mixins."""
-        await self.load_emsa_orders()
-        await self.load_emsa_routes()
+    async def load_emsx_data(self):
+        """Load all EMSX data (orders and routes) from both mixins."""
+        await self.load_emsx_orders()
+        await self.load_emsx_routes()
 
     # =========================================================================
     # UI State Methods

@@ -23,8 +23,7 @@ class TickerDataItem(TypedDict):
 
 class StockScreenerItem(TypedDict):
     id: int
-    otl: str
-    mkt_cap_37_pct: str
+    dtl10: str
     ticker: str
     company: str
     country: str
@@ -33,6 +32,7 @@ class StockScreenerItem(TypedDict):
     mkt_cap_loc: str
     mkt_cap_usd: str
     adv_3m: str
+    adv_3m_usd: str
     locate_qty_mm: str
     locate_f: str
 

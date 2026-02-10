@@ -1,7 +1,7 @@
 """
-EMSA Route AG-Grid Component.
+EMSX Order AG-Grid Component.
 
-AG-Grid based implementation for EMSA route table, replacing legacy rx.el.table.
+AG-Grid based implementation for EMSX order table, replacing legacy rx.el.table.
 Migrated to use create_standard_grid factory with full toolbar support.
 """
 
@@ -16,8 +16,8 @@ from app.components.shared.ag_grid_config import create_standard_grid
 # =============================================================================
 
 
-class EMSARouteGridState(rx.State):
-    """State for EMSA Route grid quick filter."""
+class EMSXOrderGridState(rx.State):
+    """State for EMSX Order grid quick filter."""
 
     search_text: str = ""
 
@@ -36,28 +36,29 @@ class EMSARouteGridState(rx.State):
 
 
 def _get_column_defs() -> list:
-    """Return column definitions for the EMSA route grid."""
+    """Return column definitions for the EMSX order grid."""
     return [
         ag_grid.column_def(
-            field="id",
-            header_name="ID",
-            filter=AGFilters.number,
-            min_width=70,
-            hide=True,  # Hidden unique identifier for row_id_key
-        ),
-        ag_grid.column_def(
-            field="order_id",
-            header_name="Order ID",
-            filter=AGFilters.number,
+            field="sequence",
+            header_name="Sequence",
+            filter=AGFilters.text,
             min_width=90,
+            tooltip_field="sequence",
         ),
         ag_grid.column_def(
-            field="route_id",
-            header_name="Route ID",
+            field="underlying",
+            header_name="Underlying",
             filter=AGFilters.text,
             min_width=100,
-            tooltip_field="route_id",
-            pinned="left",  # Keep visible while scrolling
+            tooltip_field="underlying",
+        ),
+        ag_grid.column_def(
+            field="ticker",
+            header_name="Ticker",
+            filter=AGFilters.text,
+            min_width=100,
+            tooltip_field="ticker",
+            pinned="left",  # Keep ticker visible while scrolling
         ),
         ag_grid.column_def(
             field="broker",
@@ -67,31 +68,49 @@ def _get_column_defs() -> list:
             tooltip_field="broker",
         ),
         ag_grid.column_def(
-            field="quantity",
-            header_name="Quantity",
-            filter=AGFilters.number,
-            min_width=100,
+            field="pos_loc",
+            header_name="Pos Loc",
+            filter=AGFilters.text,
+            min_width=80,
+            tooltip_field="pos_loc",
         ),
         ag_grid.column_def(
-            field="filled_quantity",
-            header_name="Filled Qty",
-            filter=AGFilters.number,
-            min_width=100,
-        ),
-        ag_grid.column_def(
-            field="avg_price",
-            header_name="Avg Price",
-            filter=AGFilters.number,
-            min_width=100,
+            field="side",
+            header_name="Side",
+            filter="agSetColumnFilter",  # Categorical column
+            min_width=70,
         ),
         ag_grid.column_def(
             field="status",
             header_name="Status",
             filter="agSetColumnFilter",  # Categorical column
+            min_width=90,
+        ),
+        ag_grid.column_def(
+            field="emsx_amount",
+            header_name="EMSX Amount",
+            filter=AGFilters.number,
+            min_width=110,
+        ),
+        ag_grid.column_def(
+            field="emsx_routed",
+            header_name="EMSX Routed",
+            filter=AGFilters.number,
+            min_width=110,
+        ),
+        ag_grid.column_def(
+            field="emsx_working",
+            header_name="EMSX Working",
+            filter=AGFilters.number,
+            min_width=110,
+        ),
+        ag_grid.column_def(
+            field="emsx_filled",
+            header_name="EMSX Filled",
+            filter=AGFilters.number,
             min_width=100,
         ),
     ]
-
 
 
 # =============================================================================
@@ -99,15 +118,15 @@ def _get_column_defs() -> list:
 # =============================================================================
 
 # Storage key for grid state persistence
-_STORAGE_KEY = "emsa_route_grid_state"
-_GRID_ID = "emsa_route_grid"
+_STORAGE_KEY = "emsx_order_grid_state"
+_GRID_ID = "emsx_order_grid"
 
 
-def emsa_route_ag_grid() -> rx.Component:
+def emsx_order_ag_grid() -> rx.Component:
     """
-    EMSA Route AG-Grid component.
+    EMSX Order AG-Grid component.
 
-    Displays EMSA routes with sequence, ticker, broker information.
+    Displays EMSX orders with sequence, ticker, broker information.
     Features:
     - Quick filter search across all columns
     - Excel export button
@@ -128,33 +147,33 @@ def emsa_route_ag_grid() -> rx.Component:
         # Toolbar with grouped buttons (Export | Layout | Refresh)
         grid_toolbar(
             storage_key=_STORAGE_KEY,
-            page_name="emsa_route",
-            search_value=EMSARouteGridState.search_text,
-            on_search_change=EMSARouteGridState.set_search,
-            on_search_clear=EMSARouteGridState.clear_search,
+            page_name="emsx_order",
+            search_value=EMSXOrderGridState.search_text,
+            on_search_change=EMSXOrderGridState.set_search,
+            on_search_clear=EMSXOrderGridState.clear_search,
             grid_id=_GRID_ID,
             show_compact_toggle=True,
             # Ticking pattern props
-            last_updated=EMSXState.emsa_route_last_updated,
+            last_updated=EMSXState.emsx_order_last_updated,
             show_refresh=True,
-            on_refresh=EMSXState.force_refresh_emsa_routes,
-            is_loading=EMSXState.is_loading_emsa_routes,
-            auto_refresh=EMSXState.emsa_route_auto_refresh,
-            on_auto_refresh_toggle=EMSXState.toggle_emsa_route_auto_refresh,
+            on_refresh=EMSXState.force_refresh_emsx_orders,
+            is_loading=EMSXState.is_loading_emsx_orders,
+            auto_refresh=EMSXState.emsx_order_auto_refresh,
+            on_auto_refresh_toggle=EMSXState.toggle_emsx_order_auto_refresh,
         ),
         # Grid with factory pattern
         create_standard_grid(
             grid_id=_GRID_ID,
-            row_data=EMSXState.emsa_routes,
+            row_data=EMSXState.emsx_orders,
             column_defs=_get_column_defs(),
             row_id_key="id",  # Delta detection key (unique row ID)
-            loading=EMSXState.is_loading_emsa_routes,  # Loading overlay
+            loading=EMSXState.is_loading_emsx_orders,  # Loading overlay
             enable_row_numbers=True,  # Tier 2: Row numbering
             enable_multi_select=True,  # Tier 2: Multi-row selection with checkboxes
             enable_cell_flash=True,  # Tier 2: Cell flash for ticking updates
-            default_excel_export_params=get_default_export_params("emsa_route"),
-            default_csv_export_params=get_default_csv_export_params("emsa_route"),
-            quick_filter_text=EMSARouteGridState.search_text,
+            default_excel_export_params=get_default_export_params("emsx_order"),
+            default_csv_export_params=get_default_csv_export_params("emsx_order"),
+            quick_filter_text=EMSXOrderGridState.search_text,
         ),
         width="100%",
         height="100%",
