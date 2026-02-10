@@ -3,14 +3,17 @@ Market Data Service — core business logic for market data.
 
 Provides mock data for market data grids, FX rates, top movers,
 trading calendar, market hours, ticker data, and historical data.
+Also includes Yahoo Finance integration for real-time data fetching.
 TODO: Replace mock data with actual database/repository calls.
 """
 
+import asyncio
 import logging
 import threading
 from typing import Any, Optional
 from datetime import datetime, timedelta
 
+import yfinance as yf
 from cachetools import TTLCache
 from cachetools.keys import hashkey
 
@@ -482,3 +485,198 @@ class MarketDataService:
         logger.info(f"Historical data fetched & cached — {len(result)} rows")
 
         return result
+
+    # === Yahoo Finance Integration ===
+
+    async def fetch_stock_data(self, symbol: str) -> dict:
+        """
+        Fetch real-time data for a single stock using Yahoo Finance.
+
+        Args:
+            symbol: Stock ticker symbol (e.g., 'AAPL')
+
+        Returns:
+            Dictionary with stock data including price, volume, market cap, etc.
+        """
+        try:
+            ticker = yf.Ticker(symbol)
+            info = await asyncio.to_thread(lambda: ticker.info)
+            return self._extract_stock_info(symbol, info)
+        except Exception as e:
+            logger.exception(f"Error fetching data for {symbol}: {e}")
+            return {}
+
+    async def fetch_multiple_stocks(self, symbols: list[str]) -> dict[str, dict]:
+        """
+        Fetch real-time data for multiple stocks using Yahoo Finance.
+
+        Args:
+            symbols: List of stock ticker symbols
+
+        Returns:
+            Dictionary mapping symbols to their stock data
+        """
+        if not symbols:
+            return {}
+
+        valid_symbols = [s for s in symbols if s]
+        if not valid_symbols:
+            return {}
+
+        try:
+
+            def _fetch():
+                tickers_obj = yf.Tickers(" ".join(valid_symbols))
+                results = {}
+                for symbol in valid_symbols:
+                    try:
+                        ticker = tickers_obj.tickers.get(symbol)
+                        if ticker:
+                            info = ticker.info
+                            results[symbol] = self._extract_stock_info(symbol, info)
+                    except Exception as e:
+                        logger.exception(f"Failed to fetch {symbol} in batch: {e}")
+                return results
+
+            return await asyncio.to_thread(_fetch)
+        except Exception as e:
+            logger.exception(f"Batch fetch error: {e}")
+            return {}
+
+    async def fetch_stock_history(self, symbol: str, period: str = "1mo") -> list[dict]:
+        """
+        Fetch historical price data for a symbol using Yahoo Finance.
+
+        Args:
+            symbol: Stock ticker symbol
+            period: Time period ('1mo', '3mo', '6mo', 'ytd', '1y', '2y', etc.)
+
+        Returns:
+            List of historical data points with date and price
+        """
+        try:
+
+            def _fetch_history():
+                ticker = yf.Ticker(symbol)
+                hist = ticker.history(period=period)
+                data = []
+                for date, row in hist.iterrows():
+                    data.append(
+                        {
+                            "date": date.strftime("%Y-%m-%d"),
+                            "price": round(row["Close"], 2),
+                        }
+                    )
+                return data
+
+            return await asyncio.to_thread(_fetch_history)
+        except Exception as e:
+            logger.exception(f"Error fetching history for {symbol}: {e}")
+            return []
+
+    async def fetch_stock_news(self, symbol: str) -> list[dict]:
+        """
+        Fetch news for a symbol using Yahoo Finance.
+
+        Args:
+            symbol: Stock ticker symbol
+
+        Returns:
+            List of news items
+        """
+        try:
+
+            def _fetch_news():
+                ticker = yf.Ticker(symbol)
+                news = ticker.news
+                formatted_news = []
+                for item in news[:5]:
+                    formatted_news.append(
+                        {
+                            "id": item.get("uuid", ""),
+                            "headline": item.get("title", ""),
+                            "source": item.get("publisher", "Yahoo Finance"),
+                            "time_ago": "Today",
+                            "summary": "No summary available.",
+                            "url": item.get("link", "#"),
+                            "sentiment": "Neutral",
+                            "related_symbols": [symbol],
+                        }
+                    )
+                return formatted_news
+
+            return await asyncio.to_thread(_fetch_news)
+        except Exception as e:
+            logger.exception(f"Error fetching news for {symbol}: {e}")
+            return []
+
+    async def subscribe_to_tickers(self, tickers: list[str]) -> bool:
+        """
+        Subscribe to real-time updates for tickers.
+        TODO: Implement Bloomberg subscription logic.
+        """
+        logger.info(f"Mock subscription to tickers: {tickers}")
+        return True
+
+    # === Helper Methods ===
+
+    def _extract_stock_info(self, symbol: str, info: dict) -> dict:
+        """Helper to extract relevant fields from yfinance info dict."""
+        current_price = (
+            info.get("currentPrice") or info.get("regularMarketPrice") or 0.0
+        )
+        previous_close = (
+            info.get("previousClose")
+            or info.get("regularMarketPreviousClose")
+            or current_price
+        )
+
+        change_pct = 0.0
+        if previous_close and previous_close > 0:
+            change_pct = (current_price - previous_close) / previous_close * 100
+
+        return {
+            "symbol": symbol,
+            "name": info.get("shortName") or info.get("longName") or symbol,
+            "current_price": current_price,
+            "previous_close": previous_close,
+            "daily_change_pct": round(change_pct, 2),
+            "market_cap": self._format_market_cap(info.get("marketCap", 0)),
+            "pe_ratio": round(info.get("trailingPE", 0.0) or 0.0, 2),
+            "sector": info.get("sector", "Unknown"),
+            "volume": self._format_volume(info.get("volume", 0)),
+            "high_52": info.get("fiftyTwoWeekHigh", 0.0),
+            "low_52": info.get("fiftyTwoWeekLow", 0.0),
+            "description": info.get("longBusinessSummary", "No description available."),
+            "eps": info.get("trailingEps", 0.0),
+        }
+
+    def _format_market_cap(self, value: float) -> str:
+        """Formats market cap value to string (e.g. 2.5T, 500B)."""
+        if not value:
+            return "N/A"
+        if value >= 1000000000000:
+            return f"{value / 1000000000000:.2f}T"
+        elif value >= 1000000000:
+            return f"{value / 1000000000:.2f}B"
+        elif value >= 1000000:
+            return f"{value / 1000000:.2f}M"
+        else:
+            return f"{value:,.0f}"
+
+    def _format_volume(self, value: float) -> str:
+        """Formats volume value to string."""
+        if not value:
+            return "0"
+        if value >= 1000000:
+            return f"{value / 1000000:.1f}M"
+        elif value >= 1000:
+            return f"{value / 1000:.1f}K"
+        else:
+            return f"{value}"
+
+    def _calculate_daily_change(self, current: float, previous: float) -> float:
+        """Calculate daily percentage change."""
+        if not previous:
+            return 0.0
+        return (current - previous) / previous * 100

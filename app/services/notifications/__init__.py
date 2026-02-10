@@ -1,6 +1,5 @@
-"""Notifications package - Notification services and registry."""
+"""Notifications package — re-exports from core."""
 
-from app.services.notifications.notification_service import NotificationService
-from app.services.notifications.notification_registry import NotificationRegistry
+from pmt_core.services.notifications import NotificationService, NotificationRegistry
 
 __all__ = ["NotificationService", "NotificationRegistry"]

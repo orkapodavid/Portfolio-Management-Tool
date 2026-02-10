@@ -1,25 +1,18 @@
 """
-Notification Constants
+Notification Constants — UI-specific enums and mappings.
 
-Enums and TypedDicts for type-safe notification handling.
-Centralizes all notification-related constants to reduce duplication
-and improve type checking across services and UI components.
+Re-exports core NotificationCategory for convenience.
+Provides Lucide icon names, Tailwind color classes, and
+UI display type mappings that are app-layer concerns.
 """
 
 from enum import StrEnum
-from typing import TypedDict
 
-
-class NotificationCategory(StrEnum):
-    """Categories for raw notifications from service providers.
-
-    Used in service files when creating notification dictionaries.
-    """
-
-    ALERTS = "Alerts"
-    PORTFOLIO = "Portfolio"
-    NEWS = "News"
-    SYSTEM = "System"
+# Re-export core constants for backward compatibility
+from pmt_core.services.notifications.notification_constants import (  # noqa: F401
+    NotificationCategory,
+    RawNotification,
+)
 
 
 class NotificationType(StrEnum):
@@ -85,25 +78,3 @@ CATEGORY_TO_TYPE: dict[str, str] = {
     NotificationCategory.NEWS: NotificationType.INFO,
     NotificationCategory.SYSTEM: NotificationType.INFO,
 }
-
-
-class RawNotification(TypedDict, total=False):
-    """Schema for notifications from service providers.
-
-    This is the format returned by provider functions registered
-    with NotificationRegistry.
-    """
-
-    id: str
-    category: str  # NotificationCategory value
-    title: str
-    message: str
-    time_ago: str
-    is_read: bool
-    icon: str  # NotificationIcon value
-    color: str  # NotificationColor value
-    module: str
-    subtab: str
-    row_id: str
-    grid_id: str
-    ticker: str

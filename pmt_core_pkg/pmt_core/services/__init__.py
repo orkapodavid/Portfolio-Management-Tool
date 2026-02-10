@@ -22,6 +22,7 @@ from pmt_core.services.portfolio_tools import PortfolioToolsService
 from pmt_core.services.emsx import EMSXService
 from pmt_core.services.user import UserService
 from pmt_core.services.performance import PerformanceService
+from pmt_core.services.notifications import NotificationService, NotificationRegistry
 
 __all__ = [
     "PricingService",
@@ -41,4 +42,6 @@ __all__ = [
     "EMSXService",
     "UserService",
     "PerformanceService",
+    "NotificationService",
+    "NotificationRegistry",
 ]
