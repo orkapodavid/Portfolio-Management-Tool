@@ -7,7 +7,11 @@ Migrated to use create_standard_grid factory with full toolbar support.
 import reflex as rx
 from reflex_ag_grid import ag_grid, AGFilters
 from app.states.operations.operations_state import OperationsState
-from app.components.shared.ag_grid_config import create_standard_grid
+from app.components.shared.ag_grid_config import (
+    create_standard_grid,
+    build_context_menu,
+    context_menu_dispatch_input,
+)
 
 
 # =============================================================================
@@ -79,6 +83,21 @@ def _get_column_defs() -> list:
 
 
 # =============================================================================
+# CONTEXT MENU
+# =============================================================================
+
+_CTX_MENU_ID = "op_process_ctx"
+
+_CONTEXT_MENU = build_context_menu(
+    target_id=_CTX_MENU_ID,
+    items=[
+        {"name": "Rerun", "icon": "🔄"},
+        {"name": "Kill", "icon": "🛑"},
+    ],
+)
+
+
+# =============================================================================
 # MAIN COMPONENT
 # =============================================================================
 
@@ -96,6 +115,11 @@ def operation_process_ag_grid() -> rx.Component:
     )
 
     return rx.vstack(
+        # Hidden input for context menu dispatch bridge
+        context_menu_dispatch_input(
+            target_id=_CTX_MENU_ID,
+            on_action=OperationsState.handle_context_menu_action,
+        ),
         rx.script(grid_state_script(_STORAGE_KEY, _GRID_ID)),
         grid_toolbar(
             storage_key=_STORAGE_KEY,
@@ -123,6 +147,7 @@ def operation_process_ag_grid() -> rx.Component:
                 "operation_process"
             ),
             quick_filter_text=OperationProcessGridState.search_text,
+            get_context_menu_items=_CONTEXT_MENU,
         ),
         width="100%",
         height="100%",

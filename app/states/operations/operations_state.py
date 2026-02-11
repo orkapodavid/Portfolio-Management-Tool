@@ -6,11 +6,17 @@ Composes all operations-related tab mixins:
 - Operation Processes
 """
 
+import json
+import logging
+
 import reflex as rx
+from app.services import OperationsService
 from app.states.operations.mixins import (
     DailyProceduresMixin,
     OperationProcessesMixin,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class OperationsState(
@@ -39,6 +45,39 @@ class OperationsState(
         """Load all operations data from mixins."""
         await self.load_daily_procedures_data()
         await self.load_operation_processes_data()
+
+    # =========================================================================
+    # Context Menu Handlers
+    # =========================================================================
+
+    async def handle_context_menu_action(self, payload_json: str):
+        """
+        Handle context menu actions dispatched from AG Grid.
+
+        Args:
+            payload_json: JSON string with keys 'action' and 'row'.
+        """
+        try:
+            payload = json.loads(payload_json)
+        except (json.JSONDecodeError, TypeError):
+            logger.warning(f"Invalid context menu payload: {payload_json}")
+            return
+
+        action = payload.get("action", "")
+        row = payload.get("row", {})
+        process_id = row.get("id", 0)
+        process_name = row.get("process", row.get("procedure_name", "Unknown"))
+
+        service = OperationsService()
+
+        if action == "Rerun":
+            result = await service.rerun_process(process_id, process_name)
+            yield rx.toast.success(result["message"], position="top-right")
+        elif action == "Kill":
+            result = await service.kill_process(process_id, process_name)
+            yield rx.toast.warning(result["message"], position="top-right")
+        else:
+            logger.warning(f"Unknown context menu action: {action}")
 
     # =========================================================================
     # UI State Methods

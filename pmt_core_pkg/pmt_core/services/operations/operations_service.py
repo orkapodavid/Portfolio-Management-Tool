@@ -93,3 +93,19 @@ class OperationsService:
                 "last_run_time": "2026-01-11 07:00:00",
             },
         ]
+
+    async def rerun_process(self, process_id: int, process_name: str = "") -> dict[str, Any]:
+        """Rerun an operation process. TODO: Replace with actual orchestration call."""
+        logger.info(f"Mock rerun requested for process id={process_id} name='{process_name}'")
+        return {
+            "success": True,
+            "message": f"Process '{process_name}' (id={process_id}) has been queued for rerun.",
+        }
+
+    async def kill_process(self, process_id: int, process_name: str = "") -> dict[str, Any]:
+        """Kill a running operation process. TODO: Replace with actual orchestration call."""
+        logger.info(f"Mock kill requested for process id={process_id} name='{process_name}'")
+        return {
+            "success": True,
+            "message": f"Process '{process_name}' (id={process_id}) has been terminated.",
+        }

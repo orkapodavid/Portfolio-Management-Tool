@@ -552,6 +552,13 @@ class AgGrid(rx.Component):
     suppress_no_rows_overlay: rx.Var[bool] = False
 
     # -------------------------------------------------------------------------
+    # Context Menu (Enterprise)
+    # -------------------------------------------------------------------------
+    # JS callback: (params) => [...menuItems]
+    # Return array of menu item objects or built-in strings like 'copy', 'export'
+    get_context_menu_items: rx.Var | None = None
+
+    # -------------------------------------------------------------------------
     # Row ID
     # -------------------------------------------------------------------------
     get_row_id: rx.EventHandler[lambda e0: [e0]]

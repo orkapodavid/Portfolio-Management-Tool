@@ -48,6 +48,9 @@ from .filter_bar import (
     filter_date_range_bar,
 )
 
+# --- Context menu ---
+from .context_menu import build_context_menu, context_menu_dispatch_input
+
 __all__ = [
     # Grid factory
     "create_standard_grid",
@@ -64,6 +67,9 @@ __all__ = [
     "FILTER_LABEL_CLASS",
     "FILTER_INPUT_CLASS",
     "FILTER_BTN_CLASS",
+    # Context menu
+    "build_context_menu",
+    "context_menu_dispatch_input",
     # Constants
     "STANDARD_STATUS_BAR",
     "ENHANCED_DEFAULT_COL_DEF",
