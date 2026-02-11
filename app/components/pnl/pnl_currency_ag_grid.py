@@ -185,8 +185,8 @@ def _position_date_bar() -> rx.Component:
             class_name="flex items-center justify-between w-full",
         ),
         class_name=(
-            "px-3 py-2 bg-gradient-to-r from-gray-50/80 to-slate-50/80 "
-            "border border-gray-100 rounded-lg backdrop-blur-sm"
+            "w-full px-3 py-2 bg-gradient-to-r from-gray-50/80 to-slate-50/80 "
+            "border-b border-gray-100 backdrop-blur-sm"
         ),
     )
 

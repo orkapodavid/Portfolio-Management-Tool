@@ -310,7 +310,7 @@ def _screener_filter_bar() -> rx.Component:
         on_submit=lambda _: InstrumentState.apply_screener_filters(),
         class_name=(
             "w-full px-3 py-2 bg-gradient-to-r from-gray-50/80 to-slate-50/80 "
-            "border border-gray-100 rounded-lg backdrop-blur-sm"
+            "border-b border-gray-100 backdrop-blur-sm"
         ),
     )
 

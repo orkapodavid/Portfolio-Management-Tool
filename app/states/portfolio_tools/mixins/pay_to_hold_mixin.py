@@ -22,6 +22,13 @@ class PayToHoldMixin(rx.State, mixin=True):
     is_loading_pay_to_hold: bool = False
     pay_to_hold_last_updated: str = "—"
     pay_to_hold_auto_refresh: bool = True
+    pay_to_hold_position_date: str = datetime.now().strftime("%Y-%m-%d")
+
+    async def set_pay_to_hold_position_date(self, value: str):
+        """Set position date and reload data."""
+        self.pay_to_hold_position_date = value
+        yield
+        await self.load_pay_to_hold_data()
 
     async def load_pay_to_hold_data(self):
         """Load Pay To Hold data from PortfolioToolsService."""

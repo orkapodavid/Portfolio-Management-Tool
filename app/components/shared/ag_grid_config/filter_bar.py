@@ -85,40 +85,33 @@ def filter_date_range_bar(
 
     return rx.el.div(
         rx.el.div(
-            # LEFT — optional extra + date range
-            rx.el.div(
-                *left_items,
-                class_name="flex items-center gap-2",
+            *left_items,
+            # Apply + Clear buttons (inline next to date inputs)
+            rx.el.button(
+                rx.icon("search", size=12),
+                rx.el.span("Apply"),
+                on_click=on_apply,
+                class_name=(
+                    f"{FILTER_BTN_CLASS} bg-gradient-to-r from-blue-600 to-indigo-600 "
+                    "text-white hover:shadow-md"
+                ),
             ),
-            # RIGHT — Apply + Clear buttons
-            rx.el.div(
+            rx.cond(
+                has_active_filters,
                 rx.el.button(
-                    rx.icon("search", size=12),
-                    rx.el.span("Apply"),
-                    on_click=on_apply,
+                    rx.icon("x", size=12),
+                    rx.el.span("Clear"),
+                    on_click=on_clear,
                     class_name=(
-                        f"{FILTER_BTN_CLASS} bg-gradient-to-r from-blue-600 to-indigo-600 "
-                        "text-white hover:shadow-md"
+                        f"{FILTER_BTN_CLASS} bg-white border border-gray-200 "
+                        "text-gray-500 hover:text-red-500 hover:border-red-300"
                     ),
                 ),
-                rx.cond(
-                    has_active_filters,
-                    rx.el.button(
-                        rx.icon("x", size=12),
-                        rx.el.span("Clear"),
-                        on_click=on_clear,
-                        class_name=(
-                            f"{FILTER_BTN_CLASS} bg-white border border-gray-200 "
-                            "text-gray-500 hover:text-red-500 hover:border-red-300"
-                        ),
-                    ),
-                ),
-                class_name="flex items-center gap-2",
             ),
-            class_name="flex items-center justify-between w-full",
+            class_name="flex items-center gap-2 w-full",
         ),
         class_name=(
-            "px-3 py-2 bg-gradient-to-r from-gray-50/80 to-slate-50/80 "
-            "border border-gray-100 rounded-lg backdrop-blur-sm"
+            "w-full px-3 py-2 bg-gradient-to-r from-gray-50/80 to-slate-50/80 "
+            "border-b border-gray-100 backdrop-blur-sm"
         ),
     )
