@@ -1,9 +1,13 @@
 import asyncio
+import logging
 from datetime import datetime
 
 import reflex as rx
 from app.services import RiskService
 from app.states.risk.types import DeltaChangeItem
+from app.utils.simulation import simulate_numeric_tick
+
+logger = logging.getLogger(__name__)
 
 
 class DeltaChangeMixin(rx.State, mixin=True):
@@ -42,9 +46,7 @@ class DeltaChangeMixin(rx.State, mixin=True):
             self.delta_changes = await service.get_delta_changes(pos_date)
         except Exception as e:
             self.delta_change_error = str(e)
-            import logging
-
-            logging.exception(f"Error loading delta change data: {e}")
+            logger.exception(f"Error loading delta change data: {e}")
         finally:
             self.is_loading_delta_change = False
             self.delta_change_last_updated = datetime.now().strftime(
@@ -71,19 +73,20 @@ class DeltaChangeMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
-
-            logging.exception(f"Error refreshing delta change: {e}")
+            logger.exception(f"Error refreshing delta change: {e}")
         finally:
             self.is_loading_delta_change = False
 
     @rx.event(background=True)
     async def start_delta_change_auto_refresh(self):
-        """Background task for Delta Change auto-refresh (2s interval)."""
-        while True:
+        """Background task for Delta Change auto-refresh (2s interval).
+
+        Uses while-True with guard clause. Max ~1 hour before auto-stop.
+        """
+        for _ in range(1800):  # Safety: max ~1 hour at 2s intervals
             async with self:
                 if not self.delta_change_auto_refresh:
-                    break
+                    return
                 self.simulate_delta_change_update()
             await asyncio.sleep(2)
 
@@ -94,34 +97,13 @@ class DeltaChangeMixin(rx.State, mixin=True):
             return type(self).start_delta_change_auto_refresh
 
     def simulate_delta_change_update(self):
-        """Simulated delta update for demo - random risk fluctuations."""
-        if not self.delta_change_auto_refresh or len(self.delta_changes) < 1:
+        """Apply simulated tick using shared utility."""
+        if not self.delta_change_auto_refresh or not self.delta_changes:
             return
-
-        import random
-
-        # Create a new list to trigger change detection
-        new_list = list(self.delta_changes)
-
-        # Update 1-3 random rows
-        for _ in range(random.randint(1, min(3, len(new_list)))):
-            idx = random.randint(0, len(new_list) - 1)
-            old_row = new_list[idx]
-            # Create a new row dict (immutable update for AG Grid change detection)
-            new_row = dict(old_row)
-
-            # Simulate small changes on Greek fields
-            for field in ["delta", "gamma", "vega", "theta"]:
-                if field in new_row and new_row[field] is not None:
-                    try:
-                        val = float(new_row[field])
-                        new_row[field] = round(val * random.uniform(0.98, 1.02), 4)
-                    except (ValueError, TypeError):
-                        pass
-
-            new_list[idx] = new_row
-
-        self.delta_changes = new_list
+        self.delta_changes = simulate_numeric_tick(
+            rows=self.delta_changes,
+            fields=["delta", "gamma", "vega", "theta"],
+        )
         self.delta_change_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     def set_delta_change_search(self, query: str):

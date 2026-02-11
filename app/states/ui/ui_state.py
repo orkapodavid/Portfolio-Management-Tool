@@ -11,9 +11,6 @@ Handles:
 
 import reflex as rx
 from typing import Dict, List, Any
-import random
-from datetime import datetime
-from app.states.types import GenericTableItem
 
 
 class UIState(rx.State):
@@ -40,13 +37,8 @@ class UIState(rx.State):
     sort_direction: str = "asc"
     selected_row_id: int = 0
 
-    # Pagination state
+    # Pagination state (used by filter methods)
     current_page: int = 1
-    page_size: int = 20
-    page_size_options: List[int] = [10, 20, 50, 100]
-    total_pages: int = 1
-    total_items: int = 0
-    paginated_table_data: List[GenericTableItem] = []
 
     @rx.event
     def refresh_prices(self):
@@ -207,26 +199,6 @@ class UIState(rx.State):
             self.sort_direction = "asc"
 
     @rx.event
-    def set_page_size(self, size: str):
-        self.page_size = int(size)
-        self.current_page = 1
-
-    @rx.event
-    def next_page(self):
-        # Note: total_pages is not defined in UIState yet, might need to add it or pass it
-        # For now, simplistic implementation or placeholder
-        pass
-
-    @rx.event
-    def prev_page(self):
-        if self.current_page > 1:
-            self.current_page -= 1
-
-    @rx.event
-    def set_page(self, page: int):
-        self.current_page = page
-
-    @rx.event
     def set_selected_row(self, row_id: int):
         self.selected_row_id = row_id
 
@@ -257,10 +229,6 @@ class UIState(rx.State):
         self._filters[self.active_module]["auto_refresh"] = current ^ True
 
     @rx.event
-    def handle_generate(self, action: str):
-        self.is_generate_menu_open = False
-
-    @rx.event
     def export_data(self, format: str):
         self.is_export_dropdown_open = False
 
@@ -268,30 +236,3 @@ class UIState(rx.State):
     def redirect_to_default(self):
         """Redirect to the default Market Data page when accessing root route."""
         return rx.redirect("/market-data/market-data")
-
-    def sort_data(self, data: list[dict]) -> list[dict]:
-        """Sort data based on current sort column and direction."""
-        if not self.sort_column or not data:
-            return data
-
-        def get_sort_key(item):
-            value = item.get(self.sort_column, "")
-            if isinstance(value, str):
-                cleaned = (
-                    value.replace("$", "")
-                    .replace(",", "")
-                    .replace("(", "-")
-                    .replace(")", "")
-                    .replace("%", "")
-                )
-                try:
-                    return float(cleaned)
-                except ValueError:
-                    return value.lower()
-            return value
-
-        return sorted(
-            data,
-            key=get_sort_key,
-            reverse=(self.sort_direction == "desc"),
-        )

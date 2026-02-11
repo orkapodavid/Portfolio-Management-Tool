@@ -1,9 +1,14 @@
 import asyncio
+import logging
 from datetime import datetime
 
 import reflex as rx
 from app.services import PnLService
 from app.states.pnl.types import PnLChangeItem
+from app.utils.simulation import simulate_financial_tick
+from app.utils.sort_utils import financial_sort_key
+
+logger = logging.getLogger(__name__)
 
 
 class PnLChangeMixin(rx.State, mixin=True):
@@ -42,9 +47,7 @@ class PnLChangeMixin(rx.State, mixin=True):
             self.pnl_change_list = await service.get_pnl_changes(pos_date)
         except Exception as e:
             self.pnl_change_error = str(e)
-            import logging
-
-            logging.exception(f"Error loading P&L change data: {e}")
+            logger.exception(f"Error loading P&L change data: {e}")
         finally:
             self.is_loading_pnl_change = False
             self.pnl_change_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -67,19 +70,20 @@ class PnLChangeMixin(rx.State, mixin=True):
             self.pnl_change_list = await service.get_pnl_changes(pos_date)
             self.pnl_change_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
-            import logging
-
-            logging.exception(f"Error refreshing PnL change: {e}")
+            logger.exception(f"Error refreshing PnL change: {e}")
         finally:
             self.is_loading_pnl_change = False
 
     @rx.event(background=True)
     async def start_pnl_change_auto_refresh(self):
-        """Background task for PnL Change auto-refresh (2s interval)."""
-        while True:
+        """Background task for PnL Change auto-refresh (2s interval).
+
+        Uses while-True with guard clause. Max ~1 hour before auto-stop.
+        """
+        for _ in range(1800):  # Safety: max ~1 hour at 2s intervals
             async with self:
                 if not self.pnl_change_auto_refresh:
-                    break
+                    return
                 self.simulate_pnl_change_update()
             await asyncio.sleep(2)
 
@@ -90,55 +94,14 @@ class PnLChangeMixin(rx.State, mixin=True):
             return type(self).start_pnl_change_auto_refresh
 
     def simulate_pnl_change_update(self):
-        """Simulated delta update for demo - random PnL fluctuations."""
-        if not self.pnl_change_auto_refresh or len(self.pnl_change_list) < 1:
+        """Apply simulated tick using shared utility."""
+        if not self.pnl_change_auto_refresh or not self.pnl_change_list:
             return
-
-        import random
-
-        # Create a new list to trigger change detection
-        new_list = list(self.pnl_change_list)
-
-        # Update 1-5 random rows
-        for _ in range(random.randint(1, min(5, len(new_list)))):
-            idx = random.randint(0, len(new_list) - 1)
-            old_row = new_list[idx]
-            # Create a new row dict (immutable update for AG Grid change detection)
-            new_row = dict(old_row)
-
-            # Simulate small PnL changes using correct field names from PnLRecord
-            for field in ["pnl_chg_1d", "pnl_chg_1w", "pnl_chg_1m", "pnl_ytd"]:
-                if field in new_row and new_row[field]:
-                    try:
-                        # Parse value (handle "$1,234" or "($456)" or "-$123" formats)
-                        val_str = str(new_row[field])
-                        is_negative = "(" in val_str or val_str.startswith("-")
-                        val = float(val_str.replace("$", "").replace(",", "").replace("(", "").replace(")", "").replace("-", "").strip())
-                        if is_negative:
-                            val = -val
-                        new_val = round(val * random.uniform(0.95, 1.05), 2)
-                        # Format output
-                        if new_val < 0:
-                            new_row[field] = f"-${abs(new_val):,.2f}"
-                        else:
-                            new_row[field] = f"${new_val:,.2f}"
-                    except (ValueError, TypeError):
-                        pass
-
-            # Also update percentage fields
-            for field in ["pnl_chg_pct_1d", "pnl_chg_pct_1w", "pnl_chg_pct_1m"]:
-                if field in new_row and new_row[field]:
-                    try:
-                        val_str = str(new_row[field])
-                        val = float(val_str.replace("%", "").replace("+", ""))
-                        new_val = round(val * random.uniform(0.9, 1.1), 2)
-                        new_row[field] = f"{new_val:+.1f}%"
-                    except (ValueError, TypeError):
-                        pass
-
-            new_list[idx] = new_row
-
-        self.pnl_change_list = new_list
+        self.pnl_change_list = simulate_financial_tick(
+            rows=self.pnl_change_list,
+            value_fields=["pnl_chg_1d", "pnl_chg_1w", "pnl_chg_1m", "pnl_ytd"],
+            pct_fields=["pnl_chg_pct_1d", "pnl_chg_pct_1w", "pnl_chg_pct_1m"],
+        )
         self.pnl_change_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     def set_pnl_change_search(self, query: str):
@@ -163,26 +126,10 @@ class PnLChangeMixin(rx.State, mixin=True):
 
         # Sort
         if self.pnl_change_sort_column:
-
-            def get_sort_key(item):
-                val = item.get(self.pnl_change_sort_column, "")
-                if isinstance(val, str):
-                    cleaned = (
-                        val.replace("$", "")
-                        .replace(",", "")
-                        .replace("%", "")
-                        .replace("(", "-")
-                        .replace(")", "")
-                    )
-                    try:
-                        return float(cleaned)
-                    except ValueError:
-                        return val.lower()
-                return val
-
+            col = self.pnl_change_sort_column
             data = sorted(
                 data,
-                key=get_sort_key,
+                key=lambda item: financial_sort_key(item.get(col, "")),
                 reverse=(self.pnl_change_sort_direction == "desc"),
             )
         return data
