@@ -17,13 +17,20 @@ class MonthlyExerciseLimitMixin(rx.State, mixin=True):
     monthly_exercise_limit: list[MonthlyExerciseLimitItem] = []
     is_loading_monthly_exercise_limit: bool = False
     monthly_exercise_limit_last_updated: str = "—"
+    monthly_exercise_limit_position_date: str = ""
+
+    async def set_monthly_exercise_limit_position_date(self, value: str):
+        """Set position date and reload data."""
+        self.monthly_exercise_limit_position_date = value
+        yield
+        await self.load_monthly_exercise_limit()
 
     async def load_monthly_exercise_limit(self):
         """Load monthly exercise limit data from ComplianceService."""
         self.is_loading_monthly_exercise_limit = True
         try:
             service = ComplianceService()
-            self.monthly_exercise_limit = await service.get_monthly_exercise_limit()
+            self.monthly_exercise_limit = await service.get_monthly_exercise_limit(self.monthly_exercise_limit_position_date)
             self.monthly_exercise_limit_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -43,7 +50,7 @@ class MonthlyExerciseLimitMixin(rx.State, mixin=True):
         await asyncio.sleep(0.3)  # Brief delay for loading overlay
         try:
             service = ComplianceService()
-            self.monthly_exercise_limit = await service.get_monthly_exercise_limit()
+            self.monthly_exercise_limit = await service.get_monthly_exercise_limit(self.monthly_exercise_limit_position_date)
             self.monthly_exercise_limit_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

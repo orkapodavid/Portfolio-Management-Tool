@@ -22,13 +22,20 @@ class ExcessAmountMixin(rx.State, mixin=True):
     is_loading_excess_amount: bool = False
     excess_amount_last_updated: str = "—"
     excess_amount_auto_refresh: bool = True
+    excess_amount_position_date: str = datetime.now().strftime("%Y-%m-%d")
+
+    async def set_excess_amount_position_date(self, value: str):
+        """Set position date and reload data."""
+        self.excess_amount_position_date = value
+        yield
+        await self.load_excess_amount_data()
 
     async def load_excess_amount_data(self):
         """Load Excess Amount data from PortfolioToolsService."""
         self.is_loading_excess_amount = True
         try:
             service = PortfolioToolsService()
-            self.excess_amount = await service.get_excess_amount()
+            self.excess_amount = await service.get_excess_amount(self.excess_amount_position_date)
             self.excess_amount_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -92,7 +99,7 @@ class ExcessAmountMixin(rx.State, mixin=True):
         await asyncio.sleep(0.3)
         try:
             service = PortfolioToolsService()
-            self.excess_amount = await service.get_excess_amount()
+            self.excess_amount = await service.get_excess_amount(self.excess_amount_position_date)
             self.excess_amount_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

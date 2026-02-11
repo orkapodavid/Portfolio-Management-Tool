@@ -22,6 +22,13 @@ class FailedTradesMixin(rx.State, mixin=True):
     failed_trades_last_updated: str = "—"
 
     failed_trades_search: str = ""
+    failed_trades_position_date: str = ""
+
+    async def set_failed_trades_position_date(self, value: str):
+        """Set position date and reload data."""
+        self.failed_trades_position_date = value
+        yield
+        await self.load_failed_trades_data()
 
     async def load_failed_trades_data(self):
         """Load Failed Trades data."""
@@ -29,7 +36,7 @@ class FailedTradesMixin(rx.State, mixin=True):
         self.failed_trades_error = ""
         try:
             service = ReconciliationService()
-            self.failed_trades = await service.get_failed_trades()
+            self.failed_trades = await service.get_failed_trades(self.failed_trades_position_date)
         except Exception as e:
             self.failed_trades_error = str(e)
             import logging

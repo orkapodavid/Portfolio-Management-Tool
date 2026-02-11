@@ -22,6 +22,13 @@ class PPSReconMixin(rx.State, mixin=True):
     pps_recon_last_updated: str = "—"
 
     pps_recon_search: str = ""
+    pps_recon_position_date: str = ""
+
+    async def set_pps_recon_position_date(self, value: str):
+        """Set position date and reload data."""
+        self.pps_recon_position_date = value
+        yield
+        await self.load_pps_recon_data()
 
     async def load_pps_recon_data(self):
         """Load PPS recon data."""
@@ -29,7 +36,7 @@ class PPSReconMixin(rx.State, mixin=True):
         self.pps_recon_error = ""
         try:
             service = ReconciliationService()
-            self.pps_recon = await service.get_pps_recon()
+            self.pps_recon = await service.get_pps_recon(self.pps_recon_position_date)
         except Exception as e:
             self.pps_recon_error = str(e)
             import logging

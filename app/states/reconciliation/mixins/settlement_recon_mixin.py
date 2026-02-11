@@ -22,6 +22,13 @@ class SettlementReconMixin(rx.State, mixin=True):
     settlement_recon_last_updated: str = "—"
 
     settlement_recon_search: str = ""
+    settlement_recon_position_date: str = ""
+
+    async def set_settlement_recon_position_date(self, value: str):
+        """Set position date and reload data."""
+        self.settlement_recon_position_date = value
+        yield
+        await self.load_settlement_recon_data()
 
     async def load_settlement_recon_data(self):
         """Load Settlement recon data."""
@@ -29,7 +36,7 @@ class SettlementReconMixin(rx.State, mixin=True):
         self.settlement_recon_error = ""
         try:
             service = ReconciliationService()
-            self.settlement_recon = await service.get_settlement_recon()
+            self.settlement_recon = await service.get_settlement_recon(self.settlement_recon_position_date)
         except Exception as e:
             self.settlement_recon_error = str(e)
             import logging

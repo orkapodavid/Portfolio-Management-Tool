@@ -17,13 +17,20 @@ class BeneficialOwnershipMixin(rx.State, mixin=True):
     beneficial_ownership: list[BeneficialOwnershipItem] = []
     is_loading_beneficial_ownership: bool = False
     beneficial_ownership_last_updated: str = "—"
+    beneficial_ownership_position_date: str = ""
+
+    async def set_beneficial_ownership_position_date(self, value: str):
+        """Set position date and reload data."""
+        self.beneficial_ownership_position_date = value
+        yield
+        await self.load_beneficial_ownership()
 
     async def load_beneficial_ownership(self):
         """Load beneficial ownership data from ComplianceService."""
         self.is_loading_beneficial_ownership = True
         try:
             service = ComplianceService()
-            self.beneficial_ownership = await service.get_beneficial_ownership()
+            self.beneficial_ownership = await service.get_beneficial_ownership(self.beneficial_ownership_position_date)
             self.beneficial_ownership_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -43,7 +50,7 @@ class BeneficialOwnershipMixin(rx.State, mixin=True):
         await asyncio.sleep(0.3)  # Brief delay for loading overlay
         try:
             service = ComplianceService()
-            self.beneficial_ownership = await service.get_beneficial_ownership()
+            self.beneficial_ownership = await service.get_beneficial_ownership(self.beneficial_ownership_position_date)
             self.beneficial_ownership_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

@@ -7,7 +7,11 @@ AG-Grid based implementation for beneficial ownership table, replacing legacy rx
 import reflex as rx
 from reflex_ag_grid import ag_grid, AGFilters
 from app.states.compliance.compliance_state import ComplianceState
-from app.components.shared.ag_grid_config import create_standard_grid
+from app.components.shared.ag_grid_config import (
+    create_standard_grid,
+    FILTER_LABEL_CLASS,
+    FILTER_INPUT_CLASS,
+)
 
 
 # =============================================================================
@@ -117,6 +121,35 @@ _STORAGE_KEY = "beneficial_ownership_grid_state"
 _GRID_ID = "beneficial_ownership_grid"
 
 
+# =============================================================================
+# POSITION DATE FILTER BAR
+# =============================================================================
+
+
+def _position_date_bar() -> rx.Component:
+    """Position date selector bar."""
+    return rx.el.div(
+        rx.el.div(
+            rx.el.div(
+                rx.icon("calendar", size=14, class_name="text-gray-400"),
+                rx.el.span("POSITION DATE", class_name=FILTER_LABEL_CLASS),
+                rx.el.input(
+                    type="date",
+                    value=ComplianceState.beneficial_ownership_position_date,
+                    on_change=ComplianceState.set_beneficial_ownership_position_date,
+                    class_name=f"{FILTER_INPUT_CLASS} w-[150px]",
+                ),
+                class_name="flex items-center gap-2",
+            ),
+            class_name="flex items-center justify-between w-full",
+        ),
+        class_name=(
+            "w-full px-3 py-2 bg-gradient-to-r from-gray-50/80 to-slate-50/80 "
+            "border-b border-gray-100 backdrop-blur-sm"
+        ),
+    )
+
+
 def beneficial_ownership_ag_grid() -> rx.Component:
     """
     Beneficial Ownership AG-Grid component.
@@ -155,6 +188,7 @@ def beneficial_ownership_ag_grid() -> rx.Component:
             on_refresh=ComplianceState.force_refresh_beneficial_ownership,
             is_loading=ComplianceState.is_loading_beneficial_ownership,
         ),
+        _position_date_bar(),
         # Grid with row grouping support
         create_standard_grid(
             grid_id=_GRID_ID,

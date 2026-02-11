@@ -22,6 +22,13 @@ class RiskInputReconMixin(rx.State, mixin=True):
     risk_input_recon_last_updated: str = "—"
 
     risk_input_recon_search: str = ""
+    risk_input_recon_position_date: str = ""
+
+    async def set_risk_input_recon_position_date(self, value: str):
+        """Set position date and reload data."""
+        self.risk_input_recon_position_date = value
+        yield
+        await self.load_risk_input_recon_data()
 
     async def load_risk_input_recon_data(self):
         """Load Risk Input Recon data."""
@@ -29,7 +36,7 @@ class RiskInputReconMixin(rx.State, mixin=True):
         self.risk_input_recon_error = ""
         try:
             service = ReconciliationService()
-            self.risk_input_recon = await service.get_risk_input_recon()
+            self.risk_input_recon = await service.get_risk_input_recon(self.risk_input_recon_position_date)
         except Exception as e:
             self.risk_input_recon_error = str(e)
             import logging

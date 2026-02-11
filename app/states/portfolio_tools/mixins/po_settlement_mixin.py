@@ -22,13 +22,20 @@ class POSettlementMixin(rx.State, mixin=True):
     is_loading_po_settlement: bool = False
     po_settlement_last_updated: str = "—"
     po_settlement_auto_refresh: bool = True
+    po_settlement_position_date: str = datetime.now().strftime("%Y-%m-%d")
+
+    async def set_po_settlement_position_date(self, value: str):
+        """Set position date and reload data."""
+        self.po_settlement_position_date = value
+        yield
+        await self.load_po_settlement_data()
 
     async def load_po_settlement_data(self):
         """Load PO Settlement data from PortfolioToolsService."""
         self.is_loading_po_settlement = True
         try:
             service = PortfolioToolsService()
-            self.po_settlement = await service.get_po_settlement()
+            self.po_settlement = await service.get_po_settlement(self.po_settlement_position_date)
             self.po_settlement_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -92,7 +99,7 @@ class POSettlementMixin(rx.State, mixin=True):
         await asyncio.sleep(0.3)
         try:
             service = PortfolioToolsService()
-            self.po_settlement = await service.get_po_settlement()
+            self.po_settlement = await service.get_po_settlement(self.po_settlement_position_date)
             self.po_settlement_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

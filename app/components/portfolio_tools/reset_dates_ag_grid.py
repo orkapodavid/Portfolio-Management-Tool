@@ -2,12 +2,18 @@
 Reset Dates AG-Grid Component.
 
 Migrated to use create_standard_grid factory with full toolbar support.
+Includes filter bar with ticker, date range, frequency, month, day, and up/down dropdowns.
 """
 
 import reflex as rx
 from reflex_ag_grid import ag_grid, AGFilters
 from app.states.portfolio_tools.portfolio_tools_state import PortfolioToolsState
-from app.components.shared.ag_grid_config import create_standard_grid
+from app.components.shared.ag_grid_config import (
+    create_standard_grid,
+    FILTER_LABEL_CLASS,
+    FILTER_INPUT_CLASS,
+    FILTER_BTN_CLASS,
+)
 
 
 # =============================================================================
@@ -28,6 +34,21 @@ class ResetDatesGridState(rx.State):
 
 
 # =============================================================================
+# HELPER — styled select dropdown
+# =============================================================================
+
+
+def _select(value, on_change, options: list[str], width: str = "w-[140px]") -> rx.Component:
+    """Render a styled <select> dropdown."""
+    return rx.el.select(
+        *[rx.el.option(opt, value=opt) for opt in options],
+        value=value,
+        on_change=on_change,
+        class_name=f"{FILTER_INPUT_CLASS} {width}",
+    )
+
+
+# =============================================================================
 # COLUMN DEFINITIONS
 # =============================================================================
 
@@ -35,19 +56,20 @@ class ResetDatesGridState(rx.State):
 def _get_column_defs() -> list:
     return [
         ag_grid.column_def(
-            field="ticker",
-            header_name="Ticker",
-            filter=AGFilters.text,
-            min_width=100,
-            pinned="left",
-            tooltip_field="ticker",
-        ),
-        ag_grid.column_def(
             field="underlying",
             header_name="Underlying",
             filter=AGFilters.text,
             min_width=100,
+            pinned="left",
+            sortable=True,
             tooltip_field="underlying",
+        ),
+        ag_grid.column_def(
+            field="ticker",
+            header_name="Ticker",
+            filter=AGFilters.text,
+            min_width=140,
+            tooltip_field="ticker",
         ),
         ag_grid.column_def(
             field="company_name",
@@ -93,18 +115,137 @@ def _get_column_defs() -> list:
             min_width=130,
         ),
         ag_grid.column_def(
+            field="reset_date",
+            header_name="Reset Date",
+            filter=AGFilters.date,
+            min_width=110,
+        ),
+        ag_grid.column_def(
             field="reset_up_down",
             header_name="Reset Up/Down",
             filter="agSetColumnFilter",
             min_width=120,
         ),
-        ag_grid.column_def(
-            field="market_price",
-            header_name="Market Price",
-            filter=AGFilters.number,
-            min_width=110,
-        ),
     ]
+
+
+# =============================================================================
+# FILTER BAR
+# =============================================================================
+
+_FREQUENCY_OPTIONS = ["semiannually", "annually", "quarterly", "monthly"]
+_MONTH_OPTIONS = [str(m) for m in range(1, 13)]
+_DAY_OPTIONS = [str(d) for d in range(1, 32)]
+_UP_DOWN_OPTIONS = ["up and down", "up", "down"]
+_TICKER_OPTIONS = [
+    "4592 JP_Series 1",
+    "9984 JP_Series 2",
+    "6758 JP_Series 1",
+    "7203 JP_Series 1",
+]
+
+
+def _filter_bar() -> rx.Component:
+    """Two-row filter bar matching the reference design."""
+    return rx.el.div(
+        # ── Row 1: Select Ticker ──
+        rx.el.div(
+            rx.el.div(
+                rx.icon("tag", size=14, class_name="text-gray-400"),
+                rx.el.span("SELECT TICKER", class_name=FILTER_LABEL_CLASS),
+                _select(
+                    value=PortfolioToolsState.reset_dates_ticker,
+                    on_change=PortfolioToolsState.set_reset_dates_ticker,
+                    options=_TICKER_OPTIONS,
+                    width="w-[180px]",
+                ),
+                class_name="flex items-center gap-2",
+            ),
+            class_name="flex items-center gap-4 w-full",
+        ),
+        # ── Row 2: Date range + Frequency + Month + Day + Up/Down ──
+        rx.el.div(
+            # Start/End Date
+            rx.el.div(
+                rx.icon("calendar", size=14, class_name="text-gray-400"),
+                rx.el.span("START/END DATE", class_name=FILTER_LABEL_CLASS),
+                rx.el.input(
+                    type="date",
+                    value=PortfolioToolsState.reset_dates_start_date,
+                    on_change=PortfolioToolsState.set_reset_dates_start_date,
+                    class_name=f"{FILTER_INPUT_CLASS} w-[140px]",
+                ),
+                rx.el.span("TO", class_name="text-[10px] text-gray-400 font-medium"),
+                rx.el.input(
+                    type="date",
+                    value=PortfolioToolsState.reset_dates_end_date,
+                    on_change=PortfolioToolsState.set_reset_dates_end_date,
+                    class_name=f"{FILTER_INPUT_CLASS} w-[140px]",
+                ),
+                class_name="flex items-center gap-2",
+            ),
+            # Reset Frequency
+            rx.el.div(
+                rx.el.span("RESET FREQ", class_name=FILTER_LABEL_CLASS),
+                _select(
+                    value=PortfolioToolsState.reset_dates_frequency,
+                    on_change=PortfolioToolsState.set_reset_dates_frequency,
+                    options=_FREQUENCY_OPTIONS,
+                    width="w-[130px]",
+                ),
+                class_name="flex items-center gap-2",
+            ),
+            # Reset Month
+            rx.el.div(
+                rx.el.span("RESET MONTH", class_name=FILTER_LABEL_CLASS),
+                _select(
+                    value=PortfolioToolsState.reset_dates_month,
+                    on_change=PortfolioToolsState.set_reset_dates_month,
+                    options=_MONTH_OPTIONS,
+                    width="w-[60px]",
+                ),
+                class_name="flex items-center gap-2",
+            ),
+            # Reset on Day
+            rx.el.div(
+                rx.el.span("RESET ON DAY", class_name=FILTER_LABEL_CLASS),
+                _select(
+                    value=PortfolioToolsState.reset_dates_day,
+                    on_change=PortfolioToolsState.set_reset_dates_day,
+                    options=_DAY_OPTIONS,
+                    width="w-[60px]",
+                ),
+                class_name="flex items-center gap-2",
+            ),
+            # Reset Up/Down
+            rx.el.div(
+                rx.el.span("UP/DOWN", class_name=FILTER_LABEL_CLASS),
+                _select(
+                    value=PortfolioToolsState.reset_dates_up_down,
+                    on_change=PortfolioToolsState.set_reset_dates_up_down,
+                    options=_UP_DOWN_OPTIONS,
+                    width="w-[120px]",
+                ),
+                class_name="flex items-center gap-2",
+            ),
+            # Apply button
+            rx.el.button(
+                rx.icon("search", size=12),
+                rx.el.span("Apply"),
+                on_click=PortfolioToolsState.apply_reset_dates_filters,
+                class_name=(
+                    f"{FILTER_BTN_CLASS} bg-gradient-to-r from-blue-600 to-indigo-600 "
+                    "text-white hover:shadow-md"
+                ),
+            ),
+            class_name="flex items-center gap-4 flex-wrap w-full",
+        ),
+        class_name=(
+            "w-full px-3 py-2 flex flex-col gap-2 "
+            "bg-gradient-to-r from-gray-50/80 to-slate-50/80 "
+            "border-b border-gray-100 backdrop-blur-sm"
+        ),
+    )
 
 
 # =============================================================================
@@ -139,6 +280,7 @@ def reset_dates_ag_grid() -> rx.Component:
             on_refresh=PortfolioToolsState.force_refresh_reset_dates,
             is_loading=PortfolioToolsState.is_loading_reset_dates,
         ),
+        _filter_bar(),
         create_standard_grid(
             grid_id=_GRID_ID,
             row_data=PortfolioToolsState.reset_dates,

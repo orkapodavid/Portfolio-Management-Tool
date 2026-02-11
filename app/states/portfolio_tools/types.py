@@ -91,6 +91,7 @@ class ResetDateItem(TypedDict):
     first_reset: str
     expiry: str
     latest_reset: str
+    reset_date: str
     reset_up_down: str
     market_price: str
 

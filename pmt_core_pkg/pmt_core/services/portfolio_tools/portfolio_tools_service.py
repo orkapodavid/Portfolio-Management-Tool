@@ -156,9 +156,9 @@ class PortfolioToolsService:
             },
         ]
 
-    async def get_po_settlement(self) -> list[dict[str, Any]]:
+    async def get_po_settlement(self, position_date: str = None) -> list[dict[str, Any]]:
         """Get PO settlement data. TODO: Replace with DB query."""
-        logger.info("Returning mock PO settlement data")
+        logger.info(f"Returning mock PO settlement data for date={position_date}")
         return [
             {
                 "id": 1,
@@ -196,14 +196,26 @@ class PortfolioToolsService:
             },
         ]
 
-    async def get_reset_dates(self) -> list[dict[str, Any]]:
+    async def get_reset_dates(
+        self,
+        ticker: str = None,
+        start_date: str = None,
+        end_date: str = None,
+        frequency: str = None,
+        reset_month: str = None,
+        reset_day: str = None,
+        reset_up_down: str = None,
+    ) -> list[dict[str, Any]]:
         """Get reset dates data. TODO: Replace with DB query."""
-        logger.info("Returning mock reset dates data")
+        logger.info(
+            f"Returning mock reset dates data (ticker={ticker}, "
+            f"range={start_date}~{end_date}, freq={frequency})"
+        )
         return [
             {
                 "id": 1,
                 "underlying": "AAPL",
-                "ticker": "AAPL",
+                "ticker": ticker or "4592 JP_Series 1",
                 "company_name": "Apple Inc.",
                 "sec_type": "Warrant",
                 "currency": "USD",
@@ -211,7 +223,8 @@ class PortfolioToolsService:
                 "first_reset": "2025-06-01",
                 "expiry": "2027-01-01",
                 "latest_reset": "2025-06-01",
-                "reset_up_down": "Up",
+                "reset_date": start_date or "2026-03-03",
+                "reset_up_down": reset_up_down or "Up",
                 "market_price": "182.50",
             },
         ]
@@ -234,9 +247,9 @@ class PortfolioToolsService:
             },
         ]
 
-    async def get_cb_installments(self) -> list[dict[str, Any]]:
+    async def get_cb_installments(self, position_date: str = None) -> list[dict[str, Any]]:
         """Get CB installments data. TODO: Replace with DB query."""
-        logger.info("Returning mock CB installments data")
+        logger.info(f"Returning mock CB installments data for date={position_date}")
         return [
             {
                 "id": 1,
@@ -254,9 +267,9 @@ class PortfolioToolsService:
             },
         ]
 
-    async def get_excess_amount(self) -> list[dict[str, Any]]:
+    async def get_excess_amount(self, position_date: str = None) -> list[dict[str, Any]]:
         """Get excess amount data. TODO: Replace with DB query."""
-        logger.info("Returning mock excess amount data")
+        logger.info(f"Returning mock excess amount data for date={position_date}")
         return [
             {
                 "id": 1,

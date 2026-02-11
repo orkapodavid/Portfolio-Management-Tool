@@ -19,14 +19,14 @@ class ComplianceService:
         """Get restricted list."""
         return await self.repository.get_restricted_list()
 
-    async def get_undertakings(self) -> List[ComplianceRecord]:
+    async def get_undertakings(self, position_date: str = None) -> List[ComplianceRecord]:
         """Get undertakings."""
-        return await self.repository.get_undertakings()
+        return await self.repository.get_undertakings(position_date=position_date)
 
-    async def get_beneficial_ownership(self) -> List[ComplianceRecord]:
+    async def get_beneficial_ownership(self, position_date: str = None) -> List[ComplianceRecord]:
         """Get beneficial ownership."""
-        return await self.repository.get_beneficial_ownership()
+        return await self.repository.get_beneficial_ownership(position_date=position_date)
 
-    async def get_monthly_exercise_limit(self) -> List[dict]:
+    async def get_monthly_exercise_limit(self, position_date: str = None) -> List[dict]:
         """Get monthly exercise limits."""
-        return await self.repository.get_monthly_exercise_limits()
+        return await self.repository.get_monthly_exercise_limits(position_date=position_date)

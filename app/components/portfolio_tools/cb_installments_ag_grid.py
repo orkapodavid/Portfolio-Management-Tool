@@ -7,7 +7,11 @@ Migrated to use create_standard_grid factory with full toolbar support.
 import reflex as rx
 from reflex_ag_grid import ag_grid, AGFilters
 from app.states.portfolio_tools.portfolio_tools_state import PortfolioToolsState
-from app.components.shared.ag_grid_config import create_standard_grid
+from app.components.shared.ag_grid_config import (
+    create_standard_grid,
+    FILTER_LABEL_CLASS,
+    FILTER_INPUT_CLASS,
+)
 
 
 # =============================================================================
@@ -107,6 +111,38 @@ def _get_column_defs() -> list:
 
 
 # =============================================================================
+# POSITION DATE FILTER BAR
+# =============================================================================
+
+
+def _position_date_bar() -> rx.Component:
+    """Position date selector bar — full-width background."""
+    return rx.el.div(
+        rx.el.div(
+            rx.el.div(
+                rx.icon("calendar", size=14, class_name="text-gray-400"),
+                rx.el.span(
+                    "POSITION DATE",
+                    class_name=FILTER_LABEL_CLASS,
+                ),
+                rx.el.input(
+                    type="date",
+                    value=PortfolioToolsState.cb_installments_position_date,
+                    on_change=PortfolioToolsState.set_cb_installments_position_date,
+                    class_name=f"{FILTER_INPUT_CLASS} w-[150px]",
+                ),
+                class_name="flex items-center gap-2",
+            ),
+            class_name="flex items-center justify-between w-full",
+        ),
+        class_name=(
+            "w-full px-3 py-2 bg-gradient-to-r from-gray-50/80 to-slate-50/80 "
+            "border-b border-gray-100 backdrop-blur-sm"
+        ),
+    )
+
+
+# =============================================================================
 # MAIN COMPONENT
 # =============================================================================
 
@@ -138,6 +174,8 @@ def cb_installments_ag_grid() -> rx.Component:
             on_refresh=PortfolioToolsState.force_refresh_cb_installments,
             is_loading=PortfolioToolsState.is_loading_cb_installments,
         ),
+        # Position date selector bar
+        _position_date_bar(),
         create_standard_grid(
             grid_id=_GRID_ID,
             row_data=PortfolioToolsState.cb_installments,

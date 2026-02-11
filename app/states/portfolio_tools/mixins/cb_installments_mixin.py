@@ -22,13 +22,20 @@ class CBInstallmentsMixin(rx.State, mixin=True):
     is_loading_cb_installments: bool = False
     cb_installments_last_updated: str = "—"
     cb_installments_auto_refresh: bool = True
+    cb_installments_position_date: str = datetime.now().strftime("%Y-%m-%d")
+
+    async def set_cb_installments_position_date(self, value: str):
+        """Set position date and reload data."""
+        self.cb_installments_position_date = value
+        yield
+        await self.load_cb_installments_data()
 
     async def load_cb_installments_data(self):
         """Load CB Installments data from PortfolioToolsService."""
         self.is_loading_cb_installments = True
         try:
             service = PortfolioToolsService()
-            self.cb_installments = await service.get_cb_installments()
+            self.cb_installments = await service.get_cb_installments(self.cb_installments_position_date)
             self.cb_installments_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -92,7 +99,7 @@ class CBInstallmentsMixin(rx.State, mixin=True):
         await asyncio.sleep(0.3)
         try:
             service = PortfolioToolsService()
-            self.cb_installments = await service.get_cb_installments()
+            self.cb_installments = await service.get_cb_installments(self.cb_installments_position_date)
             self.cb_installments_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

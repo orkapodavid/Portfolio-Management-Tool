@@ -17,13 +17,20 @@ class UndertakingsMixin(rx.State, mixin=True):
     undertakings: list[UndertakingItem] = []
     is_loading_undertakings: bool = False
     undertakings_last_updated: str = "—"
+    undertakings_position_date: str = ""
+
+    async def set_undertakings_position_date(self, value: str):
+        """Set position date and reload data."""
+        self.undertakings_position_date = value
+        yield
+        await self.load_undertakings()
 
     async def load_undertakings(self):
         """Load undertakings data from ComplianceService."""
         self.is_loading_undertakings = True
         try:
             service = ComplianceService()
-            self.undertakings = await service.get_undertakings()
+            self.undertakings = await service.get_undertakings(self.undertakings_position_date)
             self.undertakings_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -43,7 +50,7 @@ class UndertakingsMixin(rx.State, mixin=True):
         await asyncio.sleep(0.3)  # Brief delay for loading overlay
         try:
             service = ComplianceService()
-            self.undertakings = await service.get_undertakings()
+            self.undertakings = await service.get_undertakings(self.undertakings_position_date)
             self.undertakings_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

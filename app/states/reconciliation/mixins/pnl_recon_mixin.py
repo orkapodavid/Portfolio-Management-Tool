@@ -22,6 +22,13 @@ class PnLReconMixin(rx.State, mixin=True):
     pnl_recon_last_updated: str = "—"
 
     pnl_recon_search: str = ""
+    pnl_recon_position_date: str = ""
+
+    async def set_pnl_recon_position_date(self, value: str):
+        """Set position date and reload data."""
+        self.pnl_recon_position_date = value
+        yield
+        await self.load_pnl_recon_data()
 
     async def load_pnl_recon_data(self):
         """Load PnL Recon data."""
@@ -29,7 +36,7 @@ class PnLReconMixin(rx.State, mixin=True):
         self.pnl_recon_error = ""
         try:
             service = ReconciliationService()
-            self.pnl_recon = await service.get_pnl_recon()
+            self.pnl_recon = await service.get_pnl_recon(self.pnl_recon_position_date)
         except Exception as e:
             self.pnl_recon_error = str(e)
             import logging

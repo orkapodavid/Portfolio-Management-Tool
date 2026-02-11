@@ -40,10 +40,10 @@ class ComplianceRepository(DatabaseRepository):
             ]
         return []
 
-    async def get_undertakings(self) -> List[ComplianceRecord]:
+    async def get_undertakings(self, position_date: str = None) -> List[ComplianceRecord]:
         """Get undertakings data."""
         if self.mock_mode:
-            logger.info("Returning mock undertakings data")
+            logger.info(f"Returning mock undertakings data for date={position_date}")
             tickers = ["AAPL", "MSFT", "TSLA", "NVDA", "META"]
             return [
                 ComplianceRecord(
@@ -68,10 +68,10 @@ class ComplianceRepository(DatabaseRepository):
             ]
         return []
 
-    async def get_beneficial_ownership(self) -> List[ComplianceRecord]:
+    async def get_beneficial_ownership(self, position_date: str = None) -> List[ComplianceRecord]:
         """Get beneficial ownership data."""
         if self.mock_mode:
-            logger.info("Returning mock beneficial ownership data")
+            logger.info(f"Returning mock beneficial ownership data for date={position_date}")
             tickers = ["AAPL", "TSLA", "NVDA", "AMD", "META", "GOOGL"]
             return [
                 ComplianceRecord(
@@ -94,10 +94,10 @@ class ComplianceRepository(DatabaseRepository):
             ]
         return []
 
-    async def get_monthly_exercise_limits(self) -> List[dict[str, Any]]:
+    async def get_monthly_exercise_limits(self, position_date: str = None) -> List[dict[str, Any]]:
         """Get monthly exercise limits data."""
         if self.mock_mode:
-            logger.info("Returning mock monthly exercise limits data")
+            logger.info(f"Returning mock monthly exercise limits data for date={position_date}")
             tickers = ["AAPL", "TSLA", "NVDA", "META"]
             return [
                 {
