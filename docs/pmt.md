@@ -1,4 +1,8 @@
-# PMT Architecture Map (PyQt, Windows)
+📖 [Back to Documentation Index](index.md)
+
+*This documents the **PyQt desktop app** architecture for code reuse purposes. See [pmt_web_plan.md](pmt_web_plan.md) for the shared logic strategy.*
+
+# PMT Desktop App — Architecture Map (PyQt, Windows)
 
 This notes the structure and data plumbing of the Portfolio Management Tool (PyQt5 desktop app packaged by `main.spec`). Docs are ignored; focus is on the runtime code that drives the UI.
 

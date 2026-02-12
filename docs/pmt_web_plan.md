@@ -2,7 +2,9 @@ I have transcribed the content of the images into the Markdown document below. I
 
 ---
 
-# Shared Business Logic Guide (PyQt + Reflex)
+> 📖 [Back to Documentation Index](index.md) · See also: [PyQt Architecture Map](pmt.md)
+
+# PMT Web — Sharing Business Logic Between PyQt and Reflex
 
 This guide explains how to share the existing business logic (currently in `source/` and `resources/`) between the legacy PyQt app and a new Reflex web app without breaking either UI.
 

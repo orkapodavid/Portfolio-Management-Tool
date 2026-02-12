@@ -5,6 +5,8 @@ This repository is designed to be friendly to AI agents.
 ## Project Overview
 Portfolio Management Tool built with **Reflex** (Python web framework) for managing financial positions, compliance, risk, and operations.
 
+> **CRITICAL**: This is a **Reflex** application. The UI is written entirely in Python but compiles to React/Next.js. DO NOT write raw HTML, JavaScript, or React components. All UI must use `rx.*` components.
+
 ## Project Structure
 ```
 [root]
@@ -38,6 +40,41 @@ MS SQL Server (external) via `DATABASE_URL` environment variable.
 Top Nav: Positions | Compliance | PnL | Risk | Portfolio Tools | Market Data | Instrument | Events | Operations | Orders
 
 Global: Header Dashboard (metrics) + Notifications Sidebar (alerts)
+
+---
+
+## UI Architecture: 4-Region Layout
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    REGION 1: TOP NAVIGATION                      │
+│  [Market Data] [Positions] [PnL] [Risk] [Recon] ... (11 modules) │
+├─────────────────────────────────────────────────────────────────┤
+│                 REGION 2: PERFORMANCE HEADER                     │
+│  ┌─────────┬─────────┬─────────┬─────────┬─────────┐            │
+│  │Daily PnL│Pos FX   │CCY Hedged│YTD Disc │YTD R/U  │ [KPI Row]  │
+│  └─────────┴─────────┴─────────┴─────────┴─────────┘            │
+│  [▼ Show Top Movers - Collapsible 5 mini-grids]                 │
+├─────────────────────────────────────────────────────┬───────────┤
+│              REGION 3: CONTEXTUAL WORKSPACE         │ REGION 4  │
+│  ┌─────────────────────────────────────────────┐   │NOTIF BAR  │
+│  │ [Sub-tab 1] [Sub-tab 2] [Sub-tab 3] ...     │   │           │
+│  ├─────────────────────────────────────────────┤   │ ┌───────┐ │
+│  │ [Generate▼] [Export] [🔄] [Search] [Date]   │   │ │Alert 1│ │
+│  ├─────────────────────────────────────────────┤   │ └───────┘ │
+│  │           DATA TABLE (scrollable)           │   │ ┌───────┐ │
+│  ├─────────────────────────────────────────────┤   │ │Alert 2│ │
+│  │ [Rows: 50▼] Page 1 of 8 (400 items) [< >]   │   │ └───────┘ │
+│  └─────────────────────────────────────────────┘   └───────────┘
+└─────────────────────────────────────────────────────────────────┘
+```
+
+| Region | Component | File |
+|--------|-----------|------|
+| 1 | Top Navigation | `components/top_navigation.py` |
+| 2 | Performance Header | `components/performance_header.py` |
+| 3 | Contextual Workspace | `components/contextual_workspace.py` |
+| 4 | Notification Sidebar | `components/notification_sidebar.py` |
 
 ---
 
@@ -88,6 +125,94 @@ Use custom exceptions from `app/exceptions.py`: `PMTError`, `DatabaseConnectionE
 
 ---
 
+## Reflex UI Patterns
+
+### Conditional Rendering (`rx.cond`)
+
+**NEVER use Python if/else in component functions**. Always use `rx.cond`:
+
+```python
+# ✅ CORRECT
+rx.cond(
+    State.is_positive,
+    rx.el.span("Positive", class_name="text-green-500"),
+    rx.el.span("Negative", class_name="text-red-500"),
+)
+
+# ❌ WRONG - Never use Python if/else
+if state.is_positive:  # BREAKS COMPILATION
+    return rx.el.span("Positive")
+```
+
+### List Iteration (`rx.foreach`)
+
+**NEVER use Python for loops or list comprehensions**:
+
+```python
+# ✅ CORRECT
+rx.foreach(State.items, render_item)
+
+# ❌ WRONG
+[render_item(item) for item in State.items]  # BREAKS
+```
+
+### Multi-Condition Rendering (`rx.match`)
+
+```python
+rx.match(
+    notification["type"],
+    ("alert", rx.el.div(class_name="bg-amber-100")),
+    ("warning", rx.el.div(class_name="bg-yellow-100")),
+    ("info", rx.el.div(class_name="bg-blue-100")),
+    rx.el.div(class_name="bg-gray-100"),  # default
+)
+```
+
+### Reflex-Specific Reminders
+
+1. **All UI is Python**: Never write JSX, HTML, or JavaScript directly.
+2. **`rx.el.*` vs `rx.*`**: Use `rx.el.*` (HTML elements) for most components. Use `rx.*` only for special components like `rx.icon`, `rx.recharts.*`.
+3. **Event Handlers**: Must be decorated with `@rx.event`. Background tasks use `@rx.event(background=True)`.
+4. **Computed Vars**: Use `@rx.var` for derived state. Use `cache=True` for expensive computations.
+5. **Cross-State Access**: Always use `await self.get_state(OtherState)` in async methods.
+6. **Styling**: Use Tailwind classes via `class_name`. Never use inline `style={}` except for dynamic values.
+
+---
+
+## Critical Troubleshooting
+
+### PyO3 / Tokio Panic with Background Tasks
+
+**Issue**: Using a `while True` loop inside a `@rx.event(background=True)` handler can cause the application to crash with a `tokio-runtime-worker` panic:
+`"Cannot drop pointer into Python heap without the thread being attached to the Python interpreter"`
+
+**Solution**: Use the **Recursive Event Pattern** instead of an infinite loop.
+
+**❌ BAD (Unsafe):**
+```python
+@rx.event(background=True)
+async def start_auto_refresh(self):
+    while True:  # <--- CAUSES PANIC
+        async with self:
+            if not self.active: break
+            self.refresh_data()
+        await asyncio.sleep(2)
+```
+
+**✅ GOOD (Safe):**
+```python
+@rx.event(background=True)
+async def run_refresh_step(self):
+    async with self:
+        if not self.active: return
+        self.refresh_data()
+    
+    await asyncio.sleep(2)
+    return type(self).run_refresh_step  # Recursively schedule next step
+```
+
+---
+
 ## Current Blockers
 
 | Resource | Blocks |
@@ -97,11 +222,12 @@ Use custom exceptions from `app/exceptions.py`: `PMTError`, `DatabaseConnectionE
 | Config Files (`resources/config/`) | Config migration |
 | Bloomberg Terminal | EMSX integration |
 
-See `docs/milestone-1-pre-integration-checklist.md` for details.
+See `docs/todos/milestone-1-pre-integration-checklist.md` for details.
 
 ---
 
 ## References
+- `docs/index.md` - **Documentation index** (start here)
 - `pmt_core_pkg/README.md` - Shared package docs
 - `docs/style_guides/reflex-architecture-guide.md` - Architecture patterns
 - `app/states/pnl/pnl_state.py` - Exemplar implementation
@@ -117,3 +243,4 @@ node .agents/skills/superpowers/bootstrap.js
 
 Follow the instructions it returns.
 </EXTREMELY_IMPORTANT>
+

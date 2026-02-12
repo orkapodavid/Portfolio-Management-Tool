@@ -218,11 +218,63 @@ uv run pytest
 
 ---
 
+## Tech Stack
+
+- **Framework**: [Reflex](https://reflex.dev) (Python → React/Next.js)
+- **Styling**: TailwindCSS v3
+- **Icons**: Lucide Icons via `rx.icon()`
+- **Charts**: Recharts via `rx.recharts`
+- **Data**: yfinance for market data
+
+---
+
+## Key Routes
+
+| Route | Description |
+|-------|-------------|
+| `/pmt/` | Main dashboard with 4-region layout |
+| `/pmt/pnl` | P&L Change, Summary, Currency, Full views |
+| `/pmt/positions` | Position data, Stock/Warrant/Bond positions |
+| `/pmt/market-data` | Market data, FX, Historical, Trading Calendar |
+| `/pmt/risk` | Delta Change, Risk Measures, Risk Inputs, Pricers |
+| `/pmt/recon` | PPS, Settlement, Failed Trades, PnL Recon |
+| `/pmt/compliance` | Restricted List, Undertakings, Beneficial Ownership |
+| `/pmt/portfolio-tools` | Pay-To-Hold, Stock Borrow, Resets, Installments |
+| `/pmt/instruments` | Ticker Data, Stock Screener, Special Terms |
+| `/pmt/events` | Event Calendar, Event Stream, Reverse Inquiry |
+| `/pmt/operations` | Daily Procedure Check, Operation Process |
+| `/pmt/orders` | EMSX Order, EMSX Route |
+
+---
+
+## Troubleshooting
+
+**Port already in use**:
+```bash
+uv run reflex run --frontend-port 3001 --backend-port 8001
+```
+
+**Frontend not building**:
+```bash
+rm -rf .web
+uv run reflex run
+```
+
+**Pydantic V1 compatibility (Python 3.14+)**:
+```bash
+# Recreate virtual environment with Python 3.13
+uv venv --python 3.13 .venv
+uv sync
+```
+
+---
+
 ## Documentation
 
+- **[docs/index.md](docs/index.md)** - **Documentation index** (start here)
 - **[AGENTS.md](AGENTS.md)** - Guide for AI agents working with this codebase
 - **[pmt_core_pkg/README.md](pmt_core_pkg/README.md)** - Detailed pmt_core package documentation
-- **[docs/milestone-1-pre-integration-checklist.md](docs/milestone-1-pre-integration-checklist.md)** - Integration as
+- **[docs/todos/milestone-1-pre-integration-checklist.md](docs/todos/milestone-1-pre-integration-checklist.md)** - Integration preparation checklist
 
 ---
 
