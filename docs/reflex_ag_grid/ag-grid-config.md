@@ -8,13 +8,14 @@
 
 ```
 app/components/shared/ag_grid_config/
-├── __init__.py            # Re-exports all 16 public symbols (backward-compatible)
+├── __init__.py            # Re-exports all 18 public symbols (backward-compatible)
 ├── constants.py           # Universal config: status bar, default col defs, overlay
 ├── grid_factory.py        # create_standard_grid() factory function
 ├── export_helpers.py      # Excel/CSV export params, JS helpers
 ├── state_persistence.py   # grid_state_script() — localStorage save/restore/reset
 ├── toolbar.py             # grid_toolbar() — unified toolbar component
-└── filter_bar.py          # filter_date_range_bar(), filter_date_input(), CSS constants
+├── filter_bar.py          # filter_date_range_bar(), filter_date_input(), CSS constants
+└── context_menu.py        # build_context_menu(), context_menu_dispatch_input()
 ```
 
 ### Import Pattern (unchanged)
@@ -29,6 +30,8 @@ from app.components.shared.ag_grid_config import (
     get_default_export_params,
     get_default_csv_export_params,
     filter_date_range_bar,
+    build_context_menu,
+    context_menu_dispatch_input,
     FILTER_BTN_CLASS,
 )
 ```
@@ -159,6 +162,44 @@ filter_date_range_bar(
 
 ---
 
+### `context_menu.py` — Custom Context Menu
+
+Adds custom right-click context menu items to AG Grid Enterprise grids.
+
+| Symbol | Type | Description |
+|--------|------|-------------|
+| `build_context_menu(...)` | `rx.Var` | Builds a `getContextMenuItems` JS callback |
+| `context_menu_dispatch_input(...)` | `Component` | Hidden input bridge for JS→Reflex event dispatch |
+
+**Architecture:** Uses a visually-hidden `<input>` as a bridge between AG Grid's JS context menu `action` callbacks and Reflex's Python event handlers. When a custom menu item is clicked, JS writes a JSON payload to the hidden input, which triggers Reflex's `on_change` to dispatch to the backend.
+
+**`build_context_menu` parameters:**
+
+```python
+build_context_menu(
+    target_id: str,               # Must match the target_id in context_menu_dispatch_input
+    items: list[dict],            # List of custom menu items (see below)
+    include_defaults: bool=True,  # Append built-in Copy/Export items
+) -> rx.Var
+```
+
+Each item dict:
+- `name` (str): Display label (e.g. `"Rerun"`)
+- `icon` (str, optional): Emoji or short HTML (e.g. `"🔄"`)
+
+**`context_menu_dispatch_input` parameters:**
+
+```python
+context_menu_dispatch_input(
+    target_id: str,       # Must match the target_id used in build_context_menu
+    on_action: EventHandler,  # State handler receiving JSON payload str
+)
+```
+
+The `on_action` handler receives a JSON string: `{"action": "Rerun", "row": {...row data...}}`
+
+---
+
 ## Complete Usage Example
 
 ```python
@@ -169,13 +210,30 @@ from app.components.shared.ag_grid_config import (
     get_default_export_params,
     get_default_csv_export_params,
     filter_date_range_bar,
+    build_context_menu,
+    context_menu_dispatch_input,
 )
 
 _STORAGE_KEY = "my_grid_state"
 _GRID_ID = "my_grid"
+_CTX_MENU_ID = "my_grid_ctx"
+
+# Build the context menu once at module level
+_CONTEXT_MENU = build_context_menu(
+    target_id=_CTX_MENU_ID,
+    items=[
+        {"name": "Rerun", "icon": "🔄"},
+        {"name": "Kill",  "icon": "🛑"},
+    ],
+)
 
 def my_grid_component() -> rx.Component:
     return rx.vstack(
+        # 0. Context menu dispatch bridge
+        context_menu_dispatch_input(
+            target_id=_CTX_MENU_ID,
+            on_action=MyState.handle_context_menu_action,
+        ),
         # 1. State persistence script
         rx.script(grid_state_script(_STORAGE_KEY, _GRID_ID)),
         # 2. Toolbar
@@ -201,7 +259,7 @@ def my_grid_component() -> rx.Component:
             has_active_filters=MyState.has_filters,
             on_clear=MyState.clear_filters,
         ),
-        # 4. Grid
+        # 4. Grid (pass context menu via kwargs)
         create_standard_grid(
             grid_id=_GRID_ID,
             row_data=MyState.data,
@@ -212,11 +270,31 @@ def my_grid_component() -> rx.Component:
             default_excel_export_params=get_default_export_params("my_table"),
             default_csv_export_params=get_default_csv_export_params("my_table"),
             quick_filter_text=MyState.search_text,
+            get_context_menu_items=_CONTEXT_MENU,
         ),
         width="100%",
         height="100%",
         spacing="0",
     )
+```
+
+### Context Menu State Handler Example
+
+```python
+import json
+
+class MyState(rx.State):
+    async def handle_context_menu_action(self, payload_json: str):
+        """Handle context menu actions from AG Grid."""
+        payload = json.loads(payload_json)
+        action = payload["action"]   # "Rerun" or "Kill"
+        row = payload["row"]         # full row data dict
+
+        if action == "Rerun":
+            # ... call your service
+            yield rx.toast.success(f"Rerunning {row['name']}")
+        elif action == "Kill":
+            yield rx.toast.warning(f"Killing {row['name']}")
 ```
 
 ---
