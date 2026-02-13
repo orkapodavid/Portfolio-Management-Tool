@@ -1,0 +1,39 @@
+[project]
+name = "reflex-ui-starter"
+version = "0.1.0"
+description = "A Reflex UI starter template with tabbed navigation, notifications, and AG Grid"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "reflex==0.8.26",
+    "python-dotenv",
+    "reflex-ag-grid",
+    "starter-core",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["starter_app"]
+
+[tool.uv.sources]
+starter-core = { path = "./core_pkg", editable = true }
+reflex-ag-grid = { workspace = true }
+
+[tool.uv.workspace]
+members = ["reflex_ag_grid"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "core_pkg/tests_core"]
+python_files = ["test_*.py"]
+asyncio_mode = "auto"
+
+[tool.reflex]
+app_name = "starter_app"

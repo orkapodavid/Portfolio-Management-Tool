@@ -1,0 +1,21 @@
+/* Notification Row Highlight */
+.notification-highlight {
+    background-color: #FFF2CC !important;
+    animation: notification-pulse 2s ease-in-out infinite;
+    position: relative;
+}
+
+.notification-highlight::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: #FFC000;
+}
+
+@keyframes notification-pulse {
+    0%, 100% { background-color: #FFF2CC; }
+    50% { background-color: #FFE699; }
+}
