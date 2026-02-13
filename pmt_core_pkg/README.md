@@ -5,6 +5,7 @@ Shared business logic for Portfolio Management Tool.
 ## Overview
 
 `pmt_core` is a standalone Python package containing shared business logic, data models, and utilities used by both:
+
 - The **Reflex web application** (`app/`)
 - Future integration with **PyQt desktop application** (`source/`)
 
@@ -13,7 +14,6 @@ This package enables code reuse and maintains consistency between the two UIs.
 ## Installation
 
 ### Development (Editable Install)
-
 ```bash
 # From repository root
 pip install -e ./pmt_core
@@ -23,7 +23,6 @@ uv pip install -e ./pmt_core
 ```
 
 ### Verify Installation
-
 ```python
 from pmt_core import __version__
 print(f"pmt_core version: {__version__}")
@@ -33,47 +32,82 @@ print(f"pmt_core version: {__version__}")
 
 ```
 pmt_core/
-├── models/          # Enums, dataclasses, TypedDicts
-│   ├── types.py     # Data structure definitions
-│   └── enums.py     # Enumeration types
-├── services/        # Business logic (pricing, reporting, EMSX)
-├── repositories/    # Database/file access wrappers
-├── resources/       # Packaged configs/templates
-└── utilities/       # Config/logging helpers (UI-free)
+├── models/          # Data descriptions (Pydantic models, TypedDicts, Enums)
+├── services/        # Business logic (Pricing, Risk, Reporting, etc.)
+├── repositories/    # Data access layer (Database, File System)
+├── exceptions/      # Custom exception hierarchy
+├── resources/       # Static resources (Config templates, SQL queries)
+└── utilities/       # Independent helpers (Logging, Dates)
 ```
 
 ## Usage
 
-### Type Definitions
+### Models & Enums
+
+Imports are organized for easy access.
 
 ```python
-from pmt_core.models import PositionRecord, InstrumentType
+from pmt_core.models import PositionRecord, InstrumentType, OrderStatus
 
-# Use types for type hints
-def process_position(position: PositionRecord) -> None:
-    if position["sec_type"] == InstrumentType.STOCK:
-        # Handle stock position
-        pass
+def check_status(status: OrderStatus):
+    if status == OrderStatus.FILLED:
+        print("Order filled!")
+
+pos: PositionRecord = {
+    "symbol": "AAPL",
+    "sec_type": InstrumentType.STOCK,
+    "position": 100,
+    "avg_cost": 150.0
+}
 ```
 
-### Enums
+### Services
+
+Services encapsulate business logic.
 
 ```python
-from pmt_core.models import DashboardSection, OrderStatus
+from pmt_core.services import ReportService, PositionService
 
-current_section = DashboardSection.POSITIONS
-order_status = OrderStatus.WORKING
+# Services handle complex operations
+# report = ReportService.generate_daily_pnl()
 ```
 
-## Current Status
+### Repositories
 
-**Version:** 0.1.0 (Scaffold)
+Repositories handle data access.
 
-This package is currently a scaffold with:
-- ✅ Preliminary type definitions based on documentation
-- ✅ Placeholder enums for common values
-- ⏳ Services pending PyQt source code integration
-- ⏳ Repositories pending database access
+```python
+from pmt_core.repositories import PositionRepository
+
+# Repositories abstract the data storage
+# positions = PositionRepository.get_all_positions()
+```
+
+### Exceptions
+
+Structured error handling.
+
+```python
+from pmt_core.exceptions import PMTError, DataValidationError
+
+try:
+    # perform operation
+    pass
+except DataValidationError as e:
+    print(f"Invalid data: {e}")
+```
+
+## Testing
+
+Tests are located in `tests_core/`.
+
+```bash
+# Run all tests
+pytest pmt_core_pkg/tests_core
+
+# Run specific test file
+pytest pmt_core_pkg/tests_core/unit/test_models.py
+```
 
 ## Dependencies
 
@@ -83,6 +117,5 @@ This package is currently a scaffold with:
 
 ## Related Documentation
 
-- [Milestone 1 Checklist](../docs/milestone-1-pre-integration-checklist.md)
 - [PMT Architecture](../docs/pmt.md)
 - [Main AGENTS.md](../AGENTS.md)
