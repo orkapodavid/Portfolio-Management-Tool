@@ -7,24 +7,87 @@ Portfolio Management Tool built with **Reflex** (Python web framework) for manag
 
 > **CRITICAL**: This is a **Reflex** application. The UI is written entirely in Python but compiles to React/Next.js. DO NOT write raw HTML, JavaScript, or React components. All UI must use `rx.*` components.
 
+---
+
+## ⚠️ Architecture: Dual-Package Separation
+
+> **THE GOLDEN RULE**: Business / backend logic lives in **`pmt_core_pkg/pmt_core/`**. UI / UX logic lives in **`app/`**. Never mix them.
+
+```
+┌───────────────────────────────────────────────────────────────┐
+│                          app/                                 │
+│  ┌────────────┐  ┌─────────────┐  ┌────────────────────────┐ │
+│  │   pages/   │  │ components/ │  │       states/          │ │
+│  │ (routing)  │→ │ (UI render) │← │ (Reflex state mgmt)    │ │
+│  └────────────┘  └─────────────┘  └──────────┬─────────────┘ │
+│                                               │               │
+│  ┌────────────────────────────────────────────┤               │
+│  │            app/services/                   │               │
+│  │  Thin adapters — call pmt_core services    │               │
+│  │  May add UI-specific constants, caching    │               │
+│  └────────────────────────────────────────────┤               │
+└───────────────────────────────────────────────┼───────────────┘
+                                                │ imports
+┌───────────────────────────────────────────────┼───────────────┐
+│                pmt_core_pkg/pmt_core/         │               │
+│  ┌──────────┐  ┌──────────────┐  ┌────────────┴─────────────┐ │
+│  │ models/  │  │repositories/ │  │       services/          │ │
+│  │ (domain) │← │  (data DAL)  │← │  (business logic)       │ │
+│  └──────────┘  └──────────────┘  └──────────────────────────┘ │
+│                                                               │
+│  ⚠️  NO Reflex imports. NO app/ imports.                      │
+└───────────────────────────────────────────────────────────────┘
+```
+
+### Import Hierarchy (one-way)
+
+```
+pmt_core.services → app.services → app.states → app.components
+```
+
+- `pmt_core_pkg/` must **NEVER** import from `reflex` or `app/`
+- `app/states/` calls core services for data; manages Reflex-specific state (loading, error, search)
+- `app/components/` reads state vars and renders UI; never calls services directly
+- `app/services/` is a thin adapter layer; may add caching, error wrapping, or UI-specific constants
+
+### Where Does Logic Belong?
+
+| Logic Type | Package | Example |
+|-----------|---------|--------|
+| Data models, TypedDicts, Enums | `pmt_core/models/` | `PositionRecord`, `InstrumentType` |
+| Data access (DB, API, files) | `pmt_core/repositories/` | `PositionsRepository.fetch()` |
+| Business rules, calculations | `pmt_core/services/` | `PricingService.calculate_pnl()` |
+| Logging utilities | `pmt_core/utilities/` | `get_logger()` |
+| Reflex state vars (loading, error) | `app/states/` | `PnLState.is_loading` |
+| Background tasks / streaming | `app/states/` | `MarketDataState.auto_refresh()` |
+| UI rendering | `app/components/` | `positions_grid()` |
+| Routing / page composition | `app/pages/` | `pnl_page()` |
+| Grid IDs, notification icons | `app/` | `ag_grid_constants.py` |
+| Service adapters (thin wrappers) | `app/services/` | `app.services.pnl` wraps `pmt_core.services.pnl` |
+
+---
+
 ## Project Structure
 ```
 [root]
-├── app/                      # Reflex application
-│   ├── pages/[module]/       # Entry points
-│   ├── states/[module]/      # State management
-│   ├── services/[module]/    # Business logic wrappers
-│   └── components/[module]/  # UI components
-├── pmt_core_pkg/pmt_core/    # Shared business logic (installed as pmt_core)
+├── app/                      # UI / UX Layer (Reflex)
+│   ├── pages/[module]/       # Route entry points
+│   ├── states/[module]/      # Reflex state management
+│   ├── services/[module]/    # Thin adapters wrapping pmt_core services
+│   ├── components/[module]/  # UI components
+│   ├── ag_grid_constants.py  # Grid IDs, route mappings
+│   └── exceptions.py        # App-level custom exceptions
+├── pmt_core_pkg/pmt_core/    # Business / Backend Logic (NO Reflex)
 │   ├── models/[module]/      # TypedDicts, enums, data structures
-│   ├── services/[module]/    # Core business logic
-│   └── repositories/[module]/# Data access layer
+│   ├── services/[module]/    # Core business logic & calculations
+│   ├── repositories/[module]/# Data access layer (DB, API, files)
+│   └── utilities/            # Logging, helpers
 ├── tests/                    # Application-level tests
 ├── docs/                     # Design documents
 └── .agents/                  # Agent skills and resources
 ```
 
-**Modules**: `positions`, `pnl`, `risk`, `compliance`, `market_data`, `notifications`, etc.
+**Modules**: `positions`, `pnl`, `risk`, `compliance`, `market_data`, `notifications`, `instruments`, `events`, `operations`, `emsx`, `portfolio_tools`, `reconciliation`, etc.
 
 ## Development
 ```bash

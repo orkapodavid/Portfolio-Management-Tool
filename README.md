@@ -55,31 +55,54 @@ The app will be available at:
 
 ---
 
+## Architecture: Dual-Package Separation
+
+This project enforces a strict separation between **business logic** and **UI/UX**:
+
+| Layer | Package | Purpose |
+|-------|---------|--------|
+| **Business / Backend** | `pmt_core_pkg/pmt_core/` | Models, services, repositories, utilities — **NO Reflex imports** |
+| **UI / UX** | `app/` | Reflex pages, states, components — connects to `pmt_core` for business logic |
+
+**Import flow (one-way only):**
+```
+pmt_core.services → app.services → app.states → app.components
+```
+
+- `pmt_core_pkg/` must **never** import from `reflex` or `app/`
+- `app/services/` are thin adapters that call `pmt_core` services
+- `app/states/` manages Reflex-specific state (loading, errors, search) and delegates data operations to services
+- `app/components/` renders UI from state vars — never calls services directly
+
+For detailed architecture guidance, see [AGENTS.md](AGENTS.md).
+
+---
+
 ## Project Structure
 
 ```
 Portfolio-Management-Tool/
-├── app/                        # Reflex web application
+├── app/                        # UI / UX Layer (Reflex)
 │   ├── components/             # UI components
-│   │   ├── shared/             # Shared layout like module_layout.py
+│   │   ├── shared/             # Shared layout (module_layout.py, etc.)
 │   │   └── [module]/           # Module-specific components (e.g., positions/, pnl/)
 │   ├── pages/                  # Route pages
 │   │   └── [module]/           # Module entry pages
-│   ├── services/               # Service layer (grouped by module)
+│   ├── services/               # Thin adapters wrapping pmt_core services
 │   │   └── [module]/           # e.g., services/positions/, services/compliance/
-│   ├── states/                 # Reflex state classes (grouped by module)
+│   ├── states/                 # Reflex state classes (UI state management)
 │   │   └── [module]/           # e.g., states/risk/, states/portfolio/
 │   ├── utils/                  # Utilities
 │   └── exceptions.py           # Custom exceptions
-├── pmt_core_pkg/               # Shared business logic package
+├── pmt_core_pkg/               # Business / Backend Logic (NO Reflex)
 │   └── pmt_core/
-│       ├── models/             # Data models
-│       │   └── [module]/       # Module-specific models (proposed)
-│       ├── services/           # Business logic
+│       ├── models/             # TypedDicts, enums, data structures
+│       │   └── [module]/       # Module-specific models
+│       ├── services/           # Core business logic & calculations
 │       │   └── [module]/       # e.g., services/pricing/, services/reports/
-│       ├── repositories/       # Data access
+│       ├── repositories/       # Data access layer (DB, API, files)
 │       │   └── [module]/       # Module-specific repositories
-│       └── utilities/          # Helpers
+│       └── utilities/          # Logging, helpers
 ├── tests/                      # Application tests
 ├── docs/                       # Documentation
 └── pyproject.toml              # Project configuration
