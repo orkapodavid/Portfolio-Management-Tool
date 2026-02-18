@@ -10,7 +10,8 @@ from datetime import datetime
 import reflex as rx
 from app.services import PortfolioToolsService
 from app.states.portfolio_tools.types import POSettlementItem
-
+import logging
+import random
 
 class POSettlementMixin(rx.State, mixin=True):
     """
@@ -40,7 +41,6 @@ class POSettlementMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error loading PO settlement data: {e}")
         finally:
@@ -66,8 +66,6 @@ class POSettlementMixin(rx.State, mixin=True):
         """Simulated delta update for demo - random price changes."""
         if not self.po_settlement_auto_refresh or len(self.po_settlement) < 1:
             return
-
-        import random
 
         new_list = list(self.po_settlement)
 

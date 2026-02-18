@@ -3,7 +3,8 @@ import asyncio
 import reflex as rx
 from app.services import MarketDataService
 from app.states.market_data.types import FXDataItem
-
+import logging
+import random
 
 class FXDataMixin(rx.State, mixin=True):
     """
@@ -26,7 +27,6 @@ class FXDataMixin(rx.State, mixin=True):
             self.fx_data = await service.get_fx_data()
         except Exception as e:
             self.fx_data_error = str(e)
-            import logging
 
             logging.exception(f"Error loading FX data: {e}")
         finally:
@@ -56,7 +56,6 @@ class FXDataMixin(rx.State, mixin=True):
         if not self.fx_auto_refresh or len(self.fx_data) < 1:
             return
 
-        import random
         from datetime import datetime
 
         # Update 1-5 random rows with price fluctuations

@@ -10,7 +10,8 @@ from datetime import datetime
 import reflex as rx
 from app.services import PortfolioToolsService
 from app.states.portfolio_tools.types import ComingResetItem
-
+import logging
+import random
 
 class ComingResetsMixin(rx.State, mixin=True):
     """
@@ -33,7 +34,6 @@ class ComingResetsMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error loading coming resets data: {e}")
         finally:
@@ -59,8 +59,6 @@ class ComingResetsMixin(rx.State, mixin=True):
         """Simulated delta update for demo - random day count changes."""
         if not self.coming_resets_auto_refresh or len(self.coming_resets) < 1:
             return
-
-        import random
 
         new_list = list(self.coming_resets)
 

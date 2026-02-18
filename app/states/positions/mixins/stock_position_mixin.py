@@ -3,7 +3,8 @@ import asyncio
 import reflex as rx
 from app.services import PositionService
 from app.states.positions.types import StockPositionItem
-
+import logging
+import random
 
 class StockPositionMixin(rx.State, mixin=True):
     """
@@ -29,7 +30,6 @@ class StockPositionMixin(rx.State, mixin=True):
             self.stock_positions = await service.get_stock_positions()
         except Exception as e:
             self.stock_positions_error = str(e)
-            import logging
 
             logging.exception(f"Error loading stock positions: {e}")
         finally:
@@ -59,7 +59,6 @@ class StockPositionMixin(rx.State, mixin=True):
         if not self.stock_positions_auto_refresh or len(self.stock_positions) < 1:
             return
 
-        import random
         from datetime import datetime
 
         # Immutable update for cell flash

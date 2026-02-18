@@ -7,7 +7,7 @@ Uses force refresh button instead of auto-refresh for static data.
 import reflex as rx
 from app.services import ReconciliationService
 from app.states.reconciliation.types import RiskInputReconItem
-
+import logging
 
 class RiskInputReconMixin(rx.State, mixin=True):
     """
@@ -39,7 +39,6 @@ class RiskInputReconMixin(rx.State, mixin=True):
             self.risk_input_recon = await service.get_risk_input_recon(self.risk_input_recon_position_date)
         except Exception as e:
             self.risk_input_recon_error = str(e)
-            import logging
 
             logging.exception(f"Error loading Risk Input Recon: {e}")
         finally:

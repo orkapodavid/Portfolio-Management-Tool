@@ -10,7 +10,8 @@ from datetime import datetime
 import reflex as rx
 from app.services import PortfolioToolsService
 from app.states.portfolio_tools.types import ShortECLItem
-
+import logging
+import random
 
 class ShortECLMixin(rx.State, mixin=True):
     """
@@ -31,7 +32,6 @@ class ShortECLMixin(rx.State, mixin=True):
             self.short_ecl = await service.get_short_ecl()
             self.short_ecl_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
-            import logging
 
             logging.exception(f"Error loading short ECL data: {e}")
         finally:
@@ -57,8 +57,6 @@ class ShortECLMixin(rx.State, mixin=True):
         """Simulated delta update for demo - random short position changes."""
         if not self.short_ecl_auto_refresh or len(self.short_ecl) < 1:
             return
-
-        import random
 
         new_list = list(self.short_ecl)
 

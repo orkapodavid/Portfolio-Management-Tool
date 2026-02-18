@@ -11,6 +11,7 @@ from app.states.compliance.mixins import (
     RestrictedListMixin,
     UndertakingsMixin,
 )
+import logging
 
 
 class ComplianceState(
@@ -57,8 +58,6 @@ class ComplianceState(
             await self.load_beneficial_ownership()
             await self.load_monthly_exercise_limit()
         except Exception as e:
-            import logging
-
             logging.exception(f"Error loading compliance data: {e}")
         finally:
             self.is_loading = False

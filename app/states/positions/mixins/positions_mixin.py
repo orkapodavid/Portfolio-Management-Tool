@@ -4,7 +4,8 @@ from datetime import datetime
 import reflex as rx
 from app.services import PositionService
 from app.states.positions.types import PositionItem
-
+import logging
+import random
 
 class PositionsMixin(rx.State, mixin=True):
     """
@@ -40,7 +41,6 @@ class PositionsMixin(rx.State, mixin=True):
             self.positions = await service.get_positions(pos_date)
         except Exception as e:
             self.positions_error = str(e)
-            import logging
 
             logging.exception(f"Error loading positions: {e}")
         finally:
@@ -65,7 +65,6 @@ class PositionsMixin(rx.State, mixin=True):
             self.positions = await service.get_positions(pos_date)
             self.positions_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
-            import logging
 
             logging.exception(f"Error refreshing positions: {e}")
         finally:
@@ -92,7 +91,6 @@ class PositionsMixin(rx.State, mixin=True):
         if not self.positions_auto_refresh or len(self.positions) < 1:
             return
 
-        import random
         import re
         from datetime import datetime
 

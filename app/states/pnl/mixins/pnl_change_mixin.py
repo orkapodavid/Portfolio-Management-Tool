@@ -76,11 +76,8 @@ class PnLChangeMixin(rx.State, mixin=True):
 
     @rx.event(background=True)
     async def start_pnl_change_auto_refresh(self):
-        """Background task for PnL Change auto-refresh (2s interval).
-
-        Uses while-True with guard clause. Max ~1 hour before auto-stop.
-        """
-        for _ in range(1800):  # Safety: max ~1 hour at 2s intervals
+        """Background task for PnL Change auto-refresh (2s interval)."""
+        while True:
             async with self:
                 if not self.pnl_change_auto_refresh:
                     return

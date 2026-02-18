@@ -10,7 +10,8 @@ from datetime import datetime
 import reflex as rx
 from app.services import PortfolioToolsService
 from app.states.portfolio_tools.types import CBInstallmentItem
-
+import logging
+import random
 
 class CBInstallmentsMixin(rx.State, mixin=True):
     """
@@ -40,7 +41,6 @@ class CBInstallmentsMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error loading CB installments data: {e}")
         finally:
@@ -66,8 +66,6 @@ class CBInstallmentsMixin(rx.State, mixin=True):
         """Simulated delta update for demo - random amount changes."""
         if not self.cb_installments_auto_refresh or len(self.cb_installments) < 1:
             return
-
-        import random
 
         new_list = list(self.cb_installments)
 

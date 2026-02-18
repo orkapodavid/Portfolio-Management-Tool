@@ -4,7 +4,8 @@ from datetime import datetime
 import reflex as rx
 from app.services import RiskService
 from app.states.risk.types import RiskMeasureItem
-
+import logging
+import random
 
 class RiskMeasuresMixin(rx.State, mixin=True):
     """
@@ -42,7 +43,6 @@ class RiskMeasuresMixin(rx.State, mixin=True):
             self.risk_measures = await service.get_risk_measures(pos_date)
         except Exception as e:
             self.risk_measures_error = str(e)
-            import logging
 
             logging.exception(f"Error loading risk measures data: {e}")
         finally:
@@ -71,7 +71,6 @@ class RiskMeasuresMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error refreshing risk measures: {e}")
         finally:
@@ -97,8 +96,6 @@ class RiskMeasuresMixin(rx.State, mixin=True):
         """Simulated delta update for demo - random risk measure fluctuations."""
         if not self.risk_measures_auto_refresh or len(self.risk_measures) < 1:
             return
-
-        import random
 
         # Create a new list to trigger change detection
         new_list = list(self.risk_measures)

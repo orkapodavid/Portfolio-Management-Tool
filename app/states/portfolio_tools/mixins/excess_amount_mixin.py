@@ -10,7 +10,8 @@ from datetime import datetime
 import reflex as rx
 from app.services import PortfolioToolsService
 from app.states.portfolio_tools.types import ExcessAmountItem
-
+import logging
+import random
 
 class ExcessAmountMixin(rx.State, mixin=True):
     """
@@ -40,7 +41,6 @@ class ExcessAmountMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error loading excess amount data: {e}")
         finally:
@@ -66,8 +66,6 @@ class ExcessAmountMixin(rx.State, mixin=True):
         """Simulated delta update for demo - random excess amount changes."""
         if not self.excess_amount_auto_refresh or len(self.excess_amount) < 1:
             return
-
-        import random
 
         new_list = list(self.excess_amount)
 

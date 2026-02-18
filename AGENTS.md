@@ -244,35 +244,33 @@ rx.match(
 
 ## Critical Troubleshooting
 
-### PyO3 / Tokio Panic with Background Tasks
+### Background Task Best Practices
 
-**Issue**: Using a `while True` loop inside a `@rx.event(background=True)` handler can cause the application to crash with a `tokio-runtime-worker` panic:
-`"Cannot drop pointer into Python heap without the thread being attached to the Python interpreter"`
+> **Reference**: [reflex.dev/docs/events/background-events](https://reflex.dev/docs/events/background-events/)
 
-**Solution**: Use the **Recursive Event Pattern** instead of an infinite loop.
+**Rules** (from official Reflex docs):
+1. Background tasks **must** be `async` functions decorated with `@rx.event(background=True)`
+2. State modifications **must** happen inside `async with self` context blocks
+3. `while True` with `await asyncio.sleep()` is the **official loop pattern**
+4. Background tasks may not be directly called — use `yield` or `return` to trigger them
 
-**❌ BAD (Unsafe):**
+**✅ Canonical Pattern:**
 ```python
 @rx.event(background=True)
 async def start_auto_refresh(self):
-    while True:  # <--- CAUSES PANIC
+    """Background task — while True with guard clause."""
+    while True:
         async with self:
-            if not self.active: break
+            if not self.auto_refresh:
+                return  # Exit cleanly when toggled off
             self.refresh_data()
         await asyncio.sleep(2)
 ```
 
-**✅ GOOD (Safe):**
-```python
-@rx.event(background=True)
-async def run_refresh_step(self):
-    async with self:
-        if not self.active: return
-        self.refresh_data()
-    
-    await asyncio.sleep(2)
-    return type(self).run_refresh_step  # Recursively schedule next step
-```
+**Lifecycle notes:**
+- Multiple instances of the same background task may run concurrently — use a guard flag to prevent duplicates
+- Check `self.router.session.client_token` for client disconnect detection
+- Background tasks are tracked in `app.background_tasks` and removed on completion
 
 ---
 

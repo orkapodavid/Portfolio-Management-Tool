@@ -4,7 +4,8 @@ from datetime import datetime
 import reflex as rx
 from app.services import MarketDataService
 from app.states.market_data.types import HistoricalDataItem
-
+import logging
+import random
 
 class HistoricalDataMixin(rx.State, mixin=True):
     """
@@ -52,7 +53,6 @@ class HistoricalDataMixin(rx.State, mixin=True):
                 self.historical_available_tickers = tickers
         except Exception as e:
             self.historical_data_error = str(e)
-            import logging
 
             logging.exception(f"Error loading historical data: {e}")
         finally:
@@ -81,8 +81,6 @@ class HistoricalDataMixin(rx.State, mixin=True):
         """Simulated delta update for demo - called by rx.moment interval."""
         if not self.historical_auto_refresh or len(self.historical_data) < 1:
             return
-
-        import random
 
         # Update 1-3 random rows (less frequent for historical)
         for _ in range(random.randint(1, min(3, len(self.historical_data)))):

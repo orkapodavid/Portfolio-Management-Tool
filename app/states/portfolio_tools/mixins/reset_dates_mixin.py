@@ -10,7 +10,8 @@ from datetime import datetime
 import reflex as rx
 from app.services import PortfolioToolsService
 from app.states.portfolio_tools.types import ResetDateItem
-
+import logging
+import random
 
 class ResetDatesMixin(rx.State, mixin=True):
     """
@@ -82,7 +83,6 @@ class ResetDatesMixin(rx.State, mixin=True):
             )
             self.reset_dates_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
-            import logging
 
             logging.exception(f"Error loading reset dates data: {e}")
         finally:
@@ -108,8 +108,6 @@ class ResetDatesMixin(rx.State, mixin=True):
         """Simulated delta update for demo - random price changes."""
         if not self.reset_dates_auto_refresh or len(self.reset_dates) < 1:
             return
-
-        import random
 
         new_list = list(self.reset_dates)
 

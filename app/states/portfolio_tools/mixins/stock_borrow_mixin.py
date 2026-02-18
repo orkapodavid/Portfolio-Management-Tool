@@ -10,7 +10,8 @@ from datetime import datetime
 import reflex as rx
 from app.services import PortfolioToolsService
 from app.states.portfolio_tools.types import StockBorrowItem
-
+import logging
+import random
 
 class StockBorrowMixin(rx.State, mixin=True):
     """
@@ -33,7 +34,6 @@ class StockBorrowMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error loading stock borrow data: {e}")
         finally:
@@ -59,8 +59,6 @@ class StockBorrowMixin(rx.State, mixin=True):
         """Simulated delta update for demo - random borrow rate changes."""
         if not self.stock_borrow_auto_refresh or len(self.stock_borrow) < 1:
             return
-
-        import random
 
         new_list = list(self.stock_borrow)
 

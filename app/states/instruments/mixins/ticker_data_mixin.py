@@ -10,7 +10,8 @@ from datetime import datetime
 import reflex as rx
 from app.services import InstrumentsService
 from app.states.instruments.types import TickerDataItem
-
+import logging
+import random
 
 class TickerDataMixin(rx.State, mixin=True):
     """
@@ -31,7 +32,6 @@ class TickerDataMixin(rx.State, mixin=True):
             self.ticker_data = await service.get_ticker_data()
             self.ticker_data_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
-            import logging
 
             logging.exception(f"Error loading ticker data: {e}")
         finally:
@@ -57,8 +57,6 @@ class TickerDataMixin(rx.State, mixin=True):
         """Simulated delta update for demo - random price changes."""
         if not self.ticker_data_auto_refresh or len(self.ticker_data) < 1:
             return
-
-        import random
 
         new_list = list(self.ticker_data)
 
@@ -103,7 +101,6 @@ class TickerDataMixin(rx.State, mixin=True):
             self.ticker_data = await service.get_ticker_data()
             self.ticker_data_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
-            import logging
 
             logging.exception(f"Error refreshing ticker data: {e}")
         finally:

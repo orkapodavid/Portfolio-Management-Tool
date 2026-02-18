@@ -6,7 +6,7 @@ from datetime import datetime
 import reflex as rx
 from app.services import ComplianceService
 from app.states.compliance.types import MonthlyExerciseLimitItem
-
+import logging
 
 class MonthlyExerciseLimitMixin(rx.State, mixin=True):
     """
@@ -35,7 +35,6 @@ class MonthlyExerciseLimitMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error loading monthly exercise limit: {e}")
         finally:
@@ -55,7 +54,6 @@ class MonthlyExerciseLimitMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error refreshing monthly exercise limit: {e}")
         finally:

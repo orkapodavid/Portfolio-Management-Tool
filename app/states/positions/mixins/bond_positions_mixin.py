@@ -3,7 +3,8 @@ import asyncio
 import reflex as rx
 from app.services import PositionService
 from app.states.positions.types import BondPositionItem
-
+import logging
+import random
 
 class BondPositionsMixin(rx.State, mixin=True):
     """
@@ -29,7 +30,6 @@ class BondPositionsMixin(rx.State, mixin=True):
             self.bond_positions = await service.get_bond_positions()
         except Exception as e:
             self.bond_positions_error = str(e)
-            import logging
 
             logging.exception(f"Error loading bond positions: {e}")
         finally:
@@ -64,7 +64,6 @@ class BondPositionsMixin(rx.State, mixin=True):
         if not self.bond_positions_auto_refresh or len(self.bond_positions) < 1:
             return
 
-        import random
         import re
         from datetime import datetime
 

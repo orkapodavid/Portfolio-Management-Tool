@@ -7,7 +7,7 @@ from datetime import datetime
 import reflex as rx
 from app.services import EMSXService
 from app.states.types import EMSXOrderItem
-
+import logging
 
 class EMSXOrderMixin(rx.State, mixin=True):
     """
@@ -33,7 +33,6 @@ class EMSXOrderMixin(rx.State, mixin=True):
             self.emsx_orders = await service.get_emsx_orders()
             self.emsx_order_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
-            import logging
 
             logging.exception(f"Error loading EMSX orders: {e}")
         finally:
@@ -97,7 +96,6 @@ class EMSXOrderMixin(rx.State, mixin=True):
             self.emsx_orders = await service.get_emsx_orders()
             self.emsx_order_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
-            import logging
 
             logging.exception(f"Error refreshing EMSX orders: {e}")
         finally:

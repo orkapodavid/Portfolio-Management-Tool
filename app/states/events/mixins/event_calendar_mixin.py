@@ -10,7 +10,8 @@ from datetime import datetime
 import reflex as rx
 from app.services import EventCalendarService
 from app.states.events.types import EventCalendarItem
-
+import logging
+import random
 
 class EventCalendarMixin(rx.State, mixin=True):
     """
@@ -33,7 +34,6 @@ class EventCalendarMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error loading event calendar data: {e}")
         finally:
@@ -59,8 +59,6 @@ class EventCalendarMixin(rx.State, mixin=True):
         """Simulated delta update for demo - random time changes."""
         if not self.event_calendar_auto_refresh or len(self.event_calendar) < 1:
             return
-
-        import random
 
         # Create a new list to trigger change detection
         new_list = list(self.event_calendar)
@@ -109,7 +107,6 @@ class EventCalendarMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error refreshing event calendar: {e}")
         finally:

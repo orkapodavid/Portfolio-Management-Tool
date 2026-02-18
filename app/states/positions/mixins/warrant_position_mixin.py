@@ -3,7 +3,8 @@ import asyncio
 import reflex as rx
 from app.services import PositionService
 from app.states.positions.types import WarrantPositionItem
-
+import logging
+import random
 
 class WarrantPositionMixin(rx.State, mixin=True):
     """
@@ -29,7 +30,6 @@ class WarrantPositionMixin(rx.State, mixin=True):
             self.warrant_positions = await service.get_warrant_positions()
         except Exception as e:
             self.warrant_positions_error = str(e)
-            import logging
 
             logging.exception(f"Error loading warrant positions: {e}")
         finally:
@@ -64,7 +64,6 @@ class WarrantPositionMixin(rx.State, mixin=True):
         if not self.warrant_positions_auto_refresh or len(self.warrant_positions) < 1:
             return
 
-        import random
         import re
         from datetime import datetime
 

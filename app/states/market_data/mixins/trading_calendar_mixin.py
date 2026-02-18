@@ -4,7 +4,7 @@ from datetime import datetime
 import reflex as rx
 from app.services import MarketDataService
 from app.states.market_data.types import TradingCalendarItem
-
+import logging
 
 class TradingCalendarMixin(rx.State, mixin=True):
     """
@@ -35,7 +35,6 @@ class TradingCalendarMixin(rx.State, mixin=True):
             )
         except Exception as e:
             self.trading_calendar_error = str(e)
-            import logging
 
             logging.exception(f"Error loading trading calendar: {e}")
         finally:

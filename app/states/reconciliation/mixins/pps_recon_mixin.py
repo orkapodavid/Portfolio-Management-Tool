@@ -7,7 +7,7 @@ Uses force refresh button instead of auto-refresh for static data.
 import reflex as rx
 from app.services import ReconciliationService
 from app.states.reconciliation.types import PPSReconItem
-
+import logging
 
 class PPSReconMixin(rx.State, mixin=True):
     """
@@ -39,7 +39,6 @@ class PPSReconMixin(rx.State, mixin=True):
             self.pps_recon = await service.get_pps_recon(self.pps_recon_position_date)
         except Exception as e:
             self.pps_recon_error = str(e)
-            import logging
 
             logging.exception(f"Error loading PPS recon: {e}")
         finally:

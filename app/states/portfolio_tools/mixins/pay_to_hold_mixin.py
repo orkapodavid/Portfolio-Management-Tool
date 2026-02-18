@@ -10,7 +10,8 @@ from datetime import datetime
 import reflex as rx
 from app.services import PortfolioToolsService
 from app.states.portfolio_tools.types import PayToHoldItem
-
+import logging
+import random
 
 class PayToHoldMixin(rx.State, mixin=True):
     """
@@ -38,7 +39,6 @@ class PayToHoldMixin(rx.State, mixin=True):
             self.pay_to_hold = await service.get_pay_to_hold()
             self.pay_to_hold_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
-            import logging
 
             logging.exception(f"Error loading pay to hold data: {e}")
         finally:
@@ -64,8 +64,6 @@ class PayToHoldMixin(rx.State, mixin=True):
         """Simulated delta update for demo - random PTH amount changes."""
         if not self.pay_to_hold_auto_refresh or len(self.pay_to_hold) < 1:
             return
-
-        import random
 
         new_list = list(self.pay_to_hold)
 

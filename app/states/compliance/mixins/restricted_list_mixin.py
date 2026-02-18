@@ -6,7 +6,7 @@ from datetime import datetime
 import reflex as rx
 from app.services import ComplianceService
 from app.states.compliance.types import RestrictedListItem
-
+import logging
 
 class RestrictedListMixin(rx.State, mixin=True):
     """
@@ -28,7 +28,6 @@ class RestrictedListMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error loading restricted list: {e}")
         finally:
@@ -48,7 +47,6 @@ class RestrictedListMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error refreshing restricted list: {e}")
         finally:

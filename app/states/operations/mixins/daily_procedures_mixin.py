@@ -10,7 +10,8 @@ from datetime import datetime
 import reflex as rx
 from app.services import OperationsService
 from app.states.operations.types import DailyProcedureItem
-
+import logging
+import random
 
 class DailyProceduresMixin(rx.State, mixin=True):
     """
@@ -33,7 +34,6 @@ class DailyProceduresMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error loading daily procedures data: {e}")
         finally:
@@ -59,8 +59,6 @@ class DailyProceduresMixin(rx.State, mixin=True):
         """Simulated delta update for demo - random status changes."""
         if not self.daily_procedures_auto_refresh or len(self.daily_procedures) < 1:
             return
-
-        import random
 
         new_list = list(self.daily_procedures)
 
@@ -101,7 +99,6 @@ class DailyProceduresMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error refreshing daily procedures: {e}")
         finally:

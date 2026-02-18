@@ -4,7 +4,8 @@ from datetime import datetime
 import reflex as rx
 from app.services import PositionService
 from app.states.positions.types import TradeSummaryItem
-
+import logging
+import random
 
 class TradeSummaryMixin(rx.State, mixin=True):
     """
@@ -42,7 +43,6 @@ class TradeSummaryMixin(rx.State, mixin=True):
             )
         except Exception as e:
             self.trade_summary_error = str(e)
-            import logging
 
             logging.exception(f"Error loading trade summary: {e}")
         finally:
@@ -73,7 +73,6 @@ class TradeSummaryMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error refreshing trade summary: {e}")
         finally:
@@ -104,8 +103,6 @@ class TradeSummaryMixin(rx.State, mixin=True):
         """Simulated update for demo - random fluctuations."""
         if not self.trade_summary_auto_refresh or len(self.trade_summaries) < 1:
             return
-
-        import random
 
         # Immutable update for cell flash
         new_list = list(self.trade_summaries)

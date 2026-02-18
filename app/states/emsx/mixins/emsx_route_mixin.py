@@ -6,7 +6,7 @@ from datetime import datetime
 
 import reflex as rx
 from app.services import EMSXService
-
+import logging
 
 class EMSXRouteMixin(rx.State, mixin=True):
     """
@@ -32,7 +32,6 @@ class EMSXRouteMixin(rx.State, mixin=True):
             self.emsx_routes = await service.get_emsx_routes()
             self.emsx_route_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
-            import logging
 
             logging.exception(f"Error loading EMSX routes: {e}")
         finally:
@@ -95,7 +94,6 @@ class EMSXRouteMixin(rx.State, mixin=True):
             self.emsx_routes = await service.get_emsx_routes()
             self.emsx_route_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
-            import logging
 
             logging.exception(f"Error refreshing EMSX routes: {e}")
         finally:

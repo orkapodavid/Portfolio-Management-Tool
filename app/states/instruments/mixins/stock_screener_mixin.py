@@ -11,7 +11,8 @@ from datetime import datetime
 import reflex as rx
 from app.services import InstrumentsService
 from app.states.instruments.types import StockScreenerItem
-
+import logging
+import random
 
 class StockScreenerMixin(rx.State, mixin=True):
     """
@@ -192,7 +193,6 @@ class StockScreenerMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error loading stock screener data: {e}")
         finally:
@@ -218,8 +218,6 @@ class StockScreenerMixin(rx.State, mixin=True):
         """Simulated delta update for demo - random price/cap changes."""
         if not self.stock_screener_auto_refresh or len(self.stock_screener) < 1:
             return
-
-        import random
 
         new_list = list(self.stock_screener)
 
@@ -265,7 +263,6 @@ class StockScreenerMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error refreshing stock screener: {e}")
         finally:

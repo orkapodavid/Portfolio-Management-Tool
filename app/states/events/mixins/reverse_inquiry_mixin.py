@@ -11,7 +11,8 @@ from datetime import datetime
 import reflex as rx
 from app.services import ReverseInquiryService
 from app.states.events.types import ReverseInquiryItem
-
+import logging
+import random
 
 class ReverseInquiryMixin(rx.State, mixin=True):
     """
@@ -44,7 +45,6 @@ class ReverseInquiryMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error loading reverse inquiry data: {e}")
         finally:
@@ -75,8 +75,6 @@ class ReverseInquiryMixin(rx.State, mixin=True):
         """Simulated delta update for demo - random deal point changes."""
         if not self.reverse_inquiry_auto_refresh or len(self.reverse_inquiry) < 1:
             return
-
-        import random
 
         # Create a new list to trigger change detection
         new_list = list(self.reverse_inquiry)
@@ -119,7 +117,6 @@ class ReverseInquiryMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error refreshing reverse inquiry: {e}")
         finally:

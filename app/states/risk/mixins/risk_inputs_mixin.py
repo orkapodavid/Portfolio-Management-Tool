@@ -3,7 +3,8 @@ import asyncio
 import reflex as rx
 from app.services import RiskService
 from app.states.risk.types import RiskInputItem
-
+import logging
+import random
 
 class RiskInputsMixin(rx.State, mixin=True):
     """
@@ -31,7 +32,6 @@ class RiskInputsMixin(rx.State, mixin=True):
             self.risk_inputs = await service.get_risk_inputs()
         except Exception as e:
             self.risk_inputs_error = str(e)
-            import logging
 
             logging.exception(f"Error loading risk inputs data: {e}")
         finally:
@@ -61,7 +61,6 @@ class RiskInputsMixin(rx.State, mixin=True):
         if not self.risk_inputs_auto_refresh or len(self.risk_inputs) < 1:
             return
 
-        import random
         from datetime import datetime
 
         # Create a new list to trigger change detection

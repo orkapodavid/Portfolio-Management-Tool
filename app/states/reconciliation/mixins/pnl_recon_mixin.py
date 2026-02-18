@@ -7,7 +7,7 @@ Uses force refresh button instead of auto-refresh for static data.
 import reflex as rx
 from app.services import ReconciliationService
 from app.states.reconciliation.types import PnLReconItem
-
+import logging
 
 class PnLReconMixin(rx.State, mixin=True):
     """
@@ -39,7 +39,6 @@ class PnLReconMixin(rx.State, mixin=True):
             self.pnl_recon = await service.get_pnl_recon(self.pnl_recon_position_date)
         except Exception as e:
             self.pnl_recon_error = str(e)
-            import logging
 
             logging.exception(f"Error loading PnL Recon: {e}")
         finally:

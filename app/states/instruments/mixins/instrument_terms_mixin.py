@@ -10,7 +10,8 @@ from datetime import datetime
 import reflex as rx
 from app.services import InstrumentsService
 from app.states.instruments.types import InstrumentTermItem
-
+import logging
+import random
 
 class InstrumentTermsMixin(rx.State, mixin=True):
     """
@@ -33,7 +34,6 @@ class InstrumentTermsMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error loading instrument terms data: {e}")
         finally:
@@ -59,8 +59,6 @@ class InstrumentTermsMixin(rx.State, mixin=True):
         """Simulated delta update for demo - update timestamps."""
         if not self.instrument_terms_auto_refresh or len(self.instrument_terms) < 1:
             return
-
-        import random
 
         new_list = list(self.instrument_terms)
 
@@ -90,7 +88,6 @@ class InstrumentTermsMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error refreshing instrument terms: {e}")
         finally:

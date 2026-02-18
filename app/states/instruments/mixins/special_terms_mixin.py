@@ -10,7 +10,8 @@ from datetime import datetime
 import reflex as rx
 from app.services import InstrumentsService
 from app.states.instruments.types import SpecialTermItem
-
+import logging
+import random
 
 class SpecialTermsMixin(rx.State, mixin=True):
     """
@@ -43,7 +44,6 @@ class SpecialTermsMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error loading special terms data: {e}")
         finally:
@@ -74,8 +74,6 @@ class SpecialTermsMixin(rx.State, mixin=True):
         """Simulated delta update for demo - random position changes."""
         if not self.special_terms_auto_refresh or len(self.special_terms) < 1:
             return
-
-        import random
 
         new_list = list(self.special_terms)
 
@@ -113,7 +111,6 @@ class SpecialTermsMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error refreshing special terms: {e}")
         finally:

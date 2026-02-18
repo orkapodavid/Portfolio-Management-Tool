@@ -10,7 +10,8 @@ from datetime import datetime
 import reflex as rx
 from app.services import EventStreamService
 from app.states.events.types import EventStreamItem
-
+import logging
+import random
 
 class EventStreamMixin(rx.State, mixin=True):
     """
@@ -33,7 +34,6 @@ class EventStreamMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error loading event stream data: {e}")
         finally:
@@ -59,8 +59,6 @@ class EventStreamMixin(rx.State, mixin=True):
         """Simulated delta update for demo - random notes changes."""
         if not self.event_stream_auto_refresh or len(self.event_stream) < 1:
             return
-
-        import random
 
         # Create a new list to trigger change detection
         new_list = list(self.event_stream)
@@ -94,7 +92,6 @@ class EventStreamMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error refreshing event stream: {e}")
         finally:

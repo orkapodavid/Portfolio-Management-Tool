@@ -4,7 +4,8 @@ from datetime import datetime
 import reflex as rx
 from app.services import PnLService
 from app.states.pnl.types import PnLSummaryItem
-
+import logging
+import random
 
 class PnLSummaryMixin(rx.State, mixin=True):
     """
@@ -42,7 +43,6 @@ class PnLSummaryMixin(rx.State, mixin=True):
             self.pnl_summary_list = await service.get_pnl_summary(pos_date)
         except Exception as e:
             self.pnl_summary_error = str(e)
-            import logging
 
             logging.exception(f"Error loading P&L summary data: {e}")
         finally:
@@ -71,7 +71,6 @@ class PnLSummaryMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error refreshing PnL summary: {e}")
         finally:
@@ -97,8 +96,6 @@ class PnLSummaryMixin(rx.State, mixin=True):
         """Simulated delta update for demo - random price fluctuations."""
         if not self.pnl_summary_auto_refresh or len(self.pnl_summary_list) < 1:
             return
-
-        import random
 
         # Create a new list to trigger change detection
         new_list = list(self.pnl_summary_list)

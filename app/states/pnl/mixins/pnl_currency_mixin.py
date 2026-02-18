@@ -4,7 +4,8 @@ from datetime import datetime
 import reflex as rx
 from app.services import PnLService
 from app.states.pnl.types import PnLCurrencyItem
-
+import logging
+import random
 
 class PnLCurrencyMixin(rx.State, mixin=True):
     """
@@ -40,7 +41,6 @@ class PnLCurrencyMixin(rx.State, mixin=True):
             self.pnl_currency_list = await service.get_pnl_by_currency(pos_date)
         except Exception as e:
             self.pnl_currency_error = str(e)
-            import logging
 
             logging.exception(f"Error loading P&L currency data: {e}")
         finally:
@@ -69,7 +69,6 @@ class PnLCurrencyMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error refreshing PnL currency: {e}")
         finally:
@@ -95,8 +94,6 @@ class PnLCurrencyMixin(rx.State, mixin=True):
         """Simulated delta update for demo - random PnL fluctuations."""
         if not self.pnl_currency_auto_refresh or len(self.pnl_currency_list) < 1:
             return
-
-        import random
 
         # Create a new list to trigger change detection
         new_list = list(self.pnl_currency_list)

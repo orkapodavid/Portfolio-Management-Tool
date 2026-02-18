@@ -10,7 +10,8 @@ from datetime import datetime
 import reflex as rx
 from app.services import OperationsService
 from app.states.operations.types import OperationProcessItem
-
+import logging
+import random
 
 class OperationProcessesMixin(rx.State, mixin=True):
     """
@@ -33,7 +34,6 @@ class OperationProcessesMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error loading operation processes data: {e}")
         finally:
@@ -62,8 +62,6 @@ class OperationProcessesMixin(rx.State, mixin=True):
             or len(self.operation_processes) < 1
         ):
             return
-
-        import random
 
         new_list = list(self.operation_processes)
 
@@ -103,7 +101,6 @@ class OperationProcessesMixin(rx.State, mixin=True):
                 "%Y-%m-%d %H:%M:%S"
             )
         except Exception as e:
-            import logging
 
             logging.exception(f"Error refreshing operation processes: {e}")
         finally:

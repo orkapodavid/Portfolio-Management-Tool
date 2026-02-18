@@ -4,7 +4,8 @@ from datetime import datetime
 import reflex as rx
 from app.services import PnLService
 from app.states.pnl.types import PnLFullItem
-
+import logging
+import random
 
 class PnLFullMixin(rx.State, mixin=True):
     """
@@ -40,7 +41,6 @@ class PnLFullMixin(rx.State, mixin=True):
             self.pnl_full_list = await service.get_pnl_full(pos_date)
         except Exception as e:
             self.pnl_full_error = str(e)
-            import logging
 
             logging.exception(f"Error loading P&L full data: {e}")
         finally:
@@ -65,7 +65,6 @@ class PnLFullMixin(rx.State, mixin=True):
             self.pnl_full_list = await service.get_pnl_full(pos_date)
             self.pnl_full_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
-            import logging
 
             logging.exception(f"Error refreshing PnL full: {e}")
         finally:
@@ -91,8 +90,6 @@ class PnLFullMixin(rx.State, mixin=True):
         """Simulated delta update for demo - random PnL fluctuations."""
         if not self.pnl_full_auto_refresh or len(self.pnl_full_list) < 1:
             return
-
-        import random
 
         # Create a new list to trigger change detection
         new_list = list(self.pnl_full_list)
