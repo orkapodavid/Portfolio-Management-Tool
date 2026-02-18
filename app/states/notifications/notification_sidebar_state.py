@@ -140,18 +140,6 @@ class NotificationSidebarState(rx.State):
         finally:
             self.is_loading = False
 
-    def _extract_ticker(self, message: str) -> str:
-        """Extract ticker symbol from message."""
-        if not message:
-            return "N/A"
-        # Simple extraction - get last word if it looks like a ticker
-        words = message.split()
-        if words:
-            last_word = words[-1].strip(".,!?")
-            if last_word.isupper() and 2 <= len(last_word) <= 5:
-                return last_word
-        return "N/A"
-
     # Event Handlers - Filtering
     @rx.event
     def set_notification_filter(self, filter_val: str):
