@@ -54,8 +54,8 @@ def _get_column_defs() -> list:
             tooltip_field="company_name",
         ),
         ag_grid.column_def(
-            field="in_emdx",
-            header_name="In EMDX?",
+            field="in_emsx",
+            header_name="In EMSX?",
             filter="agSetColumnFilter",  # Tier 2: Set filter for boolean-like
             min_width=80,
         ),

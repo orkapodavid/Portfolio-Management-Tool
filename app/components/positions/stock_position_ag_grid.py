@@ -93,8 +93,8 @@ def _get_column_defs() -> list:
             min_width=100,
         ),
         ag_grid.column_def(
-            field="position_location",
-            header_name="Position Location",
+            field="pos_loc",
+            header_name="Pos Loc",
             filter="agSetColumnFilter",
             min_width=130,
         ),

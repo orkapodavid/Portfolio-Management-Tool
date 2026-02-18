@@ -6,23 +6,34 @@ Comprehensive review of the `app/` and `pmt_core_pkg/pmt_core/` layers before re
 
 ## Executive Summary
 
-The architecture is **well-designed** — dual-package separation, mixin-based state management, thin service adapters, and proper TypedDict deduplication are solid foundations. There is **1 critical issue** and **4 important improvements** needed before connecting to the real backend.
+The architecture is **well-designed** — dual-package separation, mixin-based state management, thin service adapters, and proper TypedDict deduplication are solid foundations. There are **2 critical issues** and **4 important improvements** identified. C1 is resolved; C2 and I1–I4 remain.
 
 ---
 
 ## 🚨 Critical Issues (Must Fix)
 
-### C1. Inline Imports in Exception Handlers
+### ~~C1. Inline Imports in Exception Handlers~~ ✅ RESOLVED
 
-Several mixins use inline `import logging` or `import random` inside methods instead of top-level imports. Example from [pnl_summary_mixin.py:L45-L46](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/app/states/pnl/mixins/pnl_summary_mixin.py#L45-L46):
+Fixed via automated script — 69 `import logging` + 32 `import random` moved to module level across 47 files.
 
-```python
-except Exception as e:
-    import logging  # ← should be at module level
-    logging.exception(f"Error loading P&L summary data: {e}")
-```
+---
 
-**Fix**: Move all `import logging` and `import random` statements to the top of each file, following `pnl_change_mixin.py`'s pattern.
+### C2. Field Name Typos Between UI Types and Core Models 🔴
+
+Critical typos in UI TypedDicts that will cause **silent data loss** when real data flows through:
+
+| UI Type (app/states) | UI Field | Core Model (pmt_core) | Core Field | Impact |
+|---|---|---|---|---|
+| `RiskMeasureItem` | `national` | `RiskRecord` | `notional` | 💥 Silent key miss |
+| `RiskMeasureItem` | `national_used` | `RiskRecord` | `notional_used` | 💥 Silent key miss |
+| `RiskMeasureItem` | `national_current` | `RiskRecord` | `notional_current` | 💥 Silent key miss |
+| `RestrictedListItem` | `in_emdx` | `ComplianceRecord` | `in_emsx` | 💥 Silent key miss |
+| `DeltaChangeItem` | `pos_g` | `RiskRecord` | `pos_gamma` | 💥 Silent key miss |
+| `StockPositionItem` | `position_location` | `PositionRecord` | `pos_loc` | 💥 Silent key miss |
+
+Additionally, `RiskInputItem` has the same 3 `national` → `notional` typos.
+
+**Fix**: Rename UI TypedDict fields to match core model field names. Update column definitions and mock data generators accordingly.
 
 ---
 
@@ -30,51 +41,68 @@ except Exception as e:
 
 ### I1. Service Instantiation Pattern
 
-Every mixin creates a new service instance per call:
-```python
-async def load_pnl_change_data(self):
-    service = PnLService()  # ← new instance every call
-    self.pnl_change_list = await service.get_pnl_changes(pos_date)
-```
+**Scope**: **86+ instantiations** across all mixins — every method call creates `service = XxxService()`.
 
-When connecting to the real DB, this will create new repository/connection instances per request. Consider:
-- **Option A**: Singleton service instances (module-level or class-level)
-- **Option B**: Service factory with connection pooling
-- **Option C**: Dependency injection via `__init__` (already supported by `PnLService(repository=...)`)
+Affected services (call count):
+| Service | Instantiations |
+|---|---|
+| `PortfolioToolsService()` | 18 |
+| `PnLService()` | 10 |
+| `PositionService()` | 7 |
+| `RiskService()` | 6 |
+| `ReconciliationService()` | 5 |
+| `OperationsService()` | 5 |
+| `ComplianceService()` | 4+ |
+| Others | 30+ |
 
----
-
-### I2. Mock Data Hardcoded in `pmt_core` Services
-
-All services in `pmt_core_pkg/pmt_core/services/` return inline mock data with `TODO: Replace with DB query` comments. Example: [pnl_service.py](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/pmt_core_pkg/pmt_core/services/pnl/pnl_service.py) has 250+ lines of hardcoded dictionaries.
-
-**Recommendation**: Before integration:
-1. Audit all TODO comments: `grep -r "TODO" pmt_core_pkg/`
-2. Make an inventory of every method that needs real data
-3. Ensure each repository has a clear interface for what the DB query replaces
-4. Consider moving mock data to a dedicated `test_fixtures/` directory
+DI is already supported (`PnLService(repository=...)`) but unused. **Recommended**: Module-level singleton per service, injected repository with connection pool.
 
 ---
 
-### I3. Type Misalignment Risk Between `app/states/types.py` and `pmt_core/models/`
+### I2. Mock Data Audit — TODO Inventory
 
-Two separate type hierarchies exist:
-- `app/states/*/types.py` — TypedDicts for UI state (e.g., `PnLChangeItem`, `PositionItem`)
-- `pmt_core/models/` — TypedDicts for domain models (e.g., `PnLRecord`, `PositionRecord`)
+**77+ TODO comments** across 17 service/repository files. Breakdown by category:
 
-Services currently return `Dict[str, Any]` or `List[Dict[str, Any]]` — when real data arrives, mismatches between field names in core models vs. UI types could cause silent failures.
+| Category | Count | Example Files |
+|---|---|---|
+| `Replace with DB query` | 30+ | pnl_service, reconciliation_service, portfolio_tools_service |
+| `Replace mock data` | 8 | user_service, risk_service, operations_service |
+| `Implement logic` | 10 | report_service (5), risk_service (2), bond_pricer, warrant_pricer |
+| `Update database` | 5 | notification_service (3), user_service (2) |
+| `Replace with orchestration` | 2 | operations_service |
 
-**Recommendation**: Create a mapping layer or ensure field names match 1:1 before integration.
+Mock data currently lives in repositories (compliance, positions, pnl, etc.) — good separation. The `mock_mode` toggle in `DatabaseRepository` supports seamless transition.
 
 ---
 
-### I4. Repository Layer is Incomplete
+### I3. Type Alignment Analysis
 
-[pmt_core/repositories/](file:///c:/Users/orkap/Desktop/Programming/Portfolio-Management-Tool/pmt_core_pkg/pmt_core/repositories) has 8 module directories but only with mock/stub implementations. Each repository needs:
-- A clear interface (Protocol or ABC)
-- Connection handling (pooling, retry)
-- Query parameterization (SQL injection prevention)
-- Error handling mapped to `pmt_core.exceptions`
+**Architecture**: UI uses per-view TypedDicts (e.g., `PnLChangeItem`, `PnLFullItem`), core uses single union records (e.g., `PnLRecord`). The mapping is **intentional** — UI types are projections of core records.
+
+**Field name typos** are promoted to C2 (critical). Additional structural mismatches:
+- UI types use plain `str` everywhere; core uses `Optional[str]` — no runtime issue since mock data always populates, but real DB data with NULLs may cause TypedDict validation warnings
+- `ComplianceRecord` is a single union type; UI splits into 4 TypedDicts (`RestrictedListItem`, `UndertakingItem`, `BeneficialOwnershipItem`, `MonthlyExerciseLimitItem`) — this is correct design but needs careful field mapping
+
+**Recommendation**: Fix C2 typos first, then add explicit `Optional` annotations to UI types for nullable fields.
+
+---
+
+### I4. Repository Interface Design
+
+**Current state**: 8 concrete repositories, all inheriting `DatabaseRepository`. No abstract interfaces:
+
+| Repository | Methods | Has Abstract Interface? |
+|---|---|---|
+| `ComplianceRepository` | 4 | ❌ |
+| `PositionRepository` | 4+ | ❌ |
+| `PnLRepository` | 4+ | ❌ |
+| `ReconRepository` | 5 | ❌ |
+| `EventRepository` | 3+ | ❌ |
+| `OperationsRepository` | 3+ | ❌ |
+
+`DatabaseRepository` base is solid: supports `mock_mode` toggle, `execute_query()`, `execute_stored_proc()`, and `get_connection()` context manager with graceful pyodbc fallback.
+
+**Recommendation**: Add `Protocol` interfaces for each repository to enable testing with mock implementations. This also supports the service DI pattern (I1).
 
 ---
 
@@ -106,10 +134,13 @@ Services currently return `Dict[str, Any]` or `List[Dict[str, Any]]` — when re
 
 ### Phase 1: Infrastructure Readiness
 
-- [ ] **I1**: Decide on service instantiation strategy (singleton/factory/DI)
-- [ ] **I2**: Audit all `TODO: Replace with DB query` in `pmt_core`
-- [ ] **I3**: Verify field name alignment between UI types and core models
-- [ ] **I4**: Define repository interfaces (Protocol/ABC) for each data domain
+- [x] **I1**: Audit service instantiation scope (86+ per-call instantiations found)
+- [x] **I2**: Audit all `TODO: Replace with DB query` in `pmt_core` (77+ TODOs inventoried)
+- [x] **I3**: Verify field name alignment (6 critical typos found → promoted to C2)
+- [x] **I4**: Audit repository interfaces (0/8 have Protocol/ABC)
+- [x] **C2**: Fix field name typos in UI TypedDicts (9 renames across 8 files)
+- [ ] Implement singleton service pattern or connection pooling
+- [ ] Define Protocol interfaces for each repository
 - [ ] Verify database connectivity (`ODBC Driver 17`, connection string)
 - [ ] Add connection pooling configuration
 

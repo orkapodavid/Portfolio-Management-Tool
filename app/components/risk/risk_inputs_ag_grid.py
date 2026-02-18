@@ -63,20 +63,20 @@ def _get_column_defs() -> list:
             min_width=90,
         ),
         ag_grid.column_def(
-            field="national",
-            header_name="National",
+            field="notional",
+            header_name="Notional",
             filter=AGFilters.number,
             min_width=90,
         ),
         ag_grid.column_def(
-            field="national_used",
-            header_name="National Used",
+            field="notional_used",
+            header_name="Notional Used",
             filter=AGFilters.number,
             min_width=110,
         ),
         ag_grid.column_def(
-            field="national_current",
-            header_name="National Current",
+            field="notional_current",
+            header_name="Notional Current",
             filter=AGFilters.number,
             min_width=120,
         ),
@@ -145,4 +145,3 @@ def risk_inputs_ag_grid() -> rx.Component:
         spacing="0",
         on_mount=RiskState.start_risk_inputs_auto_refresh,
     )
-

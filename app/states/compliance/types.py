@@ -11,7 +11,7 @@ class RestrictedListItem(TypedDict):
     id: int
     ticker: str
     company_name: str
-    in_emdx: str
+    in_emsx: str
     compliance_type: str
     firm_block: str
     compliance_start: str

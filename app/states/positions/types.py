@@ -30,7 +30,7 @@ class StockPositionItem(TypedDict):
     sec_type: str
     currency: str
     account_id: str
-    position_location: str
+    pos_loc: str
     notional: str
 
 

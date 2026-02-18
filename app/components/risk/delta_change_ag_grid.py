@@ -84,7 +84,10 @@ def _get_column_defs() -> list:
             min_width=130,
         ),
         ag_grid.column_def(
-            field="pos_g", header_name="Pos G", filter=AGFilters.number, min_width=80
+            field="pos_gamma",
+            header_name="Pos Gamma",
+            filter=AGFilters.number,
+            min_width=100,
         ),
     ]
 

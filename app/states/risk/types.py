@@ -18,7 +18,7 @@ class DeltaChangeItem(TypedDict):
     valuation_price: str
     pos_delta: str
     pos_delta_small: str
-    pos_g: str
+    pos_gamma: str
 
 
 class RiskMeasureItem(TypedDict):
@@ -30,9 +30,9 @@ class RiskMeasureItem(TypedDict):
     ticker: str
     sec_type: str
     is_private: str
-    national: str
-    national_used: str
-    national_current: str
+    notional: str
+    notional_used: str
+    notional_current: str
     currency: str
     fx_rate: str
     spot_price: str
@@ -47,9 +47,9 @@ class RiskInputItem(TypedDict):
     ticker: str
     sec_type: str
     is_private: str
-    national: str
-    national_used: str
-    national_current: str
+    notional: str
+    notional_used: str
+    notional_current: str
     currency: str
     fx_rate: str
     spot_price: str
