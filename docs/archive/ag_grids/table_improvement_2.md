@@ -1,3 +1,7 @@
+> [!NOTE]
+> **Status: ✅ Archived** — 2026-02-19
+> Phase 2 complete. All 10 requirements (bug fixes, tree data, perf testing, status bar, overlays, CRUD) implemented.
+
 # AG Grid Reflex Wrapper - Phase 2 Implementation Plan
 
 > **For AI Assistants:** Follow task checklists in order. Test each demo page in browser after changes. Use `uv run reflex run` from `reflex_ag_grid/examples/demo_app`.

@@ -1,3 +1,7 @@
+> [!NOTE]
+> **Status: ✅ Archived** — 2026-02-19
+> Superseded by Milestone 1 and subsequent work. Infrastructure items completed or tracked in `service_layer_migration_2.md`.
+
 # Milestone 0: Infrastructure Preparation (No Source Code Required)
 
 **Description:** Preparation tasks that can be completed before obtaining the PyQt source code. These establish the foundation for rapid integration once the source becomes available.

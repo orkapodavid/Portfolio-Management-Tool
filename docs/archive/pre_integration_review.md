@@ -1,3 +1,7 @@
+> [!NOTE]
+> **Status: ✅ Archived** — 2026-02-19
+> C1, C2, I1, I4 resolved. I2 (mock data audit) and I3 (type alignment) tracked in `service_layer_migration_2.md`.
+
 # Pre-Integration Review: Reflex Python Backend
 
 Comprehensive review of the `app/` and `pmt_core_pkg/pmt_core/` layers before real backend integration.

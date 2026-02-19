@@ -1,3 +1,7 @@
+> [!NOTE]
+> **Status: ✅ Archived** — 2026-02-19
+> Design implemented in `pricer_bond_view.py` and `pricer_warrant_view.py` with 2D/3D Plotly charts.
+
 # Design Chart: Dynamic Pricer Visualization
 
 This document outlines the design for integrating dynamic 2D/3D Plotly charts into the Pricer Bond and Pricer Warrant views.

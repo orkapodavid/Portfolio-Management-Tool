@@ -1,3 +1,7 @@
+> [!NOTE]
+> **Status: ✅ Archived** — 2026-02-19
+> Implementation complete. Pricer views refactored and Plotly charts integrated.
+
 # Refactor Pricer Views and Add Plotly Charts Implementation Plan
 
 ## Goal Description

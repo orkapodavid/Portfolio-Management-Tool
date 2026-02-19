@@ -1,3 +1,7 @@
+> [!NOTE]
+> **Status: ✅ Archived** — 2026-02-19
+> All 48 AG Grid components migrated with `last_updated`, `auto_refresh`, and simulated delta updates across 4 rollout phases.
+
 # Status Bar Rollout Plan (Updated)
 
 Add `last_updated` timestamp, `auto_refresh` toggle, and **simulated delta updates** to all 48 AG Grid components.

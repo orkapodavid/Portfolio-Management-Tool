@@ -1,3 +1,7 @@
+> [!NOTE]
+> **Status: ✅ Archived** — 2026-02-19
+> All actionable items completed. Remaining blocked items (DB access, PyQt source) tracked in `service_layer_migration_2.md`.
+
 # Milestone 1: Pre-Integration Preparation
 
 **Description:** Prepare the codebase infrastructure and resolve dependencies before integrating the PyQt business logic into the Reflex web application via the `pmt_core` shared package.

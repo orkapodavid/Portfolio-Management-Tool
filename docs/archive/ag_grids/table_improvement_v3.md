@@ -1,3 +1,7 @@
+> [!NOTE]
+> **Status: ✅ Archived** — 2026-02-19
+> Phase 3 complete. v35 migration finished (module registration, theming API, API modernization, console warnings).
+
 # AG Grid Reflex Wrapper - Phase 3 Implementation Plan
 
 > **For AI Assistants:** Follow task checklists in order. Test each demo page in browser after changes. Use `uv run reflex run` from `reflex_ag_grid/examples/demo_app`.
