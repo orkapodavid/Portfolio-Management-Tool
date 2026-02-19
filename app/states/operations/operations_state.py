@@ -10,11 +10,11 @@ import json
 import logging
 
 import reflex as rx
-from app.services import OperationsService
 from app.states.operations.mixins import (
     DailyProceduresMixin,
     OperationProcessesMixin,
 )
+from app.services import services
 
 logger = logging.getLogger(__name__)
 
@@ -67,14 +67,11 @@ class OperationsState(
         row = payload.get("row", {})
         process_id = row.get("id", 0)
         process_name = row.get("process", row.get("procedure_name", "Unknown"))
-
-        service = OperationsService()
-
         if action == "Rerun":
-            result = await service.rerun_process(process_id, process_name)
+            result = await services.operations.rerun_process(process_id, process_name)
             yield rx.toast.success(result["message"], position="top-right")
         elif action == "Kill":
-            result = await service.kill_process(process_id, process_name)
+            result = await services.operations.kill_process(process_id, process_name)
             yield rx.toast.warning(result["message"], position="top-right")
         else:
             logger.warning(f"Unknown context menu action: {action}")

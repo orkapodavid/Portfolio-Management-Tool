@@ -1,5 +1,6 @@
 from typing import List, Optional
 from pmt_core.repositories.positions import PositionRepository
+from pmt_core.repositories.protocols import PositionRepositoryProtocol
 from pmt_core.models import PositionRecord
 import logging
 
@@ -12,7 +13,7 @@ class PositionService:
     Delegates data fetching to PositionRepository.
     """
 
-    def __init__(self, repository: Optional[PositionRepository] = None):
+    def __init__(self, repository: Optional[PositionRepositoryProtocol] = None):
         self.repository = repository or PositionRepository()
 
     async def get_positions(

@@ -8,10 +8,10 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import PortfolioToolsService
 from app.states.portfolio_tools.types import ComingResetItem
 import logging
 import random
+from app.services import services
 
 class ComingResetsMixin(rx.State, mixin=True):
     """
@@ -28,8 +28,7 @@ class ComingResetsMixin(rx.State, mixin=True):
         """Load Coming Resets data from PortfolioToolsService."""
         self.is_loading_coming_resets = True
         try:
-            service = PortfolioToolsService()
-            self.coming_resets = await service.get_coming_resets()
+            self.coming_resets = await services.portfolio_tools.get_coming_resets()
             self.coming_resets_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -89,8 +88,7 @@ class ComingResetsMixin(rx.State, mixin=True):
         yield
         await asyncio.sleep(0.3)
         try:
-            service = PortfolioToolsService()
-            self.coming_resets = await service.get_coming_resets()
+            self.coming_resets = await services.portfolio_tools.get_coming_resets()
             self.coming_resets_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

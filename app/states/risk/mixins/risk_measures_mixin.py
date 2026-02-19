@@ -2,10 +2,10 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import RiskService
 from app.states.risk.types import RiskMeasureItem
 import logging
 import random
+from app.services import services
 
 class RiskMeasuresMixin(rx.State, mixin=True):
     """
@@ -39,8 +39,7 @@ class RiskMeasuresMixin(rx.State, mixin=True):
         self.risk_measures_error = ""
         try:
             pos_date = self._ensure_risk_measures_date()
-            service = RiskService()
-            self.risk_measures = await service.get_risk_measures(pos_date)
+            self.risk_measures = await services.risk.get_risk_measures(pos_date)
         except Exception as e:
             self.risk_measures_error = str(e)
 
@@ -65,8 +64,7 @@ class RiskMeasuresMixin(rx.State, mixin=True):
         await asyncio.sleep(0.3)
         try:
             pos_date = self._ensure_risk_measures_date()
-            service = RiskService()
-            self.risk_measures = await service.get_risk_measures(pos_date)
+            self.risk_measures = await services.risk.get_risk_measures(pos_date)
             self.risk_measures_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

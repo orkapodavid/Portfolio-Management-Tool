@@ -1,6 +1,7 @@
 import reflex as rx
 from typing import TypedDict
 import random
+from app.services import services
 
 
 class PerformancePoint(TypedDict):
@@ -51,7 +52,6 @@ class ReportsState(rx.State):
     @rx.event
     async def generate_performance_data(self):
         """Generates performance data based on selected range using real S&P 500 data for benchmark."""
-        from app.services import MarketDataService
 
         period_map = {
             "1M": "1mo",
@@ -62,9 +62,9 @@ class ReportsState(rx.State):
             "ALL": "2y",
         }
         yf_period = period_map.get(self.selected_range, "1mo")
-        
-        market_data_service = MarketDataService()
-        benchmark_data = await market_data_service.fetch_stock_history("SPY", period=yf_period)
+        benchmark_data = await services.market_data.fetch_stock_history(
+            "SPY", period=yf_period
+        )
         points = []
         if benchmark_data:
             base_value = benchmark_data[0]["price"]

@@ -8,10 +8,10 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import EventCalendarService
 from app.states.events.types import EventCalendarItem
 import logging
 import random
+from app.services import services
 
 class EventCalendarMixin(rx.State, mixin=True):
     """
@@ -28,8 +28,7 @@ class EventCalendarMixin(rx.State, mixin=True):
         """Load Event Calendar data from EventCalendarService."""
         self.is_loading_event_calendar = True
         try:
-            service = EventCalendarService()
-            self.event_calendar = await service.get_event_calendar()
+            self.event_calendar = await services.event_calendar.get_event_calendar()
             self.event_calendar_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -101,8 +100,7 @@ class EventCalendarMixin(rx.State, mixin=True):
         yield  # Send loading state to client immediately
         await asyncio.sleep(0.3)
         try:
-            service = EventCalendarService()
-            self.event_calendar = await service.get_event_calendar()
+            self.event_calendar = await services.event_calendar.get_event_calendar()
             self.event_calendar_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

@@ -4,9 +4,9 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import ComplianceService
 from app.states.compliance.types import RestrictedListItem
 import logging
+from app.services import services
 
 class RestrictedListMixin(rx.State, mixin=True):
     """
@@ -22,8 +22,7 @@ class RestrictedListMixin(rx.State, mixin=True):
         """Load restricted list data from ComplianceService."""
         self.is_loading_restricted_list = True
         try:
-            service = ComplianceService()
-            self.restricted_list = await service.get_restricted_list()
+            self.restricted_list = await services.compliance.get_restricted_list()
             self.restricted_list_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -41,8 +40,7 @@ class RestrictedListMixin(rx.State, mixin=True):
         yield  # Send loading state to client immediately
         await asyncio.sleep(0.3)  # Brief delay for loading overlay
         try:
-            service = ComplianceService()
-            self.restricted_list = await service.get_restricted_list()
+            self.restricted_list = await services.compliance.get_restricted_list()
             self.restricted_list_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

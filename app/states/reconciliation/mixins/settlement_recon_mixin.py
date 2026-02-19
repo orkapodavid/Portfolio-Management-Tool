@@ -5,9 +5,9 @@ Uses force refresh button instead of auto-refresh for static data.
 """
 
 import reflex as rx
-from app.services import ReconciliationService
 from app.states.reconciliation.types import SettlementReconItem
 import logging
+from app.services import services
 
 class SettlementReconMixin(rx.State, mixin=True):
     """
@@ -35,8 +35,7 @@ class SettlementReconMixin(rx.State, mixin=True):
         self.is_loading_settlement_recon = True
         self.settlement_recon_error = ""
         try:
-            service = ReconciliationService()
-            self.settlement_recon = await service.get_settlement_recon(self.settlement_recon_position_date)
+            self.settlement_recon = await services.reconciliation.get_settlement_recon(self.settlement_recon_position_date)
         except Exception as e:
             self.settlement_recon_error = str(e)
 

@@ -8,10 +8,10 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import PortfolioToolsService
 from app.states.portfolio_tools.types import POSettlementItem
 import logging
 import random
+from app.services import services
 
 class POSettlementMixin(rx.State, mixin=True):
     """
@@ -35,8 +35,7 @@ class POSettlementMixin(rx.State, mixin=True):
         """Load PO Settlement data from PortfolioToolsService."""
         self.is_loading_po_settlement = True
         try:
-            service = PortfolioToolsService()
-            self.po_settlement = await service.get_po_settlement(self.po_settlement_position_date)
+            self.po_settlement = await services.portfolio_tools.get_po_settlement(self.po_settlement_position_date)
             self.po_settlement_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -96,8 +95,7 @@ class POSettlementMixin(rx.State, mixin=True):
         yield
         await asyncio.sleep(0.3)
         try:
-            service = PortfolioToolsService()
-            self.po_settlement = await service.get_po_settlement(self.po_settlement_position_date)
+            self.po_settlement = await services.portfolio_tools.get_po_settlement(self.po_settlement_position_date)
             self.po_settlement_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

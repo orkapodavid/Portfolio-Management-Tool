@@ -8,10 +8,10 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import PortfolioToolsService
 from app.states.portfolio_tools.types import PayToHoldItem
 import logging
 import random
+from app.services import services
 
 class PayToHoldMixin(rx.State, mixin=True):
     """
@@ -35,8 +35,7 @@ class PayToHoldMixin(rx.State, mixin=True):
         """Load Pay To Hold data from PortfolioToolsService."""
         self.is_loading_pay_to_hold = True
         try:
-            service = PortfolioToolsService()
-            self.pay_to_hold = await service.get_pay_to_hold()
+            self.pay_to_hold = await services.portfolio_tools.get_pay_to_hold()
             self.pay_to_hold_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
 
@@ -94,8 +93,7 @@ class PayToHoldMixin(rx.State, mixin=True):
         yield
         await asyncio.sleep(0.3)
         try:
-            service = PortfolioToolsService()
-            self.pay_to_hold = await service.get_pay_to_hold()
+            self.pay_to_hold = await services.portfolio_tools.get_pay_to_hold()
             self.pay_to_hold_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         finally:
             self.is_loading_pay_to_hold = False

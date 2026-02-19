@@ -1,10 +1,10 @@
 import asyncio
 
 import reflex as rx
-from app.services import PositionService
 from app.states.positions.types import BondPositionItem
 import logging
 import random
+from app.services import services
 
 class BondPositionsMixin(rx.State, mixin=True):
     """
@@ -26,8 +26,7 @@ class BondPositionsMixin(rx.State, mixin=True):
         self.is_loading_bond_positions = True
         self.bond_positions_error = ""
         try:
-            service = PositionService()
-            self.bond_positions = await service.get_bond_positions()
+            self.bond_positions = await services.positions.get_bond_positions()
         except Exception as e:
             self.bond_positions_error = str(e)
 

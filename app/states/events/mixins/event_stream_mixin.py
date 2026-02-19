@@ -8,10 +8,10 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import EventStreamService
 from app.states.events.types import EventStreamItem
 import logging
 import random
+from app.services import services
 
 class EventStreamMixin(rx.State, mixin=True):
     """
@@ -28,8 +28,7 @@ class EventStreamMixin(rx.State, mixin=True):
         """Load Event Stream data from EventStreamService."""
         self.is_loading_event_stream = True
         try:
-            service = EventStreamService()
-            self.event_stream = await service.get_event_stream()
+            self.event_stream = await services.event_stream.get_event_stream()
             self.event_stream_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -86,8 +85,7 @@ class EventStreamMixin(rx.State, mixin=True):
         yield  # Send loading state to client immediately
         await asyncio.sleep(0.3)
         try:
-            service = EventStreamService()
-            self.event_stream = await service.get_event_stream()
+            self.event_stream = await services.event_stream.get_event_stream()
             self.event_stream_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

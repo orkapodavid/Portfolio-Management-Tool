@@ -13,6 +13,7 @@ from typing import List
 import logging
 
 from app.states.types import KPIMetric, TopMover, Holding
+from app.services import services
 
 logger = logging.getLogger(__name__)
 
@@ -94,26 +95,20 @@ class PerformanceHeaderState(rx.State):
         """
         self.is_loading = True
         try:
-            from app.services.shared.performance_header_service import (
-                PerformanceHeaderService,
-            )
-            from app.services.market_data.market_data_service import MarketDataService
-
-            perf_service = PerformanceHeaderService()
-            market_service = MarketDataService()
-
             # Load KPI metrics (from core via PerformanceHeaderService)
-            self.kpi_metrics = await perf_service.get_kpi_metrics()
+            self.kpi_metrics = await services.performance_header.get_kpi_metrics()
 
             # Load top movers for all categories (from MarketDataService)
-            self.top_movers_ops = await market_service.get_top_movers("ops")
-            self.top_movers_ytd = await market_service.get_top_movers("ytd")
-            self.top_movers_delta = await market_service.get_top_movers("delta")
-            self.top_movers_price = await market_service.get_top_movers("price")
-            self.top_movers_volume = await market_service.get_top_movers("volume")
+            self.top_movers_ops = await services.market_data.get_top_movers("ops")
+            self.top_movers_ytd = await services.market_data.get_top_movers("ytd")
+            self.top_movers_delta = await services.market_data.get_top_movers("delta")
+            self.top_movers_price = await services.market_data.get_top_movers("price")
+            self.top_movers_volume = await services.market_data.get_top_movers("volume")
 
             # Load portfolio holdings (from core via PerformanceHeaderService)
-            self.portfolio_holdings = await perf_service.get_portfolio_holdings()
+            self.portfolio_holdings = (
+                await services.performance_header.get_portfolio_holdings()
+            )
 
             logger.info("Performance header data loaded successfully")
         except Exception as e:

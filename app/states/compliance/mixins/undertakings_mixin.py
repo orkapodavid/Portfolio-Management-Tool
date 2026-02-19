@@ -4,9 +4,9 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import ComplianceService
 from app.states.compliance.types import UndertakingItem
 import logging
+from app.services import services
 
 class UndertakingsMixin(rx.State, mixin=True):
     """
@@ -29,8 +29,7 @@ class UndertakingsMixin(rx.State, mixin=True):
         """Load undertakings data from ComplianceService."""
         self.is_loading_undertakings = True
         try:
-            service = ComplianceService()
-            self.undertakings = await service.get_undertakings(self.undertakings_position_date)
+            self.undertakings = await services.compliance.get_undertakings(self.undertakings_position_date)
             self.undertakings_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -48,8 +47,7 @@ class UndertakingsMixin(rx.State, mixin=True):
         yield  # Send loading state to client immediately
         await asyncio.sleep(0.3)  # Brief delay for loading overlay
         try:
-            service = ComplianceService()
-            self.undertakings = await service.get_undertakings(self.undertakings_position_date)
+            self.undertakings = await services.compliance.get_undertakings(self.undertakings_position_date)
             self.undertakings_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

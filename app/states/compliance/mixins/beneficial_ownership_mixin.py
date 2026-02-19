@@ -4,9 +4,9 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import ComplianceService
 from app.states.compliance.types import BeneficialOwnershipItem
 import logging
+from app.services import services
 
 class BeneficialOwnershipMixin(rx.State, mixin=True):
     """
@@ -29,8 +29,7 @@ class BeneficialOwnershipMixin(rx.State, mixin=True):
         """Load beneficial ownership data from ComplianceService."""
         self.is_loading_beneficial_ownership = True
         try:
-            service = ComplianceService()
-            self.beneficial_ownership = await service.get_beneficial_ownership(self.beneficial_ownership_position_date)
+            self.beneficial_ownership = await services.compliance.get_beneficial_ownership(self.beneficial_ownership_position_date)
             self.beneficial_ownership_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -48,8 +47,7 @@ class BeneficialOwnershipMixin(rx.State, mixin=True):
         yield  # Send loading state to client immediately
         await asyncio.sleep(0.3)  # Brief delay for loading overlay
         try:
-            service = ComplianceService()
-            self.beneficial_ownership = await service.get_beneficial_ownership(self.beneficial_ownership_position_date)
+            self.beneficial_ownership = await services.compliance.get_beneficial_ownership(self.beneficial_ownership_position_date)
             self.beneficial_ownership_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

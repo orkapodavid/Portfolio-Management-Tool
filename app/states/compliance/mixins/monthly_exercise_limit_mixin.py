@@ -4,9 +4,9 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import ComplianceService
 from app.states.compliance.types import MonthlyExerciseLimitItem
 import logging
+from app.services import services
 
 class MonthlyExerciseLimitMixin(rx.State, mixin=True):
     """
@@ -29,8 +29,7 @@ class MonthlyExerciseLimitMixin(rx.State, mixin=True):
         """Load monthly exercise limit data from ComplianceService."""
         self.is_loading_monthly_exercise_limit = True
         try:
-            service = ComplianceService()
-            self.monthly_exercise_limit = await service.get_monthly_exercise_limit(self.monthly_exercise_limit_position_date)
+            self.monthly_exercise_limit = await services.compliance.get_monthly_exercise_limit(self.monthly_exercise_limit_position_date)
             self.monthly_exercise_limit_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -48,8 +47,7 @@ class MonthlyExerciseLimitMixin(rx.State, mixin=True):
         yield  # Send loading state to client immediately
         await asyncio.sleep(0.3)  # Brief delay for loading overlay
         try:
-            service = ComplianceService()
-            self.monthly_exercise_limit = await service.get_monthly_exercise_limit(self.monthly_exercise_limit_position_date)
+            self.monthly_exercise_limit = await services.compliance.get_monthly_exercise_limit(self.monthly_exercise_limit_position_date)
             self.monthly_exercise_limit_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

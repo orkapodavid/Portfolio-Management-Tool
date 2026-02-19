@@ -8,10 +8,10 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import PortfolioToolsService
 from app.states.portfolio_tools.types import ExcessAmountItem
 import logging
 import random
+from app.services import services
 
 class ExcessAmountMixin(rx.State, mixin=True):
     """
@@ -35,8 +35,7 @@ class ExcessAmountMixin(rx.State, mixin=True):
         """Load Excess Amount data from PortfolioToolsService."""
         self.is_loading_excess_amount = True
         try:
-            service = PortfolioToolsService()
-            self.excess_amount = await service.get_excess_amount(self.excess_amount_position_date)
+            self.excess_amount = await services.portfolio_tools.get_excess_amount(self.excess_amount_position_date)
             self.excess_amount_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -96,8 +95,7 @@ class ExcessAmountMixin(rx.State, mixin=True):
         yield
         await asyncio.sleep(0.3)
         try:
-            service = PortfolioToolsService()
-            self.excess_amount = await service.get_excess_amount(self.excess_amount_position_date)
+            self.excess_amount = await services.portfolio_tools.get_excess_amount(self.excess_amount_position_date)
             self.excess_amount_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

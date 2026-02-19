@@ -8,10 +8,10 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import PortfolioToolsService
 from app.states.portfolio_tools.types import ShortECLItem
 import logging
 import random
+from app.services import services
 
 class ShortECLMixin(rx.State, mixin=True):
     """
@@ -28,8 +28,7 @@ class ShortECLMixin(rx.State, mixin=True):
         """Load Short ECL data from PortfolioToolsService."""
         self.is_loading_short_ecl = True
         try:
-            service = PortfolioToolsService()
-            self.short_ecl = await service.get_short_ecl()
+            self.short_ecl = await services.portfolio_tools.get_short_ecl()
             self.short_ecl_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
 
@@ -87,8 +86,7 @@ class ShortECLMixin(rx.State, mixin=True):
         yield
         await asyncio.sleep(0.3)
         try:
-            service = PortfolioToolsService()
-            self.short_ecl = await service.get_short_ecl()
+            self.short_ecl = await services.portfolio_tools.get_short_ecl()
             self.short_ecl_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         finally:
             self.is_loading_short_ecl = False

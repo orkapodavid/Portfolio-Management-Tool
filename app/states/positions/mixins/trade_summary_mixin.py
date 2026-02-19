@@ -2,10 +2,10 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import PositionService
 from app.states.positions.types import TradeSummaryItem
 import logging
 import random
+from app.services import services
 
 class TradeSummaryMixin(rx.State, mixin=True):
     """
@@ -37,8 +37,7 @@ class TradeSummaryMixin(rx.State, mixin=True):
         self.trade_summary_error = ""
         try:
             pos_date = self._ensure_trade_summary_date()
-            service = PositionService()
-            self.trade_summaries = await service.get_trade_summary(
+            self.trade_summaries = await services.positions.get_trade_summary(
                 start_date=pos_date, end_date=pos_date
             )
         except Exception as e:
@@ -65,8 +64,7 @@ class TradeSummaryMixin(rx.State, mixin=True):
         await asyncio.sleep(0.3)
         try:
             pos_date = self._ensure_trade_summary_date()
-            service = PositionService()
-            self.trade_summaries = await service.get_trade_summary(
+            self.trade_summaries = await services.positions.get_trade_summary(
                 start_date=pos_date, end_date=pos_date
             )
             self.trade_summary_last_updated = datetime.now().strftime(

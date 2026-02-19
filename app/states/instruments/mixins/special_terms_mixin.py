@@ -8,10 +8,10 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import InstrumentsService
 from app.states.instruments.types import SpecialTermItem
 import logging
 import random
+from app.services import services
 
 class SpecialTermsMixin(rx.State, mixin=True):
     """
@@ -38,8 +38,7 @@ class SpecialTermsMixin(rx.State, mixin=True):
         self.is_loading_special_terms = True
         try:
             pos_date = self._ensure_special_terms_date()
-            service = InstrumentsService()
-            self.special_terms = await service.get_special_terms(pos_date)
+            self.special_terms = await services.instruments.get_special_terms(pos_date)
             self.special_terms_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -105,8 +104,7 @@ class SpecialTermsMixin(rx.State, mixin=True):
         await asyncio.sleep(0.3)
         try:
             pos_date = self._ensure_special_terms_date()
-            service = InstrumentsService()
-            self.special_terms = await service.get_special_terms(pos_date)
+            self.special_terms = await services.instruments.get_special_terms(pos_date)
             self.special_terms_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

@@ -2,9 +2,9 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import MarketDataService
 from app.states.market_data.types import TradingCalendarItem
 import logging
+from app.services import services
 
 class TradingCalendarMixin(rx.State, mixin=True):
     """
@@ -24,12 +24,11 @@ class TradingCalendarMixin(rx.State, mixin=True):
     trading_calendar_to_date: str = ""
 
     async def load_trading_calendar(self):
-        """Load trading calendar using current filter params via the service."""
+        """Load trading calendar using current filter params via the services.market_data."""
         self.is_loading_trading_calendar = True
         self.trading_calendar_error = ""
         try:
-            service = MarketDataService()
-            self.trading_calendar = await service.get_trading_calendar(
+            self.trading_calendar = await services.market_data.get_trading_calendar(
                 start_date=self.trading_calendar_from_date or None,
                 end_date=self.trading_calendar_to_date or None,
             )

@@ -23,11 +23,13 @@ from app.services.events.event_stream_service import EventStreamService
 from app.services.operations.operations_service import OperationsService
 from app.services.instruments.instruments_service import InstrumentsService
 from app.services.reconciliation.reconciliation_service import ReconciliationService
+from app.services.registry import services
 
 # Import notification providers to ensure registration at startup
 import app.services.notifications.notification_providers  # noqa: F401
 
 __all__ = [
+    "services",
     "PnLService",
     "PositionService",
     "RiskService",
@@ -39,7 +41,6 @@ __all__ = [
     "NotificationRegistry",
     "UserService",
     "PerformanceHeaderService",
-
     "ReverseInquiryService",
     "EventCalendarService",
     "EventStreamService",

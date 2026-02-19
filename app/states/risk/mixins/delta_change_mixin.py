@@ -3,9 +3,9 @@ import logging
 from datetime import datetime
 
 import reflex as rx
-from app.services import RiskService
 from app.states.risk.types import DeltaChangeItem
 from app.utils.simulation import simulate_numeric_tick
+from app.services import services
 
 logger = logging.getLogger(__name__)
 
@@ -42,8 +42,7 @@ class DeltaChangeMixin(rx.State, mixin=True):
         self.delta_change_error = ""
         try:
             pos_date = self._ensure_delta_change_date()
-            service = RiskService()
-            self.delta_changes = await service.get_delta_changes(pos_date)
+            self.delta_changes = await services.risk.get_delta_changes(pos_date)
         except Exception as e:
             self.delta_change_error = str(e)
             logger.exception(f"Error loading delta change data: {e}")
@@ -67,8 +66,7 @@ class DeltaChangeMixin(rx.State, mixin=True):
         await asyncio.sleep(0.3)
         try:
             pos_date = self._ensure_delta_change_date()
-            service = RiskService()
-            self.delta_changes = await service.get_delta_changes(pos_date)
+            self.delta_changes = await services.risk.get_delta_changes(pos_date)
             self.delta_change_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

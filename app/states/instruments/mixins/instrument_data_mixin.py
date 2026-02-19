@@ -8,10 +8,10 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import InstrumentsService
 from app.states.instruments.types import InstrumentDataItem
 import logging
 import random
+from app.services import services
 
 class InstrumentDataMixin(rx.State, mixin=True):
     """
@@ -28,8 +28,7 @@ class InstrumentDataMixin(rx.State, mixin=True):
         """Load Instrument Data from InstrumentsService."""
         self.is_loading_instrument_data = True
         try:
-            service = InstrumentsService()
-            self.instrument_data = await service.get_instrument_data()
+            self.instrument_data = await services.instruments.get_instrument_data()
             self.instrument_data_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -80,8 +79,7 @@ class InstrumentDataMixin(rx.State, mixin=True):
         yield
         await asyncio.sleep(0.3)
         try:
-            service = InstrumentsService()
-            self.instrument_data = await service.get_instrument_data()
+            self.instrument_data = await services.instruments.get_instrument_data()
             self.instrument_data_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

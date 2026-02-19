@@ -2,10 +2,10 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import PnLService
 from app.states.pnl.types import PnLCurrencyItem
 import logging
 import random
+from app.services import services
 
 class PnLCurrencyMixin(rx.State, mixin=True):
     """
@@ -37,8 +37,7 @@ class PnLCurrencyMixin(rx.State, mixin=True):
         self.pnl_currency_error = ""
         try:
             pos_date = self._ensure_pnl_currency_date()
-            service = PnLService()
-            self.pnl_currency_list = await service.get_pnl_by_currency(pos_date)
+            self.pnl_currency_list = await services.pnl.get_pnl_by_currency(pos_date)
         except Exception as e:
             self.pnl_currency_error = str(e)
 
@@ -63,8 +62,7 @@ class PnLCurrencyMixin(rx.State, mixin=True):
         await asyncio.sleep(0.3)
         try:
             pos_date = self._ensure_pnl_currency_date()
-            service = PnLService()
-            self.pnl_currency_list = await service.get_pnl_by_currency(pos_date)
+            self.pnl_currency_list = await services.pnl.get_pnl_by_currency(pos_date)
             self.pnl_currency_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

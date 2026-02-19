@@ -5,9 +5,9 @@ Uses force refresh button instead of auto-refresh for static data.
 """
 
 import reflex as rx
-from app.services import ReconciliationService
 from app.states.reconciliation.types import PnLReconItem
 import logging
+from app.services import services
 
 class PnLReconMixin(rx.State, mixin=True):
     """
@@ -35,8 +35,7 @@ class PnLReconMixin(rx.State, mixin=True):
         self.is_loading_pnl_recon = True
         self.pnl_recon_error = ""
         try:
-            service = ReconciliationService()
-            self.pnl_recon = await service.get_pnl_recon(self.pnl_recon_position_date)
+            self.pnl_recon = await services.reconciliation.get_pnl_recon(self.pnl_recon_position_date)
         except Exception as e:
             self.pnl_recon_error = str(e)
 

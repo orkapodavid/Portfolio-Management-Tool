@@ -1,10 +1,10 @@
 import asyncio
 
 import reflex as rx
-from app.services import RiskService
 from app.states.risk.types import RiskInputItem
 import logging
 import random
+from app.services import services
 
 class RiskInputsMixin(rx.State, mixin=True):
     """
@@ -28,8 +28,7 @@ class RiskInputsMixin(rx.State, mixin=True):
         self.is_loading_risk_inputs = True
         self.risk_inputs_error = ""
         try:
-            service = RiskService()
-            self.risk_inputs = await service.get_risk_inputs()
+            self.risk_inputs = await services.risk.get_risk_inputs()
         except Exception as e:
             self.risk_inputs_error = str(e)
 

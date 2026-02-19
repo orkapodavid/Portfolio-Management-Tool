@@ -3,10 +3,10 @@ import logging
 from datetime import datetime
 
 import reflex as rx
-from app.services import PnLService
 from app.states.pnl.types import PnLChangeItem
 from app.utils.simulation import simulate_financial_tick
 from app.utils.sort_utils import financial_sort_key
+from app.services import services
 
 logger = logging.getLogger(__name__)
 
@@ -43,8 +43,7 @@ class PnLChangeMixin(rx.State, mixin=True):
         self.pnl_change_error = ""
         try:
             pos_date = self._ensure_pnl_change_date()
-            service = PnLService()
-            self.pnl_change_list = await service.get_pnl_changes(pos_date)
+            self.pnl_change_list = await services.pnl.get_pnl_changes(pos_date)
         except Exception as e:
             self.pnl_change_error = str(e)
             logger.exception(f"Error loading P&L change data: {e}")
@@ -66,8 +65,7 @@ class PnLChangeMixin(rx.State, mixin=True):
         await asyncio.sleep(0.3)
         try:
             pos_date = self._ensure_pnl_change_date()
-            service = PnLService()
-            self.pnl_change_list = await service.get_pnl_changes(pos_date)
+            self.pnl_change_list = await services.pnl.get_pnl_changes(pos_date)
             self.pnl_change_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
             logger.exception(f"Error refreshing PnL change: {e}")

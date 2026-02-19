@@ -8,10 +8,10 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import PortfolioToolsService
 from app.states.portfolio_tools.types import DealIndicationItem
 import logging
 import random
+from app.services import services
 
 class DealIndicationMixin(rx.State, mixin=True):
     """
@@ -28,8 +28,7 @@ class DealIndicationMixin(rx.State, mixin=True):
         """Load Deal Indication data from PortfolioToolsService."""
         self.is_loading_deal_indication = True
         try:
-            service = PortfolioToolsService()
-            self.deal_indication = await service.get_deal_indication()
+            self.deal_indication = await services.portfolio_tools.get_deal_indication()
             self.deal_indication_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -89,8 +88,7 @@ class DealIndicationMixin(rx.State, mixin=True):
         yield
         await asyncio.sleep(0.3)
         try:
-            service = PortfolioToolsService()
-            self.deal_indication = await service.get_deal_indication()
+            self.deal_indication = await services.portfolio_tools.get_deal_indication()
             self.deal_indication_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

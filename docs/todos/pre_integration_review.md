@@ -39,23 +39,11 @@ Additionally, `RiskInputItem` has the same 3 `national` → `notional` typos.
 
 ## ⚠️ Important Improvements (Should Fix)
 
-### I1. Service Instantiation Pattern
+### I1. Service Instantiation Pattern ✅ RESOLVED
 
-**Scope**: **86+ instantiations** across all mixins — every method call creates `service = XxxService()`.
+**Scope**: **86+ instantiations** across all mixins — every method call created `service = XxxService()`.
 
-Affected services (call count):
-| Service | Instantiations |
-|---|---|
-| `PortfolioToolsService()` | 18 |
-| `PnLService()` | 10 |
-| `PositionService()` | 7 |
-| `RiskService()` | 6 |
-| `ReconciliationService()` | 5 |
-| `OperationsService()` | 5 |
-| `ComplianceService()` | 4+ |
-| Others | 30+ |
-
-DI is already supported (`PnLService(repository=...)`) but unused. **Recommended**: Module-level singleton per service, injected repository with connection pool.
+**Fix**: Created `app/services/registry.py` — `ServiceRegistry` with `@cached_property` accessors for all 17 services. Refactored 52 files to use `services.xxx.method()` pattern. Zero remaining per-call instantiations.
 
 ---
 
@@ -87,22 +75,9 @@ Mock data currently lives in repositories (compliance, positions, pnl, etc.) —
 
 ---
 
-### I4. Repository Interface Design
+### I4. Repository Interface Design ✅ RESOLVED
 
-**Current state**: 8 concrete repositories, all inheriting `DatabaseRepository`. No abstract interfaces:
-
-| Repository | Methods | Has Abstract Interface? |
-|---|---|---|
-| `ComplianceRepository` | 4 | ❌ |
-| `PositionRepository` | 4+ | ❌ |
-| `PnLRepository` | 4+ | ❌ |
-| `ReconRepository` | 5 | ❌ |
-| `EventRepository` | 3+ | ❌ |
-| `OperationsRepository` | 3+ | ❌ |
-
-`DatabaseRepository` base is solid: supports `mock_mode` toggle, `execute_query()`, `execute_stored_proc()`, and `get_connection()` context manager with graceful pyodbc fallback.
-
-**Recommendation**: Add `Protocol` interfaces for each repository to enable testing with mock implementations. This also supports the service DI pattern (I1).
+**Fix**: Created `pmt_core/repositories/protocols.py` with 6 `@runtime_checkable` Protocol interfaces. Updated type hints in `PnLService`, `PositionService`, and `ComplianceService` from concrete to Protocol types. Remaining 3 services (Operations, Events, Recon) have protocols ready for when repository DI is wired.
 
 ---
 
@@ -139,8 +114,8 @@ Mock data currently lives in repositories (compliance, positions, pnl, etc.) —
 - [x] **I3**: Verify field name alignment (6 critical typos found → promoted to C2)
 - [x] **I4**: Audit repository interfaces (0/8 have Protocol/ABC)
 - [x] **C2**: Fix field name typos in UI TypedDicts (9 renames across 8 files)
-- [ ] Implement singleton service pattern or connection pooling
-- [ ] Define Protocol interfaces for each repository
+- [x] Implement singleton service pattern or connection pooling
+- [x] Define Protocol interfaces for each repository
 - [ ] Verify database connectivity (`ODBC Driver 17`, connection string)
 - [ ] Add connection pooling configuration
 

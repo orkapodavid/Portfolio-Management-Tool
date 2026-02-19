@@ -1,7 +1,7 @@
 import reflex as rx
-from app.services import MarketDataService
 from app.states.market_data.types import TickerDataItem
 import logging
+from app.services import services
 
 class TickerDataMixin(rx.State, mixin=True):
     """
@@ -18,8 +18,7 @@ class TickerDataMixin(rx.State, mixin=True):
         self.is_loading_ticker_data = True
         self.ticker_data_error = ""
         try:
-            service = MarketDataService()
-            self.ticker_data = await service.get_ticker_data()
+            self.ticker_data = await services.market_data.get_ticker_data()
         except Exception as e:
             self.ticker_data_error = str(e)
 

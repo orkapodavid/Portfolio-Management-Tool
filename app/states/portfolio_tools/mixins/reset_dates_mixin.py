@@ -8,10 +8,10 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import PortfolioToolsService
 from app.states.portfolio_tools.types import ResetDateItem
 import logging
 import random
+from app.services import services
 
 class ResetDatesMixin(rx.State, mixin=True):
     """
@@ -71,8 +71,7 @@ class ResetDatesMixin(rx.State, mixin=True):
         """Load Reset Dates data from PortfolioToolsService."""
         self.is_loading_reset_dates = True
         try:
-            service = PortfolioToolsService()
-            self.reset_dates = await service.get_reset_dates(
+            self.reset_dates = await services.portfolio_tools.get_reset_dates(
                 ticker=self.reset_dates_ticker,
                 start_date=self.reset_dates_start_date,
                 end_date=self.reset_dates_end_date,
@@ -138,8 +137,7 @@ class ResetDatesMixin(rx.State, mixin=True):
         yield
         await asyncio.sleep(0.3)
         try:
-            service = PortfolioToolsService()
-            self.reset_dates = await service.get_reset_dates(
+            self.reset_dates = await services.portfolio_tools.get_reset_dates(
                 ticker=self.reset_dates_ticker,
                 start_date=self.reset_dates_start_date,
                 end_date=self.reset_dates_end_date,

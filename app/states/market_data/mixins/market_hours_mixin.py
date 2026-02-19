@@ -1,7 +1,7 @@
 import reflex as rx
-from app.services import MarketDataService
 from app.states.market_data.types import MarketHoursItem
 import logging
+from app.services import services
 
 class MarketHoursMixin(rx.State, mixin=True):
     """
@@ -17,8 +17,7 @@ class MarketHoursMixin(rx.State, mixin=True):
         self.is_loading_market_hours = True
         self.market_hours_error = ""
         try:
-            service = MarketDataService()
-            self.market_hours = await service.get_market_hours()
+            self.market_hours = await services.market_data.get_market_hours()
         except Exception as e:
             self.market_hours_error = str(e)
 

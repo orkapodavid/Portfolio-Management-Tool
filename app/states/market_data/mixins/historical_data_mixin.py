@@ -2,10 +2,10 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import MarketDataService
 from app.states.market_data.types import HistoricalDataItem
 import logging
 import random
+from app.services import services
 
 class HistoricalDataMixin(rx.State, mixin=True):
     """
@@ -30,19 +30,18 @@ class HistoricalDataMixin(rx.State, mixin=True):
     historical_to_date: str = ""
 
     async def load_historical_data(self):
-        """Load historical data using current filter params via the service."""
+        """Load historical data using current filter params via the services.market_data."""
         self.is_loading_historical_data = True
         self.historical_data_error = ""
         try:
-            service = MarketDataService()
-            self.historical_data = await service.get_historical_data(
+            self.historical_data = await services.market_data.get_historical_data(
                 tickers=self.historical_selected_tickers or None,
                 start_date=self.historical_from_date or None,
                 end_date=self.historical_to_date or None,
             )
             # Populate available tickers (query without filters to get all)
             if not self.historical_available_tickers:
-                all_data = await service.get_historical_data()
+                all_data = await services.market_data.get_historical_data()
                 tickers = sorted(
                     set(
                         item.get("ticker", "")

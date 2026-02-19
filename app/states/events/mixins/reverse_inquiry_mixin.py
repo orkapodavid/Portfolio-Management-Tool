@@ -9,10 +9,10 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import ReverseInquiryService
 from app.states.events.types import ReverseInquiryItem
 import logging
 import random
+from app.services import services
 
 class ReverseInquiryMixin(rx.State, mixin=True):
     """
@@ -39,8 +39,7 @@ class ReverseInquiryMixin(rx.State, mixin=True):
         self.is_loading_reverse_inquiry = True
         try:
             pos_date = self._ensure_position_date()
-            service = ReverseInquiryService()
-            self.reverse_inquiry = await service.get_reverse_inquiry(pos_date)
+            self.reverse_inquiry = await services.reverse_inquiry.get_reverse_inquiry(pos_date)
             self.reverse_inquiry_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -111,8 +110,7 @@ class ReverseInquiryMixin(rx.State, mixin=True):
         await asyncio.sleep(0.3)
         try:
             pos_date = self._ensure_position_date()
-            service = ReverseInquiryService()
-            self.reverse_inquiry = await service.get_reverse_inquiry(pos_date)
+            self.reverse_inquiry = await services.reverse_inquiry.get_reverse_inquiry(pos_date)
             self.reverse_inquiry_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

@@ -5,8 +5,8 @@ import random
 from datetime import datetime
 
 import reflex as rx
-from app.services import EMSXService
 import logging
+from app.services import services
 
 class EMSXRouteMixin(rx.State, mixin=True):
     """
@@ -28,8 +28,7 @@ class EMSXRouteMixin(rx.State, mixin=True):
         """Load EMSX routes from EMSXService."""
         self.is_loading_emsx_routes = True
         try:
-            service = EMSXService()
-            self.emsx_routes = await service.get_emsx_routes()
+            self.emsx_routes = await services.emsx.get_emsx_routes()
             self.emsx_route_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
 
@@ -90,8 +89,7 @@ class EMSXRouteMixin(rx.State, mixin=True):
         yield  # Send loading state to client immediately
         await asyncio.sleep(0.3)
         try:
-            service = EMSXService()
-            self.emsx_routes = await service.get_emsx_routes()
+            self.emsx_routes = await services.emsx.get_emsx_routes()
             self.emsx_route_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
 

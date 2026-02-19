@@ -2,10 +2,10 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import PositionService
 from app.states.positions.types import PositionItem
 import logging
 import random
+from app.services import services
 
 class PositionsMixin(rx.State, mixin=True):
     """
@@ -37,8 +37,7 @@ class PositionsMixin(rx.State, mixin=True):
         self.positions_error = ""
         try:
             pos_date = self._ensure_positions_date()
-            service = PositionService()
-            self.positions = await service.get_positions(pos_date)
+            self.positions = await services.positions.get_positions(pos_date)
         except Exception as e:
             self.positions_error = str(e)
 
@@ -61,8 +60,7 @@ class PositionsMixin(rx.State, mixin=True):
         await asyncio.sleep(0.3)
         try:
             pos_date = self._ensure_positions_date()
-            service = PositionService()
-            self.positions = await service.get_positions(pos_date)
+            self.positions = await services.positions.get_positions(pos_date)
             self.positions_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
 

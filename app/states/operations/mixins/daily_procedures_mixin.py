@@ -8,10 +8,10 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import OperationsService
 from app.states.operations.types import DailyProcedureItem
 import logging
 import random
+from app.services import services
 
 class DailyProceduresMixin(rx.State, mixin=True):
     """
@@ -28,8 +28,7 @@ class DailyProceduresMixin(rx.State, mixin=True):
         """Load Daily Procedures data from OperationsService."""
         self.is_loading_daily_procedures = True
         try:
-            service = OperationsService()
-            self.daily_procedures = await service.get_daily_procedures()
+            self.daily_procedures = await services.operations.get_daily_procedures()
             self.daily_procedures_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -93,8 +92,7 @@ class DailyProceduresMixin(rx.State, mixin=True):
         yield
         await asyncio.sleep(0.3)
         try:
-            service = OperationsService()
-            self.daily_procedures = await service.get_daily_procedures()
+            self.daily_procedures = await services.operations.get_daily_procedures()
             self.daily_procedures_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

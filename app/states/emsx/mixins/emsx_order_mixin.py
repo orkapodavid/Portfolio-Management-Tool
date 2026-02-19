@@ -5,9 +5,9 @@ import random
 from datetime import datetime
 
 import reflex as rx
-from app.services import EMSXService
 from app.states.types import EMSXOrderItem
 import logging
+from app.services import services
 
 class EMSXOrderMixin(rx.State, mixin=True):
     """
@@ -29,8 +29,7 @@ class EMSXOrderMixin(rx.State, mixin=True):
         """Load EMSX orders from EMSXService."""
         self.is_loading_emsx_orders = True
         try:
-            service = EMSXService()
-            self.emsx_orders = await service.get_emsx_orders()
+            self.emsx_orders = await services.emsx.get_emsx_orders()
             self.emsx_order_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
 
@@ -92,8 +91,7 @@ class EMSXOrderMixin(rx.State, mixin=True):
         yield  # Send loading state to client immediately
         await asyncio.sleep(0.3)
         try:
-            service = EMSXService()
-            self.emsx_orders = await service.get_emsx_orders()
+            self.emsx_orders = await services.emsx.get_emsx_orders()
             self.emsx_order_last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
 

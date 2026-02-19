@@ -5,9 +5,9 @@ Uses force refresh button instead of auto-refresh for static data.
 """
 
 import reflex as rx
-from app.services import ReconciliationService
 from app.states.reconciliation.types import FailedTradeItem
 import logging
+from app.services import services
 
 class FailedTradesMixin(rx.State, mixin=True):
     """
@@ -35,8 +35,7 @@ class FailedTradesMixin(rx.State, mixin=True):
         self.is_loading_failed_trades = True
         self.failed_trades_error = ""
         try:
-            service = ReconciliationService()
-            self.failed_trades = await service.get_failed_trades(self.failed_trades_position_date)
+            self.failed_trades = await services.reconciliation.get_failed_trades(self.failed_trades_position_date)
         except Exception as e:
             self.failed_trades_error = str(e)
 

@@ -17,6 +17,16 @@ from pmt_core.repositories.recon import ReconRepository
 from pmt_core.repositories.operations import OperationsRepository
 from pmt_core.repositories.events import EventRepository
 
+# Protocol interfaces for dependency injection
+from pmt_core.repositories.protocols import (
+    PnLRepositoryProtocol,
+    PositionRepositoryProtocol,
+    ComplianceRepositoryProtocol,
+    OperationsRepositoryProtocol,
+    EventRepositoryProtocol,
+    ReconRepositoryProtocol,
+)
+
 __all__ = [
     "DatabaseRepository",
     "PositionRepository",
@@ -25,4 +35,11 @@ __all__ = [
     "ReconRepository",
     "OperationsRepository",
     "EventRepository",
+    # Protocols
+    "PnLRepositoryProtocol",
+    "PositionRepositoryProtocol",
+    "ComplianceRepositoryProtocol",
+    "OperationsRepositoryProtocol",
+    "EventRepositoryProtocol",
+    "ReconRepositoryProtocol",
 ]

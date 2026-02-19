@@ -20,6 +20,7 @@ from app.services.notifications.notification_constants import (
     NotificationType,
     CATEGORY_TO_TYPE,
 )
+from app.services import services
 
 logger = logging.getLogger(__name__)
 
@@ -106,10 +107,7 @@ class NotificationSidebarState(rx.State):
         """
         self.is_loading = True
         try:
-            from app.services import NotificationService
-
-            service = NotificationService()
-            raw_notifications = await service.get_notifications(limit=20)
+            raw_notifications = await services.notifications.get_notifications(limit=20)
 
             # Transform to NotificationItem format expected by component
             self.notifications = [

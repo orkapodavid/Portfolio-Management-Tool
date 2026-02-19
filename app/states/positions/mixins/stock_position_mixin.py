@@ -1,10 +1,10 @@
 import asyncio
 
 import reflex as rx
-from app.services import PositionService
 from app.states.positions.types import StockPositionItem
 import logging
 import random
+from app.services import services
 
 class StockPositionMixin(rx.State, mixin=True):
     """
@@ -26,8 +26,7 @@ class StockPositionMixin(rx.State, mixin=True):
         self.is_loading_stock_positions = True
         self.stock_positions_error = ""
         try:
-            service = PositionService()
-            self.stock_positions = await service.get_stock_positions()
+            self.stock_positions = await services.positions.get_stock_positions()
         except Exception as e:
             self.stock_positions_error = str(e)
 

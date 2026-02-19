@@ -8,10 +8,10 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import PortfolioToolsService
 from app.states.portfolio_tools.types import StockBorrowItem
 import logging
 import random
+from app.services import services
 
 class StockBorrowMixin(rx.State, mixin=True):
     """
@@ -28,8 +28,7 @@ class StockBorrowMixin(rx.State, mixin=True):
         """Load Stock Borrow data from PortfolioToolsService."""
         self.is_loading_stock_borrow = True
         try:
-            service = PortfolioToolsService()
-            self.stock_borrow = await service.get_stock_borrow()
+            self.stock_borrow = await services.portfolio_tools.get_stock_borrow()
             self.stock_borrow_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -90,8 +89,7 @@ class StockBorrowMixin(rx.State, mixin=True):
         yield
         await asyncio.sleep(0.3)
         try:
-            service = PortfolioToolsService()
-            self.stock_borrow = await service.get_stock_borrow()
+            self.stock_borrow = await services.portfolio_tools.get_stock_borrow()
             self.stock_borrow_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

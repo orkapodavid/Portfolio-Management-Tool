@@ -2,10 +2,10 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import PnLService
 from app.states.pnl.types import PnLSummaryItem
 import logging
 import random
+from app.services import services
 
 class PnLSummaryMixin(rx.State, mixin=True):
     """
@@ -39,8 +39,7 @@ class PnLSummaryMixin(rx.State, mixin=True):
         self.pnl_summary_error = ""
         try:
             pos_date = self._ensure_pnl_summary_date()
-            service = PnLService()
-            self.pnl_summary_list = await service.get_pnl_summary(pos_date)
+            self.pnl_summary_list = await services.pnl.get_pnl_summary(pos_date)
         except Exception as e:
             self.pnl_summary_error = str(e)
 
@@ -65,8 +64,7 @@ class PnLSummaryMixin(rx.State, mixin=True):
         await asyncio.sleep(0.3)
         try:
             pos_date = self._ensure_pnl_summary_date()
-            service = PnLService()
-            self.pnl_summary_list = await service.get_pnl_summary(pos_date)
+            self.pnl_summary_list = await services.pnl.get_pnl_summary(pos_date)
             self.pnl_summary_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

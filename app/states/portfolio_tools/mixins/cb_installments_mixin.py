@@ -8,10 +8,10 @@ import asyncio
 from datetime import datetime
 
 import reflex as rx
-from app.services import PortfolioToolsService
 from app.states.portfolio_tools.types import CBInstallmentItem
 import logging
 import random
+from app.services import services
 
 class CBInstallmentsMixin(rx.State, mixin=True):
     """
@@ -35,8 +35,7 @@ class CBInstallmentsMixin(rx.State, mixin=True):
         """Load CB Installments data from PortfolioToolsService."""
         self.is_loading_cb_installments = True
         try:
-            service = PortfolioToolsService()
-            self.cb_installments = await service.get_cb_installments(self.cb_installments_position_date)
+            self.cb_installments = await services.portfolio_tools.get_cb_installments(self.cb_installments_position_date)
             self.cb_installments_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -96,8 +95,7 @@ class CBInstallmentsMixin(rx.State, mixin=True):
         yield
         await asyncio.sleep(0.3)
         try:
-            service = PortfolioToolsService()
-            self.cb_installments = await service.get_cb_installments(self.cb_installments_position_date)
+            self.cb_installments = await services.portfolio_tools.get_cb_installments(self.cb_installments_position_date)
             self.cb_installments_last_updated = datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )

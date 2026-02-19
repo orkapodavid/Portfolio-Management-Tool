@@ -1,5 +1,6 @@
 from typing import List, Optional, Dict, Any
 from pmt_core.repositories.pnl import PnLRepository
+from pmt_core.repositories.protocols import PnLRepositoryProtocol
 from pmt_core.models import PnLRecord
 import logging
 
@@ -12,7 +13,7 @@ class PnLService:
     Delegates data fetching to PnLRepository.
     """
 
-    def __init__(self, repository: Optional[PnLRepository] = None):
+    def __init__(self, repository: Optional[PnLRepositoryProtocol] = None):
         self.repository = repository or PnLRepository()
 
     async def get_pnl_changes(
@@ -215,27 +216,74 @@ class PnLService:
         """Get full P&L detailed view. TODO: Replace with DB query."""
         logger.info("Returning mock full PnL data")
         companies = [
-            ("Toyota Motor", "7203.T"), ("Sony Group", "6758.T"),
-            ("Nintendo", "7974.T"), ("SoftBank Group", "9984.T"),
-            ("Keyence", "6861.T"), ("Fast Retailing", "9983.T"),
-            ("Tokyo Electron", "8035.T"), ("Shin-Etsu Chemical", "4063.T"),
-            ("Hitachi", "6501.T"), ("Mitsubishi UFJ", "8306.T"),
-            ("Recruit Holdings", "6098.T"), ("Daikin Industries", "6367.T"),
-            ("KDDI", "9433.T"), ("Fanuc", "6954.T"),
+            ("Toyota Motor", "7203.T"),
+            ("Sony Group", "6758.T"),
+            ("Nintendo", "7974.T"),
+            ("SoftBank Group", "9984.T"),
+            ("Keyence", "6861.T"),
+            ("Fast Retailing", "9983.T"),
+            ("Tokyo Electron", "8035.T"),
+            ("Shin-Etsu Chemical", "4063.T"),
+            ("Hitachi", "6501.T"),
+            ("Mitsubishi UFJ", "8306.T"),
+            ("Recruit Holdings", "6098.T"),
+            ("Daikin Industries", "6367.T"),
+            ("KDDI", "9433.T"),
+            ("Fanuc", "6954.T"),
             ("Murata Manufacturing", "6981.T"),
         ]
 
         pnl_data = [
             ("$1,234,567", "$12,345", "$45,678", "$123,456", "+1.2%", "+3.5%", "+8.7%"),
             ("$987,654", "-$8,765", "$23,456", "$67,890", "-0.9%", "+2.1%", "+5.4%"),
-            ("$2,345,678", "$34,567", "$78,901", "$234,567", "+2.3%", "+4.8%", "+12.1%"),
-            ("($456,789)", "-$45,678", "-$89,012", "($156,789)", "-3.2%", "-5.6%", "-9.8%"),
-            ("$3,456,789", "$56,789", "$123,456", "$345,678", "+1.8%", "+5.2%", "+15.3%"),
+            (
+                "$2,345,678",
+                "$34,567",
+                "$78,901",
+                "$234,567",
+                "+2.3%",
+                "+4.8%",
+                "+12.1%",
+            ),
+            (
+                "($456,789)",
+                "-$45,678",
+                "-$89,012",
+                "($156,789)",
+                "-3.2%",
+                "-5.6%",
+                "-9.8%",
+            ),
+            (
+                "$3,456,789",
+                "$56,789",
+                "$123,456",
+                "$345,678",
+                "+1.8%",
+                "+5.2%",
+                "+15.3%",
+            ),
             ("$567,890", "$6,789", "$12,345", "$56,789", "+0.7%", "+1.9%", "+4.2%"),
-            ("$1,890,123", "-$23,456", "$45,678", "$189,012", "-1.1%", "+2.8%", "+7.6%"),
+            (
+                "$1,890,123",
+                "-$23,456",
+                "$45,678",
+                "$189,012",
+                "-1.1%",
+                "+2.8%",
+                "+7.6%",
+            ),
             ("$789,012", "$7,890", "$15,678", "$78,901", "+0.9%", "+2.3%", "+6.1%"),
             ("$1,234,567", "$23,456", "$56,789", "$123,456", "+1.5%", "+3.9%", "+9.2%"),
-            ("($234,567)", "-$12,345", "-$34,567", "($78,901)", "-1.8%", "-4.2%", "-7.5%"),
+            (
+                "($234,567)",
+                "-$12,345",
+                "-$34,567",
+                "($78,901)",
+                "-1.8%",
+                "-4.2%",
+                "-7.5%",
+            ),
             ("$890,123", "$8,901", "$17,890", "$89,012", "+1.0%", "+2.5%", "+6.8%"),
             ("$456,789", "$4,567", "$9,012", "$45,678", "+0.6%", "+1.7%", "+3.9%"),
             ("$345,678", "-$3,456", "$6,789", "$34,567", "-0.5%", "+1.2%", "+3.2%"),
@@ -245,19 +293,21 @@ class PnLService:
 
         result = []
         for i, ((name, ticker), data) in enumerate(zip(companies, pnl_data)):
-            result.append({
-                "id": i + 1,
-                "trade_date": "2026-01-31",
-                "underlying": name,
-                "ticker": ticker,
-                "pnl_ytd": data[0],
-                "pnl_chg_1d": data[1],
-                "pnl_chg_1w": data[2],
-                "pnl_chg_1m": data[3],
-                "pnl_chg_pct_1d": data[4],
-                "pnl_chg_pct_1w": data[5],
-                "pnl_chg_pct_1m": data[6],
-            })
+            result.append(
+                {
+                    "id": i + 1,
+                    "trade_date": "2026-01-31",
+                    "underlying": name,
+                    "ticker": ticker,
+                    "pnl_ytd": data[0],
+                    "pnl_chg_1d": data[1],
+                    "pnl_chg_1w": data[2],
+                    "pnl_chg_1m": data[3],
+                    "pnl_chg_pct_1d": data[4],
+                    "pnl_chg_pct_1w": data[5],
+                    "pnl_chg_pct_1m": data[6],
+                }
+            )
         return result
 
     async def calculate_daily_pnl(

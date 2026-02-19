@@ -1,10 +1,10 @@
 import asyncio
 
 import reflex as rx
-from app.services import MarketDataService
 from app.states.market_data.types import FXDataItem
 import logging
 import random
+from app.services import services
 
 class FXDataMixin(rx.State, mixin=True):
     """
@@ -23,8 +23,7 @@ class FXDataMixin(rx.State, mixin=True):
         self.is_loading_fx_data = True
         self.fx_data_error = ""
         try:
-            service = MarketDataService()
-            self.fx_data = await service.get_fx_data()
+            self.fx_data = await services.market_data.get_fx_data()
         except Exception as e:
             self.fx_data_error = str(e)
 
