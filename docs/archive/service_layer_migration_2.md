@@ -1,6 +1,10 @@
+> [!NOTE]
+> **Status: ✅ Archived** — 2026-02-19
+> Phase 2 complete. Remaining 6 domains migrated to `pmt_core/services/`, mock data cleanup done.
+
 # Service Layer Migration — Phase 2
 
-> **Status**: Pending  
+> **Status**: ✅ Completed  
 > **Prerequisite**: [Phase 1](./service_layer_migration.md) ✅ Completed  
 > **Date**: 2026-02-10
 

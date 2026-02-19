@@ -61,13 +61,6 @@ Reusable task prompts for AI-assisted development:
 
 ---
 
-## Active Work (Todos)
-
-| Document | Status |
-|---|---|
-| [todos/service_layer_migration_2.md](todos/service_layer_migration_2.md) | Phase 2 — move mock data into `pmt_core` services |
-| [todos/table_improvement_v4.md](todos/table_improvement_v4.md) | AG Grid Phase 4 — remaining improvements |
-
 ---
 
 ## Archived
@@ -77,6 +70,7 @@ Completed or superseded documents:
 | Document | Notes |
 |---|---|
 | [archive/service_layer_migration.md](archive/service_layer_migration.md) | ✅ Phase 1 completed — all 14 mixins migrated |
+| [archive/service_layer_migration_2.md](archive/service_layer_migration_2.md) | ✅ Phase 2 completed — remaining 6 domains migrated |
 | [archive/generic_prompts.md](archive/generic_prompts.md) | SPA→route migration plan (superseded by current architecture) |
 | [archive/milestone-0-preparation-checklist.md](archive/milestone-0-preparation-checklist.md) | ✅ Infrastructure preparation (superseded by Milestone 1) |
 | [archive/milestone-1-pre-integration-checklist.md](archive/milestone-1-pre-integration-checklist.md) | ✅ Pre-integration preparation (actionable items complete) |
@@ -85,6 +79,7 @@ Completed or superseded documents:
 | [archive/ag_grids/table_improvement_2.md](archive/ag_grids/table_improvement_2.md) | ✅ AG Grid Phase 2 — advanced features |
 | [archive/ag_grids/table_improvement_v3.md](archive/ag_grids/table_improvement_v3.md) | ✅ AG Grid Phase 3 — v35 migration |
 | [archive/ag_grids/status_bar_rollout.md](archive/ag_grids/status_bar_rollout.md) | ✅ Status bar rollout — all 48 grids |
+| [archive/ag_grids/table_improvement_v4.md](archive/ag_grids/table_improvement_v4.md) | ✅ AG Grid Phase 4 — overlays, tree data, quick filter, column state |
 | [archive/plotly/design_chart.md](archive/plotly/design_chart.md) | ✅ Pricer chart design |
 | [archive/plotly/implementation_plan.md](archive/plotly/implementation_plan.md) | ✅ Plotly integration plan |
 

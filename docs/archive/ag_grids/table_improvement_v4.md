@@ -1,3 +1,7 @@
+> [!NOTE]
+> **Status: ✅ Archived** — 2026-02-19
+> Phase 4 complete. All 5 features implemented (overlays, tree data, status bar, quick filter, auto-restore column state).
+
 # AG Grid Reflex Wrapper - Phase 4 Documentation
 
 > **Reference documentation for completed Phase 4 improvements to the AG Grid wrapper.**
