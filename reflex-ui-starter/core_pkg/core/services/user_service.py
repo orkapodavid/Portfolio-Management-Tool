@@ -5,18 +5,10 @@ Provides mock user data for the starter template.
 Replace with real data source in production.
 """
 
-from typing import List, Optional
+from typing import List
 import uuid
 from datetime import datetime, timedelta
 import random
-
-
-class UserItem:
-    """User data structure."""
-
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
 
 
 class UserService:
@@ -33,7 +25,7 @@ class UserService:
             self._initialized = True
         return self._users
 
-    def get_by_id(self, user_id: str) -> Optional[dict]:
+    def get_by_id(self, user_id: str) -> dict | None:
         """Get a user by ID."""
         return next((u for u in self.get_users() if u["id"] == user_id), None)
 

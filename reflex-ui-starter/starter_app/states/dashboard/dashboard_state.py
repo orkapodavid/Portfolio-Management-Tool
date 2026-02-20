@@ -25,9 +25,9 @@ class DashboardState(
     async def load_dashboard_module_data(self):
         """Load data for the active subtab."""
         if self.active_dashboard_subtab == "Overview":
-            self.load_overview_data()
+            yield type(self).load_overview_data
         elif self.active_dashboard_subtab == "Analytics":
-            self.load_analytics_data()
+            yield type(self).load_analytics_data
 
     @rx.event
     def set_dashboard_subtab(self, subtab: str):

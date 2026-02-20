@@ -116,6 +116,183 @@ DEMO_NOTIFICATIONS: List[NotificationItem] = [
 ]
 
 
+# =============================================================================
+# SHARED JS HELPERS — extracted from duplicated inline JS
+# =============================================================================
+
+
+def _js_clear_highlight() -> str:
+    """JS to clear any existing row highlight state."""
+    return """
+    window.__pmtHighlightedRow = null;
+    if (window.__pmtHighlightInterval) {
+        clearInterval(window.__pmtHighlightInterval);
+        window.__pmtHighlightInterval = null;
+    }
+    document.querySelectorAll('.notification-highlight').forEach(el => {
+        el.classList.remove('notification-highlight');
+    });
+    """
+
+
+def _js_get_grid_api(grid_id: str) -> str:
+    """JS to locate the AG Grid API via React Fiber traversal.
+    
+    Sets local variables `wrapper` and `api`. If not found, early-returns.
+    """
+    return f"""
+    const wrapper = document.querySelector('[id="{grid_id}"] .ag-root-wrapper')
+                 || document.querySelector('.ag-root-wrapper');
+    if (!wrapper) {{ console.warn('No AG Grid found'); return; }}
+
+    const fiberKey = Object.keys(wrapper).find(k => k.startsWith('__reactFiber'));
+    if (!fiberKey) {{ console.warn('React Fiber not found'); return; }}
+
+    let fiber = wrapper[fiberKey];
+    let api = null;
+    let maxDepth = 50;
+    while (fiber && maxDepth-- > 0) {{
+        if (fiber.stateNode && fiber.stateNode.api) {{
+            api = fiber.stateNode.api;
+            break;
+        }}
+        if (fiber.memoizedProps && fiber.memoizedProps.gridRef && fiber.memoizedProps.gridRef.current) {{
+            api = fiber.memoizedProps.gridRef.current.api;
+            break;
+        }}
+        fiber = fiber.return;
+    }}
+    if (!api) {{ console.warn('AG Grid API not found'); return; }}
+    """
+
+
+def _js_find_and_highlight_row(row_id: str, row_id_key: str) -> str:
+    """JS to find a row node, scroll to it, flash, and apply persistent highlight.
+    
+    Requires `api` to already be set by `_js_get_grid_api()`.
+    """
+    return f"""
+    let node = api.getRowNode('{row_id}');
+    if (!node) {{
+        api.forEachNode((rowNode) => {{
+            if (!node && rowNode.data) {{
+                const fieldValue = rowNode.data['{row_id_key}'];
+                if (fieldValue !== undefined && String(fieldValue) === String('{row_id}')) {{
+                    node = rowNode;
+                }}
+            }}
+        }});
+    }}
+
+    if (node) {{
+        const actualRowId = node.id || '{row_id}';
+        window.__pmtHighlightedRow = {{ grid_id: '{row_id_key}', row_id: actualRowId }};
+
+        api.ensureNodeVisible(node, 'middle');
+        api.flashCells({{rowNodes: [node]}});
+
+        const applyHighlight = () => {{
+            const highlighted = window.__pmtHighlightedRow;
+            if (!highlighted || highlighted.row_id !== actualRowId) return;
+            document.querySelectorAll('.ag-row.notification-highlight').forEach(el => {{
+                if (el.getAttribute('row-id') !== actualRowId) {{
+                    el.classList.remove('notification-highlight');
+                }}
+            }});
+            document.querySelectorAll(`[row-id='${{actualRowId}}']`).forEach(rowEl => {{
+                if (!rowEl.classList.contains('notification-highlight')) {{
+                    rowEl.classList.add('notification-highlight');
+                }}
+            }});
+        }};
+
+        applyHighlight();
+        requestAnimationFrame(applyHighlight);
+        setTimeout(applyHighlight, 100);
+        setTimeout(applyHighlight, 300);
+        setTimeout(applyHighlight, 500);
+
+        if (window.__pmtHighlightInterval) clearInterval(window.__pmtHighlightInterval);
+        window.__pmtHighlightInterval = setInterval(() => {{
+            const highlighted = window.__pmtHighlightedRow;
+            if (!highlighted) {{ clearInterval(window.__pmtHighlightInterval); return; }}
+            document.querySelectorAll(`[row-id='${{highlighted.row_id}}']`).forEach(el => {{
+                if (!el.classList.contains('notification-highlight')) el.classList.add('notification-highlight');
+            }});
+        }}, 200);
+
+        console.log('SUCCESS: Jumped to row', actualRowId);
+    }} else {{
+        console.warn('Row not found for', '{row_id_key}', '=', '{row_id}');
+    }}
+    """
+
+
+def _build_jump_js(grid_id: str, row_id: str, row_id_key: str) -> str:
+    """Build complete JS to jump to and highlight a row in a grid."""
+    return f"""
+    (() => {{
+        {_js_clear_highlight()}
+        window.__pmtHighlightedRow = {{ grid_id: '{grid_id}', row_id: '{row_id}' }};
+        {_js_get_grid_api(grid_id)}
+        {_js_find_and_highlight_row(row_id, row_id_key)}
+    }})()
+    """
+
+
+def _build_navigate_js(
+    grid_id: str, row_id: str, row_id_key: str, route: str
+) -> str:
+    """Build JS to navigate to a row, handling same-page and cross-page cases."""
+    return f"""
+    (() => {{
+        const targetRoute = '{route}';
+        const currentPath = window.location.pathname;
+        const grid_id = '{grid_id}';
+        const row_id = '{row_id}';
+        const row_id_key = '{row_id_key}';
+
+        // Check if the specific target grid exists on the current page
+        const targetGridWrapper = document.querySelector(`[grid-id="${{grid_id}}"]`) ||
+                                   document.querySelector(`#${{grid_id}}`) ||
+                                   document.querySelector(`[id="${{grid_id}}"]`);
+
+        const isOnTargetPage = currentPath.endsWith(targetRoute) ||
+                                currentPath.includes(targetRoute);
+        const anyGridExists = document.querySelector('.ag-root-wrapper') !== null;
+        const canJumpDirectly = targetGridWrapper !== null || (isOnTargetPage && anyGridExists);
+
+        console.log('Navigate check:', {{
+            currentPath, targetRoute, isOnTargetPage,
+            targetGridFound: targetGridWrapper !== null,
+            anyGridExists, canJumpDirectly, grid_id, row_id
+        }});
+
+        {_js_clear_highlight()}
+
+        if (canJumpDirectly) {{
+            // Same page or grid visible: jump directly
+            window.__pmtHighlightedRow = {{ grid_id: grid_id, row_id: row_id }};
+            {_js_get_grid_api(grid_id)}
+            {_js_find_and_highlight_row(row_id, row_id_key)}
+        }} else {{
+            // Different page: store in sessionStorage for pickup after navigation
+            sessionStorage.setItem('__pmtPendingHighlight', JSON.stringify({{
+                grid_id: grid_id,
+                row_id: row_id,
+                row_id_key: row_id_key
+            }}));
+            console.log('Stored pending highlight in sessionStorage, navigating to', targetRoute);
+        }}
+    }})()
+    """
+
+
+# =============================================================================
+# STATE CLASS
+# =============================================================================
+
+
 class NotificationSidebarState(rx.State):
     """
     State for notification sidebar component.
@@ -275,144 +452,8 @@ class NotificationSidebarState(rx.State):
         self._pending_grid_id = grid_id
         self._pending_row_id = row_id
 
-        # Use sessionStorage so SPA navigation (client-side routing) can pick it up
-        check_and_navigate_script = f"""
-        (() => {{
-            const targetRoute = '{route}';
-            const currentPath = window.location.pathname;
-            const grid_id = '{grid_id}';
-            const row_id = '{row_id}';
-            const row_id_key = '{row_id_key}';
-            
-            // Check if the SPECIFIC target grid exists on the current page
-            const targetGridWrapper = document.querySelector(`[grid-id="${{grid_id}}"]`) ||
-                                       document.querySelector(`#${{grid_id}}`) ||
-                                       document.querySelector(`[id="${{grid_id}}"]`);
-            
-            // Check if we're on the right page
-            const isOnTargetPage = currentPath.endsWith(targetRoute) || 
-                                   currentPath.includes(targetRoute);
-            
-            const anyGridExists = document.querySelector('.ag-root-wrapper') !== null;
-            const canJumpDirectly = targetGridWrapper !== null || (isOnTargetPage && anyGridExists);
-            
-            console.log('Navigate check:', {{ 
-                currentPath, targetRoute, isOnTargetPage, 
-                targetGridFound: targetGridWrapper !== null,
-                anyGridExists, canJumpDirectly, grid_id, row_id 
-            }});
-            
-            // Clear any existing highlight first
-            window.__pmtHighlightedRow = null;
-            if (window.__pmtHighlightInterval) {{
-                clearInterval(window.__pmtHighlightInterval);
-                window.__pmtHighlightInterval = null;
-            }}
-            document.querySelectorAll('.notification-highlight').forEach(el => {{
-                el.classList.remove('notification-highlight');
-            }});
-            
-            if (canJumpDirectly) {{
-                // Same page or grid visible: jump directly
-                window.__pmtHighlightedRow = {{ grid_id: grid_id, row_id: row_id }};
-                
-                const wrapper = document.querySelector('.ag-root-wrapper');
-                if (!wrapper) {{
-                    console.warn('No AG Grid found on page');
-                    return;
-                }}
-                
-                const key = Object.keys(wrapper).find(k => k.startsWith('__reactFiber'));
-                if (!key) {{ console.warn('React Fiber not found'); return; }}
-                
-                let fiber = wrapper[key];
-                let api = null;
-                let maxDepth = 50;
-                
-                while (fiber && maxDepth-- > 0) {{
-                    if (fiber.stateNode && fiber.stateNode.api) {{
-                        api = fiber.stateNode.api;
-                        break;
-                    }}
-                    if (fiber.memoizedProps && fiber.memoizedProps.gridRef && fiber.memoizedProps.gridRef.current) {{
-                        api = fiber.memoizedProps.gridRef.current.api;
-                        break;
-                    }}
-                    fiber = fiber.return;
-                }}
-                
-                if (!api) {{ console.warn('AG Grid API not found'); return; }}
-                
-                // Find the row
-                let node = api.getRowNode(row_id);
-                if (!node) {{
-                    api.forEachNode((rowNode) => {{
-                        if (!node && rowNode.data) {{
-                            const fieldValue = rowNode.data[row_id_key];
-                            if (fieldValue !== undefined && String(fieldValue) === String(row_id)) {{
-                                node = rowNode;
-                            }}
-                        }}
-                    }});
-                }}
-                
-                if (node) {{
-                    api.ensureNodeVisible(node, 'middle');
-                    api.flashCells({{rowNodes: [node]}});
-                    
-                    const actualRowId = node.id || row_id;
-                    window.__pmtHighlightedRow.row_id = actualRowId;
-                    
-                    const applyHighlight = () => {{
-                        const highlighted = window.__pmtHighlightedRow;
-                        if (!highlighted || highlighted.row_id !== actualRowId) return;
-                        document.querySelectorAll('.ag-row.notification-highlight').forEach(el => {{
-                            if (el.getAttribute('row-id') !== actualRowId) {{
-                                el.classList.remove('notification-highlight');
-                            }}
-                        }});
-                        const rowEls = document.querySelectorAll(`[row-id='${{actualRowId}}']`);
-                        rowEls.forEach(rowEl => {{
-                            if (!rowEl.classList.contains('notification-highlight')) {{
-                                rowEl.classList.add('notification-highlight');
-                            }}
-                        }});
-                    }};
-                    
-                    applyHighlight();
-                    requestAnimationFrame(applyHighlight);
-                    setTimeout(applyHighlight, 100);
-                    setTimeout(applyHighlight, 300);
-                    setTimeout(applyHighlight, 500);
-                    
-                    if (window.__pmtHighlightInterval) clearInterval(window.__pmtHighlightInterval);
-                    window.__pmtHighlightInterval = setInterval(() => {{
-                        const highlighted = window.__pmtHighlightedRow;
-                        if (!highlighted) {{ clearInterval(window.__pmtHighlightInterval); return; }}
-                        const rowEls = document.querySelectorAll(`[row-id='${{highlighted.row_id}}']`);
-                        rowEls.forEach(el => {{
-                            if (!el.classList.contains('notification-highlight')) {{
-                                el.classList.add('notification-highlight');
-                            }}
-                        }});
-                    }}, 200);
-                    
-                    console.log('SUCCESS: Jumped to row', actualRowId);
-                }} else {{
-                    console.warn('Row node not found for', row_id_key, '=', row_id);
-                }}
-            }} else {{
-                // Different page: store in sessionStorage for pickup after navigation
-                sessionStorage.setItem('__pmtPendingHighlight', JSON.stringify({{
-                    grid_id: grid_id,
-                    row_id: row_id,
-                    row_id_key: row_id_key
-                }}));
-                console.log('Stored pending highlight in sessionStorage, navigating to', targetRoute);
-            }}
-        }})()
-        """
-        return [rx.call_script(check_and_navigate_script), rx.redirect(route)]
+        script = _build_navigate_js(grid_id, row_id, row_id_key, route)
+        return [rx.call_script(script), rx.redirect(route)]
 
     @rx.event
     def jump_to_row(self, row_id: str, grid_id: str = "market_data_grid", row_id_key: str = ""):
@@ -427,92 +468,7 @@ class NotificationSidebarState(rx.State):
             from starter_app.ag_grid_constants import get_grid_row_id_key
             row_id_key = get_grid_row_id_key(grid_id)
 
-        script = f"""
-        (() => {{
-            console.log('Jump to row:', '{row_id}', 'in grid:', '{grid_id}', 'using key:', '{row_id_key}');
-            
-            const row_id = '{row_id}';
-            const row_id_key = '{row_id_key}';
-            
-            window.__pmtHighlightedRow = {{ grid_id: '{grid_id}', row_id: row_id, row_id_key: row_id_key }};
-            
-            const wrapper = document.querySelector('[id="{grid_id}"] .ag-root-wrapper') 
-                         || document.querySelector('.ag-root-wrapper');
-            
-            if (!wrapper) {{ console.warn('No AG Grid found'); return; }}
-            
-            const key = Object.keys(wrapper).find(k => k.startsWith('__reactFiber'));
-            if (!key) {{ console.warn('React Fiber not found'); return; }}
-            
-            let fiber = wrapper[key];
-            let api = null;
-            let maxDepth = 50;
-            
-            while (fiber && maxDepth-- > 0) {{
-                if (fiber.stateNode && fiber.stateNode.api) {{
-                    api = fiber.stateNode.api;
-                    break;
-                }}
-                if (fiber.memoizedProps && fiber.memoizedProps.gridRef && fiber.memoizedProps.gridRef.current) {{
-                    api = fiber.memoizedProps.gridRef.current.api;
-                    break;
-                }}
-                fiber = fiber.return;
-            }}
-            
-            if (!api) {{ console.warn('AG Grid API not found'); return; }}
-            
-            let node = api.getRowNode(row_id);
-            if (!node) {{
-                api.forEachNode((rowNode) => {{
-                    if (!node && rowNode.data) {{
-                        const fieldValue = rowNode.data[row_id_key];
-                        if (fieldValue !== undefined && String(fieldValue) === String(row_id)) {{
-                            node = rowNode;
-                        }}
-                    }}
-                }});
-            }}
-            
-            if (node) {{
-                const actualRowId = node.id || row_id;
-                window.__pmtHighlightedRow.row_id = actualRowId;
-                
-                api.ensureNodeVisible(node, 'middle');
-                api.flashCells({{rowNodes: [node]}});
-                
-                const applyHighlight = () => {{
-                    const highlighted = window.__pmtHighlightedRow;
-                    if (!highlighted || highlighted.row_id !== actualRowId) return;
-                    document.querySelectorAll('.ag-row.notification-highlight').forEach(el => {{
-                        if (el.getAttribute('row-id') !== actualRowId) el.classList.remove('notification-highlight');
-                    }});
-                    document.querySelectorAll(`[row-id='${{actualRowId}}']`).forEach(rowEl => {{
-                        if (!rowEl.classList.contains('notification-highlight')) rowEl.classList.add('notification-highlight');
-                    }});
-                }};
-                
-                applyHighlight();
-                requestAnimationFrame(applyHighlight);
-                setTimeout(applyHighlight, 100);
-                setTimeout(applyHighlight, 300);
-                setTimeout(applyHighlight, 500);
-                
-                if (window.__pmtHighlightInterval) clearInterval(window.__pmtHighlightInterval);
-                window.__pmtHighlightInterval = setInterval(() => {{
-                    const highlighted = window.__pmtHighlightedRow;
-                    if (!highlighted) {{ clearInterval(window.__pmtHighlightInterval); return; }}
-                    document.querySelectorAll(`[row-id='${{highlighted.row_id}}']`).forEach(el => {{
-                        if (!el.classList.contains('notification-highlight')) el.classList.add('notification-highlight');
-                    }});
-                }}, 200);
-                
-                console.log('SUCCESS: Jumped to row:', actualRowId);
-            }} else {{
-                console.warn('Row not found for', row_id_key, '=', row_id);
-            }}
-        }})()
-        """
+        script = _build_jump_js(grid_id, row_id, row_id_key)
         return rx.call_script(script)
 
     @rx.event
@@ -593,4 +549,3 @@ class NotificationSidebarState(rx.State):
             row_id_key = result.get("row_id_key", "")
             if row_id and grid_id:
                 return self.jump_to_row(row_id, grid_id, row_id_key)
-

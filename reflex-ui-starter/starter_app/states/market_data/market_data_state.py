@@ -25,9 +25,9 @@ class MarketDataState(
     async def load_market_data_module_data(self):
         """Load data for the active subtab."""
         if self.active_market_data_subtab == "FX Data":
-            self.load_fx_data()
+            yield type(self).load_fx_data
         elif self.active_market_data_subtab == "Reference Data":
-            self.load_reference_data()
+            yield type(self).load_reference_data
 
     @rx.event
     def set_market_data_subtab(self, subtab: str):

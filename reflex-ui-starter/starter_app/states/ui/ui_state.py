@@ -9,7 +9,7 @@ Handles:
 """
 
 import reflex as rx
-from typing import Dict, List, Any
+from typing import Any
 
 
 class UIState(rx.State):
@@ -19,8 +19,8 @@ class UIState(rx.State):
 
     # Navigation state
     active_module: str = "Dashboard"
-    _active_subtabs: Dict[str, str] = {}
-    _filters: Dict[str, Dict[str, Any]] = {}
+    _active_subtabs: dict[str, str] = {}
+    _filters: dict[str, dict[str, Any]] = {}
 
     # UI state
     is_sidebar_open: bool = True
@@ -28,19 +28,20 @@ class UIState(rx.State):
     is_loading: bool = False
 
     # Module configuration
-    MODULE_ICONS: Dict[str, str] = {
+    MODULE_ICONS: dict[str, str] = {
         "Dashboard": "layout-dashboard",
+        "Market Data": "bar-chart-3",
         "Settings": "settings",
     }
 
-    MODULE_SUBTABS: Dict[str, List[str]] = {
+    MODULE_SUBTABS: dict[str, list[str]] = {
         "Dashboard": ["Overview", "Analytics"],
         "Market Data": ["FX Data", "Reference Data"],
     }
 
     # Computed vars
     @rx.var
-    def current_subtabs(self) -> List[str]:
+    def current_subtabs(self) -> list[str]:
         """Returns the list of subtabs for the currently active module."""
         return self.MODULE_SUBTABS.get(self.active_module, [])
 

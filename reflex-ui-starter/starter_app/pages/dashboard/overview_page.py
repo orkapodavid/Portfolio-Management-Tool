@@ -60,7 +60,6 @@ def overview_content() -> rx.Component:
             ),
             class_name="flex flex-col md:flex-row gap-3",
         ),
-        on_mount=DashboardState.load_overview_data,
         class_name="p-4 overflow-y-auto flex-1",
     )
 

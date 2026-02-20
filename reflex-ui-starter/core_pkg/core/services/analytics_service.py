@@ -5,7 +5,7 @@ Provides mock market data for the starter template.
 Replace with real data source in production.
 """
 
-from typing import List, Optional
+from typing import List
 
 
 class AnalyticsService:
