@@ -23,6 +23,13 @@ uv run reflex run
 
 Open `http://localhost:3000` in your browser.
 
+## Running Tests
+
+```bash
+# Core business logic tests (no Reflex dependency)
+uv run pytest core_pkg/tests_core/ -v
+```
+
 ## Environment Variables
 
 Copy `.env.example` to `.env` and adjust:
@@ -39,20 +46,23 @@ Copy `.env.example` to `.env` and adjust:
 ```
 reflex-ui-starter/
 ├── starter_app/           # Reflex UI application
-│   ├── app.py             # Routes and app config
+│   ├── starter_app.py     # Entry point + routes
 │   ├── constants.py       # Design tokens
+│   ├── ag_grid_constants.py  # Grid IDs, route mappings
 │   ├── components/        # Reusable UI components
-│   │   └── shared/        # Layout, nav, sidebar, header
+│   │   └── shared/        # Layout, nav, sidebar, header, AG Grid config
 │   ├── pages/             # Page components
 │   │   ├── dashboard/     # Dashboard module pages
-│   │   └── settings/      # Settings module pages
+│   │   └── market_data/   # Market Data module pages
 │   ├── states/            # Reflex state classes
-│   │   ├── ui/            # UI state (nav, sidebar)
-│   │   └── notifications/ # Notification state
-│   └── services/          # App-layer services
+│   │   ├── ui/            # UIState, AppHeaderState
+│   │   ├── dashboard/     # DashboardState + mixins
+│   │   ├── market_data/   # MarketDataState + mixins
+│   │   └── notifications/ # NotificationSidebarState
+│   └── services/          # Re-exports + app-layer constants
 ├── core_pkg/              # Business logic package
-│   └── core/              # Models, services, repos
-├── reflex_ag_grid/        # AG Grid component
+│   ├── core/              # Models, services, repos
+│   └── tests_core/        # Unit tests (40 tests)
 ├── docs/                  # Documentation
 ├── .agents/               # Agent skills and rules
 ├── rxconfig.py            # Reflex config
@@ -61,7 +71,12 @@ reflex-ui-starter/
 
 ## Adding a New Module
 
-1. Create page files in `starter_app/pages/your_module/`
-2. Add module to `UIState.MODULE_SUBTABS` and `UIState.MODULE_ICONS`
-3. Add nav entry in `top_navigation.py`
-4. Add routes in `app.py`
+1. Create core service in `core_pkg/core/services/my_service.py`
+2. Export in `core_pkg/core/services/__init__.py`
+3. Re-export in `starter_app/services/<module>/__init__.py`
+4. Create state mixin in `starter_app/states/<module>/mixins/`
+5. Compose mixin into module state class
+6. Add pages in `starter_app/pages/<module>/`
+7. Update `UIState.MODULE_SUBTABS` and `MODULE_ICONS`
+8. Add nav entry in `top_navigation.py`
+9. Add routes in `starter_app.py` with `on_load` handlers
